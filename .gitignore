@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Firebase
+.firebase
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+firebase_private_key.json
+
+# Backend
+backend/node_modules
+backend/.env
