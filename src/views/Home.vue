@@ -9,8 +9,8 @@
           Skip the expensive middlemen. Find jobs or hire talent directly through our platform.
         </p>
         <div class="hero-buttons">
-          <router-link to="/jobs" class="btn btn-primary">Browse Jobs</router-link>
-          <router-link to="/register" class="btn btn-secondary">Get Started</router-link>
+          <router-link to="/login" class="btn btn-primary">Login</router-link>
+          <router-link to="/register" class="btn btn-secondary">Register</router-link>
         </div>
       </div>
       <div class="hero-image">
@@ -18,39 +18,46 @@
       </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features">
-      <h2>Why Choose Bridge?</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">💼</div>
-          <h3>Direct Connection</h3>
-          <p>Connect directly with employers or job seekers without expensive agencies</p>
+    <!-- Browse Jobs Section -->
+    <section id="jobs-section" class="browse-jobs">
+      <div class="jobs-header">
+        <h2>Browse Available Jobs</h2>
+        <p>Find your next opportunity from top employers in Singapore</p>
+      </div>
+
+      <!-- Job Filters -->
+      <div class="filters-container">
+        <input
+          type="text"
+          v-model="searchQuery"
+          placeholder="Search jobs by title, company..."
+          class="search-input"
+        />
+        <select v-model="selectedCategory" class="filter-select">
+          <option value="">All Categories</option>
+          <option value="construction">Construction</option>
+          <option value="hospitality">Hospitality</option>
+          <option value="manufacturing">Manufacturing</option>
+          <option value="healthcare">Healthcare</option>
+          <option value="logistics">Logistics</option>
+        </select>
+        <button @click="applyFilters" class="btn btn-primary">Search</button>
+      </div>
+
+      <!-- Job Listings -->
+      <div class="jobs-container">
+        <div v-if="loading" class="loading">
+          <p>Loading jobs...</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">🤖</div>
-          <h3>AI-Powered Matching</h3>
-          <p>Smart job matching based on skills, experience, and preferences</p>
+        <div v-else-if="filteredJobs.length === 0" class="no-results">
+          <p>No jobs found. Try adjusting your search.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">📚</div>
-          <h3>Skill Development</h3>
-          <p>Take AI-generated quizzes to upskill and earn badges</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">💬</div>
-          <h3>Real-time Chat</h3>
-          <p>Communicate directly with potential employers or candidates</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">⭐</div>
-          <h3>Review System</h3>
-          <p>Transparent reviews and ratings for both employers and workers</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📱</div>
-          <h3>Mobile Friendly</h3>
-          <p>Access the platform anywhere, anytime from any device</p>
+        <div v-else class="jobs-grid">
+          <JobCard
+            v-for="job in filteredJobs.slice(0, 6)"
+            :key="job.id"
+            :job="job"
+          />
         </div>
       </div>
     </section>
@@ -85,12 +92,76 @@
 </template>
 
 <script>
+import { ref, computed, onMounted } from 'vue'
+import { useStore } from 'vuex'
+import JobCard from '../components/JobCard.vue'
+
 export default {
-  name: 'Home'
+  name: 'Home',
+  components: {
+    JobCard
+  },
+  setup() {
+    const store = useStore()
+    
+    const searchQuery = ref('')
+    const selectedCategory = ref('')
+    const loading = ref(false)
+
+    const jobs = computed(() => store.getters['jobs/allJobs'])
+
+    const filteredJobs = computed(() => {
+      let result = jobs.value
+
+      if (searchQuery.value) {
+        result = result.filter(job =>
+          job.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          job.company.toLowerCase().includes(searchQuery.value.toLowerCase())
+        )
+      }
+
+      if (selectedCategory.value) {
+        result = result.filter(job => 
+          job.category === selectedCategory.value
+        )
+      }
+
+      return result
+    })
+
+    const applyFilters = async () => {
+      loading.value = true
+      try {
+        await store.dispatch('jobs/fetchJobs', {
+          category: selectedCategory.value
+        })
+      } catch (error) {
+        console.error('Error fetching jobs:', error)
+      } finally {
+        loading.value = false
+      }
+    }
+
+    onMounted(() => {
+      applyFilters()
+    })
+
+    return {
+      searchQuery,
+      selectedCategory,
+      loading,
+      filteredJobs,
+      applyFilters
+    }
+  }
 }
 </script>
 
 <style scoped>
+html {
+  scroll-behavior: smooth;
+}
+
 .home {
   width: 100%;
 }
@@ -146,53 +217,71 @@ export default {
   border-radius: 10px;
 }
 
-.features {
-  background: #f8f9fa;
+.browse-jobs {
   padding: 80px 20px;
-}
-
-.features h2 {
-  text-align: center;
-  font-size: 2.5rem;
-  color: #2c3e50;
-  margin-bottom: 50px;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.feature-card {
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
+.jobs-header {
   text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 40px;
 }
 
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-}
-
-.feature-icon {
-  font-size: 3rem;
-  margin-bottom: 20px;
-}
-
-.feature-card h3 {
-  font-size: 1.5rem;
+.jobs-header h2 {
+  font-size: 2.5rem;
   color: #2c3e50;
   margin-bottom: 15px;
 }
 
-.feature-card p {
+.jobs-header p {
+  font-size: 1.1rem;
   color: #7f8c8d;
-  line-height: 1.6;
+}
+
+.filters-container {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.search-input,
+.filter-select {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.search-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.jobs-container {
+  min-height: 300px;
+}
+
+.loading,
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+.jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 25px;
 }
 
 .stats {
@@ -254,12 +343,21 @@ export default {
     justify-content: center;
   }
 
-  .features-grid {
-    grid-template-columns: 1fr;
-  }
-
   .stats {
     flex-direction: column;
+  }
+
+  .filters-container {
+    flex-direction: column;
+  }
+
+  .search-input,
+  .filter-select {
+    width: 100%;
+  }
+
+  .jobs-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
