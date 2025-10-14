@@ -1,7 +1,7 @@
 <template>
   <div class="home">
-    <!-- Hero Section -->
-    <section class="hero">
+    <!-- Hero Section - Only show when not logged in -->
+    <section v-if="!isAuthenticated" class="hero">
       <div class="hero-content">
         <h1>Welcome to Bridge</h1>
         <p class="hero-subtitle">Connecting Singapore Employers with Skilled Migrant Workers</p>
@@ -14,7 +14,7 @@
         </div>
       </div>
       <div class="hero-image">
-        <img src="../assets/bridgeLogo.png" alt="Bridge Logo" />
+        <img src="../assets/migrantWorkerHappy.png" alt="Happy Migrant Workers" />
       </div>
     </section>
 
@@ -62,8 +62,8 @@
       </div>
     </section>
 
-    <!-- Stats Section -->
-    <section class="stats">
+    <!-- Stats Section - Only show when not logged in -->
+    <section v-if="!isAuthenticated" class="stats">
       <div class="stat-item">
         <h3>10,000+</h3>
         <p>Active Job Seekers</p>
@@ -82,8 +82,8 @@
       </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta">
+    <!-- CTA Section - Only show when not logged in -->
+    <section v-if="!isAuthenticated" class="cta">
       <h2>Ready to Get Started?</h2>
       <p>Join thousands of employers and job seekers on Bridge today</p>
       <router-link to="/register" class="btn btn-primary btn-large">Create Free Account</router-link>
@@ -108,6 +108,7 @@ export default {
     const selectedCategory = ref('')
     const loading = ref(false)
 
+    const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
     const jobs = computed(() => store.getters['jobs/allJobs'])
 
     const filteredJobs = computed(() => {
@@ -150,6 +151,7 @@ export default {
       searchQuery,
       selectedCategory,
       loading,
+      isAuthenticated,
       filteredJobs,
       applyFilters
     }

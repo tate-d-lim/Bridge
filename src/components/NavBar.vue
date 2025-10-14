@@ -17,7 +17,11 @@
           Company Reviews
         </router-link>
         
-        <router-link to="/login" class="nav-link" @click="closeMenu">
+        <!-- AI Quiz - redirects to quizzes if logged in, login if not -->
+        <router-link v-if="isAuthenticated" to="/quizzes" class="nav-link" @click="closeMenu">
+          AI Quiz
+        </router-link>
+        <router-link v-else to="/login" class="nav-link" @click="closeMenu">
           AI Quiz
         </router-link>
 
@@ -26,34 +30,9 @@
 
         <!-- Authenticated User Links -->
         <template v-if="isAuthenticated">
-          <!-- Job Seeker Links -->
-          <template v-if="isJobSeeker">
-            <router-link to="/quizzes" class="nav-link" @click="closeMenu">
-              Quizzes
-            </router-link>
-            <router-link to="/applications" class="nav-link" @click="closeMenu">
-              Applications
-            </router-link>
-            <router-link to="/jobseeker/dashboard" class="nav-link" @click="closeMenu">
-              Dashboard
-            </router-link>
-          </template>
-
-          <!-- Employer Links -->
-          <template v-if="isEmployer">
-            <router-link to="/candidates" class="nav-link" @click="closeMenu">
-              Candidates
-            </router-link>
-            <router-link to="/employer/post-job" class="nav-link" @click="closeMenu">
-              Post Job
-            </router-link>
-            <router-link to="/employer/dashboard" class="nav-link" @click="closeMenu">
-              Dashboard
-            </router-link>
-          </template>
-
-          <router-link to="/chat" class="nav-link" @click="closeMenu">
-            💬 Messages
+          <!-- Messages Icon -->
+          <router-link to="/chat" class="nav-link chat-icon" @click="closeMenu">
+            💬
           </router-link>
 
           <!-- User Menu -->
@@ -64,6 +43,15 @@
             <div class="user-dropdown" :class="{ active: userDropdownOpen }">
               <router-link to="/profile" class="dropdown-item" @click="closeMenus">
                 👤 Profile
+              </router-link>
+              <router-link v-if="isJobSeeker" to="/applications" class="dropdown-item" @click="closeMenus">
+                📄 Applications
+              </router-link>
+              <router-link v-if="isJobSeeker" to="/jobseeker/dashboard" class="dropdown-item" @click="closeMenus">
+                📊 Dashboard
+              </router-link>
+              <router-link v-if="isEmployer" to="/employer/dashboard" class="dropdown-item" @click="closeMenus">
+                📊 Dashboard
               </router-link>
               <button @click="handleLogout" class="dropdown-item">
                 🚪 Logout
@@ -244,6 +232,12 @@ export default {
 
 .nav-link.router-link-active {
   color: #3498db;
+}
+
+.chat-icon {
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
 }
 
 .nav-spacer {
