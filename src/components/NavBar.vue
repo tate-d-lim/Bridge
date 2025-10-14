@@ -32,7 +32,7 @@
         <template v-if="isAuthenticated">
           <!-- Messages Icon -->
           <router-link to="/chat" class="nav-link chat-icon" @click="closeMenu">
-            💬
+            <img src="../assets/envelope.svg" alt="Messages" class="envelope-icon" />
           </router-link>
 
           <!-- User Menu -->
@@ -42,19 +42,19 @@
             </button>
             <div class="user-dropdown" :class="{ active: userDropdownOpen }">
               <router-link to="/profile" class="dropdown-item" @click="closeMenus">
-                👤 Profile
+                <img src="../assets/user.svg" alt="" class="dropdown-icon" /> Profile
               </router-link>
               <router-link v-if="isJobSeeker" to="/applications" class="dropdown-item" @click="closeMenus">
-                📄 Applications
+                <img src="../assets/briefcase.svg" alt="" class="dropdown-icon" /> Applications
               </router-link>
               <router-link v-if="isJobSeeker" to="/jobseeker/dashboard" class="dropdown-item" @click="closeMenus">
-                📊 Dashboard
+                <img src="../assets/dashboard-monitor.svg" alt="" class="dropdown-icon" /> Dashboard
               </router-link>
               <router-link v-if="isEmployer" to="/employer/dashboard" class="dropdown-item" @click="closeMenus">
-                📊 Dashboard
+                <img src="../assets/dashboard-monitor.svg" alt="" class="dropdown-icon" /> Dashboard
               </router-link>
               <button @click="handleLogout" class="dropdown-item">
-                🚪 Logout
+                <img src="../assets/user-logout.svg" alt="" class="dropdown-icon" /> Logout
               </button>
             </div>
           </div>
@@ -157,9 +157,8 @@ export default {
 }
 
 .nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+  width: 100%;
+  padding: 0 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -235,9 +234,19 @@ export default {
 }
 
 .chat-icon {
-  font-size: 1.5rem;
   display: flex;
   align-items: center;
+}
+
+.envelope-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  transition: transform 0.3s;
+}
+
+.chat-icon:hover .envelope-icon {
+  transform: scale(1.1);
 }
 
 .nav-spacer {
@@ -286,7 +295,9 @@ export default {
 }
 
 .dropdown-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
   padding: 12px 20px;
   text-decoration: none;
@@ -303,7 +314,17 @@ export default {
   background: #f8f9fa;
 }
 
+.dropdown-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
 @media (max-width: 768px) {
+  .nav-container {
+    padding: 0 20px;
+  }
+
   .nav-toggle {
     display: flex;
   }
