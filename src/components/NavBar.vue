@@ -3,7 +3,6 @@
     <div class="nav-container">
       <router-link to="/" class="nav-brand">
         <img src="../assets/bridgeLogo.png" alt="Bridge" class="nav-logo" />
-        <span>Bridge</span>
       </router-link>
 
       <button class="nav-toggle" @click="toggleMenu" :class="{ active: menuOpen }">
@@ -13,9 +12,17 @@
       </button>
 
       <div class="nav-menu" :class="{ active: menuOpen }">
-        <router-link to="/jobs" class="nav-link" @click="closeMenu">
-          Browse Jobs
+        <!-- Left Side Navigation -->
+        <router-link to="/reviews" class="nav-link" @click="closeMenu">
+          Company Reviews
         </router-link>
+        
+        <router-link to="/login" class="nav-link" @click="closeMenu">
+          AI Quiz
+        </router-link>
+
+        <!-- Spacer to push right items to the right -->
+        <div class="nav-spacer"></div>
 
         <!-- Authenticated User Links -->
         <template v-if="isAuthenticated">
@@ -182,8 +189,9 @@ export default {
 }
 
 .nav-logo {
-  height: 40px;
+  height: 60px;
   width: auto;
+  margin-right: 20px;
 }
 
 .nav-toggle {
@@ -219,6 +227,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 25px;
+  flex: 1;
 }
 
 .nav-link {
@@ -235,6 +244,10 @@ export default {
 
 .nav-link.router-link-active {
   color: #3498db;
+}
+
+.nav-spacer {
+  flex: 1;
 }
 
 .user-menu {
@@ -344,6 +357,10 @@ export default {
     margin-top: 10px;
     box-shadow: none;
     border: 1px solid #e0e0e0;
+  }
+
+  .nav-spacer {
+    display: none;
   }
 }
 </style>

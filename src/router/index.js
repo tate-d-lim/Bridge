@@ -5,7 +5,7 @@ import { auth } from '../firebase/config'
 import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
-import JobListings from '../views/JobListings.vue'
+import CompanyReviews from '../views/JobListings.vue' // Renamed to CompanyReviews
 import JobDetails from '../views/JobDetails.vue'
 import JobSeekerDashboard from '../views/JobSeekerDashboard.vue'
 import EmployerDashboard from '../views/EmployerDashboard.vue'
@@ -37,9 +37,9 @@ const routes = [
     meta: { requiresAuth: false }
   },
   {
-    path: '/jobs',
-    name: 'JobListings',
-    component: JobListings,
+    path: '/reviews',
+    name: 'CompanyReviews',
+    component: CompanyReviews,
     meta: { requiresAuth: false }
   },
   {
