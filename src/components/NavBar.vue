@@ -30,6 +30,12 @@
 
         <!-- Authenticated User Links -->
         <template v-if="isAuthenticated">
+          <!-- Dark Mode Toggle -->
+          <button @click="toggleDarkMode" class="dark-mode-toggle" title="Toggle Dark Mode">
+            <img v-if="isDarkMode" src="../assets/lightModeToggle.svg" alt="Light Mode" class="toggle-icon" />
+            <img v-else src="../assets/darkModeToggle.svg" alt="Dark Mode" class="toggle-icon" />
+          </button>
+
           <!-- Messages Icon -->
           <router-link to="/chat" class="nav-link chat-icon" @click="closeMenu">
             <img src="../assets/envelope.svg" alt="Messages" class="envelope-icon" />
@@ -62,6 +68,12 @@
 
         <!-- Guest Links -->
         <template v-else>
+          <!-- Dark Mode Toggle for guests -->
+          <button @click="toggleDarkMode" class="dark-mode-toggle" title="Toggle Dark Mode">
+            <img v-if="isDarkMode" src="../assets/lightModeToggle.svg" alt="Light Mode" class="toggle-icon" />
+            <img v-else src="../assets/darkModeToggle.svg" alt="Dark Mode" class="toggle-icon" />
+          </button>
+          
           <router-link to="/login" class="nav-link" @click="closeMenu">
             Login
           </router-link>
@@ -75,7 +87,7 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 
@@ -87,6 +99,7 @@ export default {
     
     const menuOpen = ref(false)
     const userDropdownOpen = ref(false)
+    const isDarkMode = ref(false)
 
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
     const isJobSeeker = computed(() => store.getters['auth/isJobSeeker'])
@@ -130,9 +143,30 @@ export default {
       }
     }
 
+    const toggleDarkMode = () => {
+      isDarkMode.value = !isDarkMode.value
+      if (isDarkMode.value) {
+        document.documentElement.classList.add('dark-mode')
+        localStorage.setItem('darkMode', 'true')
+      } else {
+        document.documentElement.classList.remove('dark-mode')
+        localStorage.setItem('darkMode', 'false')
+      }
+    }
+
+    onMounted(() => {
+      // Check for saved dark mode preference
+      const savedDarkMode = localStorage.getItem('darkMode')
+      if (savedDarkMode === 'true') {
+        isDarkMode.value = true
+        document.documentElement.classList.add('dark-mode')
+      }
+    })
+
     return {
       menuOpen,
       userDropdownOpen,
+      isDarkMode,
       isAuthenticated,
       isJobSeeker,
       isEmployer,
@@ -141,7 +175,8 @@ export default {
       closeMenu,
       toggleUserDropdown,
       closeMenus,
-      handleLogout
+      handleLogout,
+      toggleDarkMode
     }
   }
 }
@@ -149,16 +184,18 @@ export default {
 
 <style scoped>
 .navbar {
-  background: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
 .nav-container {
   width: 100%;
-  padding: 0 40px;
+  padding: 0px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -170,9 +207,10 @@ export default {
   align-items: center;
   gap: 12px;
   text-decoration: none;
-  color: #2c3e50;
+  color: var(--text);
   font-size: 1.5rem;
   font-weight: 700;
+  transition: color 0.3s;
 }
 
 .nav-logo {
@@ -194,7 +232,7 @@ export default {
 .nav-toggle span {
   width: 25px;
   height: 3px;
-  background: #2c3e50;
+  background: var(--text);
   transition: all 0.3s;
 }
 
@@ -219,18 +257,18 @@ export default {
 
 .nav-link {
   text-decoration: none;
-  color: #2c3e50;
+  color: var(--text);
   font-weight: 500;
   font-size: 1rem;
   transition: color 0.3s;
 }
 
 .nav-link:hover {
-  color: #3498db;
+  color: var(--primary);
 }
 
 .nav-link.router-link-active {
-  color: #3498db;
+  color: var(--primary);
 }
 
 .chat-icon {
@@ -249,6 +287,27 @@ export default {
   transform: scale(1.1);
 }
 
+.dark-mode-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 10px;
+  transition: transform 0.3s;
+  display: flex;
+  align-items: center;
+}
+
+.dark-mode-toggle:hover {
+  transform: scale(1.1);
+}
+
+.toggle-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  transition: transform 0.3s;
+}
+
 .nav-spacer {
   flex: 1;
 }
@@ -261,8 +320,8 @@ export default {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: var(--bg-light);
   border: none;
   cursor: pointer;
   font-weight: bold;
@@ -278,9 +337,10 @@ export default {
   top: 100%;
   right: 0;
   margin-top: 10px;
-  background: white;
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
   min-width: 150px;
   opacity: 0;
   visibility: hidden;
@@ -301,17 +361,17 @@ export default {
   width: 100%;
   padding: 12px 20px;
   text-decoration: none;
-  color: #2c3e50;
+  color: var(--text);
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.3s, color 0.3s;
   font-size: 1rem;
 }
 
 .dropdown-item:hover {
-  background: #f8f9fa;
+  background: var(--bg-light);
 }
 
 .dropdown-icon {
@@ -334,11 +394,12 @@ export default {
     top: 70px;
     left: 0;
     right: 0;
-    background: white;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
     flex-direction: column;
     align-items: stretch;
     padding: 20px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
     transform: translateY(-100%);
     opacity: 0;
     visibility: hidden;
@@ -371,7 +432,7 @@ export default {
     position: static;
     margin-top: 10px;
     box-shadow: none;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border);
   }
 
   .nav-spacer {

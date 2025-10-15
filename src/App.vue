@@ -65,20 +65,7 @@ export default {
 </script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
+/* App-specific styles that need to override global styles */
 #app {
   min-height: 100vh;
   display: flex;
@@ -89,62 +76,10 @@ body {
   flex: 1;
 }
 
-/* Button Styles */
-.btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  text-decoration: none;
-  display: inline-block;
-  text-align: center;
-}
-
-.btn-primary {
-  background: #3498db;
-  color: white;
-}
-
-.btn-primary:hover {
-  background: #2980b9;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
-}
-
-.btn-primary:disabled {
-  background: #95a5a6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-secondary {
-  background: white;
-  color: #3498db;
-  border: 2px solid #3498db;
-}
-
-.btn-secondary:hover {
-  background: #3498db;
-  color: white;
-}
-
-.btn-block {
-  width: 100%;
-  display: block;
-}
-
-.btn-large {
-  padding: 15px 35px;
-  font-size: 1.1rem;
-}
-
 /* Footer Styles */
 .app-footer {
-  background: #2c3e50;
-  color: white;
+  background: var(--text);
+  color: var(--bg-light);
   margin-top: 60px;
 }
 
@@ -168,7 +103,7 @@ body {
 }
 
 .footer-section p {
-  color: #bdc3c7;
+  color: var(--text-muted);
   line-height: 1.6;
 }
 
@@ -181,20 +116,20 @@ body {
 }
 
 .footer-section a {
-  color: #bdc3c7;
+  color: var(--text-muted);
   text-decoration: none;
   transition: color 0.3s;
 }
 
 .footer-section a:hover {
-  color: #3498db;
+  color: var(--primary);
 }
 
 .footer-bottom {
-  border-top: 1px solid #34495e;
+  border-top: 1px solid var(--border);
   padding: 20px;
   text-align: center;
-  color: #95a5a6;
+  color: var(--text-muted);
 }
 
 /* Responsive */

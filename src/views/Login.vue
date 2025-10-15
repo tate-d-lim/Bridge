@@ -1,9 +1,9 @@
 <template>
-  <div class="login-page">
-    <div class="login-container">
-      <div class="login-card">
+  <div class="auth-page">
+    <div class="auth-container">
+      <div class="auth-card">
         <h1>Welcome Back</h1>
-        <p class="subtitle">Sign in to continue to Bridge</p>
+        <p class="auth-subtitle">Sign in to continue to Bridge</p>
 
         <form @submit.prevent="handleLogin">
           <div class="form-group">
@@ -112,138 +112,6 @@ export default {
 </script>
 
 <style scoped>
-.login-page {
-  min-height: calc(100vh - 70px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
-}
-
-.login-container {
-  width: 100%;
-  max-width: 450px;
-}
-
-.login-card {
-  background: white;
-  padding: 40px;
-  border-radius: 15px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.login-card h1 {
-  text-align: center;
-  color: #2c3e50;
-  margin-bottom: 10px;
-  font-size: 2rem;
-}
-
-.subtitle {
-  text-align: center;
-  color: #7f8c8d;
-  margin-bottom: 30px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  color: #2c3e50;
-  font-weight: 500;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 12px 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #3498db;
-}
-
-.form-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
-.checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.checkbox input {
-  cursor: pointer;
-}
-
-.forgot-password {
-  color: #3498db;
-  text-decoration: none;
-  font-size: 0.9rem;
-}
-
-.forgot-password:hover {
-  text-decoration: underline;
-}
-
-.error-message {
-  margin-top: 15px;
-  padding: 12px;
-  background: #fee;
-  color: #c33;
-  border-radius: 8px;
-  font-size: 0.9rem;
-}
-
-.divider {
-  text-align: center;
-  margin: 30px 0;
-  position: relative;
-}
-
-.divider::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 100%;
-  height: 1px;
-  background: #ddd;
-}
-
-.divider span {
-  position: relative;
-  background: white;
-  padding: 0 15px;
-  color: #7f8c8d;
-}
-
-.signup-link {
-  text-align: center;
-  color: #7f8c8d;
-}
-
-.signup-link a {
-  color: #3498db;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.signup-link a:hover {
-  text-decoration: underline;
-}
+/* Login page specific styles - most styles are now in external stylesheet */
 </style>
 

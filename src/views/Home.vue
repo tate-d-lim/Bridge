@@ -160,10 +160,7 @@ export default {
 </script>
 
 <style scoped>
-html {
-  scroll-behavior: smooth;
-}
-
+/* Home page specific styles - most styles are now in external stylesheet */
 .home {
   width: 100%;
 }
@@ -184,21 +181,21 @@ html {
 
 .hero h1 {
   font-size: 3.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 20px;
   font-weight: 700;
 }
 
 .hero-subtitle {
   font-size: 1.5rem;
-  color: #3498db;
+  color: var(--primary);
   margin-bottom: 15px;
   font-weight: 600;
 }
 
 .hero-description {
   font-size: 1.1rem;
-  color: #7f8c8d;
+  color: var(--text-muted);
   margin-bottom: 30px;
   line-height: 1.6;
 }
@@ -232,13 +229,13 @@ html {
 
 .jobs-header h2 {
   font-size: 2.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 15px;
 }
 
 .jobs-header p {
   font-size: 1.1rem;
-  color: #7f8c8d;
+  color: var(--text-muted);
 }
 
 .filters-container {
@@ -246,10 +243,10 @@ html {
   gap: 15px;
   margin-bottom: 40px;
   flex-wrap: wrap;
-  background: white;
+  background: var(--bg);
   padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .search-input,
@@ -257,15 +254,17 @@ html {
   flex: 1;
   min-width: 200px;
   padding: 12px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .search-input:focus,
 .filter-select:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: var(--primary);
 }
 
 .jobs-container {
@@ -276,7 +275,7 @@ html {
 .no-results {
   text-align: center;
   padding: 60px 20px;
-  color: #7f8c8d;
+  color: var(--text-muted);
   font-size: 1.1rem;
 }
 
@@ -302,19 +301,19 @@ html {
 
 .stat-item h3 {
   font-size: 3rem;
-  color: #3498db;
+  color: var(--primary);
   margin-bottom: 10px;
   font-weight: 700;
 }
 
 .stat-item p {
   font-size: 1.1rem;
-  color: #7f8c8d;
+  color: var(--text-muted);
 }
 
 .cta {
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: var(--bg-light);
   padding: 80px 20px;
   text-align: center;
 }

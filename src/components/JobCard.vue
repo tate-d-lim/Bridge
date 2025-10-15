@@ -83,7 +83,7 @@ export default {
   background: white;
   padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px hsla(0, 0%, 0%, 0.1);
   transition: transform 0.3s, box-shadow 0.3s;
   display: flex;
   flex-direction: column;
@@ -92,7 +92,7 @@ export default {
 
 .job-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 30px hsla(0, 0%, 0%, 0.15);
 }
 
 .job-card-header {
@@ -104,7 +104,7 @@ export default {
 
 .job-card-header h3 {
   font-size: 1.5rem;
-  color: #2c3e50;
+  color: hsl(210, 29%, 24%);
   margin: 0;
   flex: 1;
 }
@@ -123,7 +123,7 @@ export default {
 }
 
 .company {
-  color: #7f8c8d;
+  color: hsl(198, 4%, 52%);
   font-size: 1.1rem;
   margin-bottom: 15px;
 }
@@ -139,7 +139,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #7f8c8d;
+  color: hsl(198, 4%, 52%);
   font-size: 0.95rem;
 }
 
@@ -154,8 +154,8 @@ export default {
 }
 
 .tag {
-  background: #e8f4f8;
-  color: #3498db;
+  background: hsl(204, 50%, 95%);
+  color: hsl(204, 70%, 53%);
   padding: 6px 12px;
   border-radius: 15px;
   font-size: 0.85rem;
@@ -163,7 +163,7 @@ export default {
 }
 
 .job-description {
-  color: #555;
+  color: hsl(0, 0%, 33%);
   line-height: 1.6;
   margin-bottom: 20px;
   flex: 1;
@@ -174,11 +174,11 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding-top: 15px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid hsl(0, 0%, 94%);
 }
 
 .posted-date {
-  color: #95a5a6;
+  color: hsl(198, 4%, 65%);
   font-size: 0.9rem;
 }
 </style>
