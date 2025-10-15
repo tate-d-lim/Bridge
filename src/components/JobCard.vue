@@ -1,5 +1,5 @@
 <template>
-  <div class="job-card">
+  <div class="card card-interactive job-card">
     <div class="job-card-header">
       <h3>{{ job.title }}</h3>
       <button @click="saveJob" class="save-btn" title="Save job">
@@ -80,19 +80,9 @@ export default {
 
 <style scoped>
 .job-card {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px hsla(0, 0%, 0%, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
   display: flex;
   flex-direction: column;
   height: 100%;
-}
-
-.job-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px hsla(0, 0%, 0%, 0.15);
 }
 
 .job-card-header {
@@ -104,7 +94,7 @@ export default {
 
 .job-card-header h3 {
   font-size: 1.5rem;
-  color: hsl(210, 29%, 24%);
+  color: var(--text);
   margin: 0;
   flex: 1;
 }
@@ -116,14 +106,16 @@ export default {
   cursor: pointer;
   padding: 5px;
   transition: transform 0.2s;
+  color: var(--text-muted);
 }
 
 .save-btn:hover {
   transform: scale(1.2);
+  color: var(--primary);
 }
 
 .company {
-  color: hsl(198, 4%, 52%);
+  color: var(--text-muted);
   font-size: 1.1rem;
   margin-bottom: 15px;
 }
@@ -139,7 +131,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 5px;
-  color: hsl(198, 4%, 52%);
+  color: var(--text-muted);
   font-size: 0.95rem;
 }
 
@@ -154,16 +146,17 @@ export default {
 }
 
 .tag {
-  background: hsl(204, 50%, 95%);
-  color: hsl(204, 70%, 53%);
+  background: var(--bg);
+  color: var(--primary);
   padding: 6px 12px;
   border-radius: 15px;
   font-size: 0.85rem;
   text-transform: capitalize;
+  border: 1px solid var(--border);
 }
 
 .job-description {
-  color: hsl(0, 0%, 33%);
+  color: var(--text);
   line-height: 1.6;
   margin-bottom: 20px;
   flex: 1;
@@ -174,11 +167,11 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding-top: 15px;
-  border-top: 1px solid hsl(0, 0%, 94%);
+  border-top: 1px solid var(--border);
 }
 
 .posted-date {
-  color: hsl(198, 4%, 65%);
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 </style>

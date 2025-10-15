@@ -10,7 +10,7 @@
         </p>
         <div class="hero-buttons">
           <router-link to="/login" class="btn btn-primary">Login</router-link>
-          <router-link to="/register" class="btn btn-secondary">Register</router-link>
+          <router-link to="/register" class="btn btn-secondary">Sign Up</router-link>
         </div>
       </div>
       <div class="hero-image">
@@ -173,6 +173,7 @@ export default {
   max-width: 1200px;
   margin: 0 auto;
   gap: 60px;
+  background: var(--highlight);
 }
 
 .hero-content {
@@ -312,7 +313,7 @@ export default {
 }
 
 .cta {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: linear-gradient(135deg, var(--primary), oklch(0.3 0.1 245));
   color: var(--bg-light);
   padding: 80px 20px;
   text-align: center;

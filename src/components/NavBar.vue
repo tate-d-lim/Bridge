@@ -1,7 +1,8 @@
 <template>
   <nav class="navbar">
     <div class="nav-container">
-      <router-link to="/" class="nav-brand">
+      <router-link :to="getHomeRoute" class="nav-brand">
+        <!-- <img v-if="isDarkMode" src="../assets/bridgeLogoYellow.png" alt="Bridge" class="nav-logo" /> -->
         <img src="../assets/bridgeLogo.png" alt="Bridge" class="nav-logo" />
       </router-link>
 
@@ -12,33 +13,50 @@
       </button>
 
       <div class="nav-menu" :class="{ active: menuOpen }">
-        <!-- Left Side Navigation -->
-        <router-link to="/reviews" class="nav-link" @click="closeMenu">
-          Company Reviews
-        </router-link>
-        
-        <!-- AI Quiz - redirects to quizzes if logged in, login if not -->
-        <router-link v-if="isAuthenticated" to="/quizzes" class="nav-link" @click="closeMenu">
-          AI Quiz
-        </router-link>
-        <router-link v-else to="/login" class="nav-link" @click="closeMenu">
-          AI Quiz
-        </router-link>
+        <!-- Left Side Navigation Links -->
+        <template v-if="isAuthenticated">
+          <!-- Home Link -->
+          <router-link :to="getHomeRoute" class="nav-link" @click="closeMenu">
+            Home
+          </router-link>
+
+          <!-- Job Seeker-specific links -->
+          <template v-if="isJobSeeker">
+            <router-link to="/reviews" class="nav-link" @click="closeMenu">
+              Company Reviews
+            </router-link>
+            <router-link to="/quizzes" class="nav-link" @click="closeMenu">
+              AI Quiz
+            </router-link>
+          </template>
+
+          <!-- Employer-specific links -->
+          <template v-if="isEmployer">
+            <router-link to="/employer/post-job" class="nav-link" @click="closeMenu">
+              Post Job
+            </router-link>
+            <router-link to="/candidates" class="nav-link" @click="closeMenu">
+              Browse Candidates
+            </router-link>
+          </template>
+        </template>
+
 
         <!-- Spacer to push right items to the right -->
         <div class="nav-spacer"></div>
 
-        <!-- Authenticated User Links -->
+        <!-- Right Side Controls -->
         <template v-if="isAuthenticated">
           <!-- Dark Mode Toggle -->
           <button @click="toggleDarkMode" class="dark-mode-toggle" title="Toggle Dark Mode">
-            <img v-if="isDarkMode" src="../assets/lightModeToggle.svg" alt="Light Mode" class="toggle-icon" />
+            <img v-if="isDarkMode" src="../assets/lightModeToggle.png" alt="Light Mode" class="toggle-icon" />
             <img v-else src="../assets/darkModeToggle.svg" alt="Dark Mode" class="toggle-icon" />
           </button>
 
           <!-- Messages Icon -->
           <router-link to="/chat" class="nav-link chat-icon" @click="closeMenu">
-            <img src="../assets/envelope.svg" alt="Messages" class="envelope-icon" />
+            <img v-if="isDarkMode" src="../assets/darkModeMessages.png" alt="Messages" class="envelope-icon" />
+            <img v-else src="../assets/envelope.svg" alt="Messages" class="envelope-icon" />
           </router-link>
 
           <!-- User Menu -->
@@ -48,36 +66,34 @@
             </button>
             <div class="user-dropdown" :class="{ active: userDropdownOpen }">
               <router-link to="/profile" class="dropdown-item" @click="closeMenus">
-                <img src="../assets/user.svg" alt="" class="dropdown-icon" /> Profile
+                <img v-if="isDarkMode" src="../assets/userDark.png" alt="" class="dropdown-icon" />
+                <img v-else src="../assets/user.svg" alt="" class="dropdown-icon" />
+                Profile
               </router-link>
               <router-link v-if="isJobSeeker" to="/applications" class="dropdown-item" @click="closeMenus">
                 <img src="../assets/briefcase.svg" alt="" class="dropdown-icon" /> Applications
               </router-link>
-              <router-link v-if="isJobSeeker" to="/jobseeker/dashboard" class="dropdown-item" @click="closeMenus">
-                <img src="../assets/dashboard-monitor.svg" alt="" class="dropdown-icon" /> Dashboard
-              </router-link>
-              <router-link v-if="isEmployer" to="/employer/dashboard" class="dropdown-item" @click="closeMenus">
-                <img src="../assets/dashboard-monitor.svg" alt="" class="dropdown-icon" /> Dashboard
-              </router-link>
               <button @click="handleLogout" class="dropdown-item">
-                <img src="../assets/user-logout.svg" alt="" class="dropdown-icon" /> Logout
+                <img v-if="isDarkMode" src="../assets/user-logout-dark.png" alt="" class="dropdown-icon" />
+                <img v-else src="../assets/user-logout.svg" alt="" class="dropdown-icon" />
+                Logout
               </button>
             </div>
           </div>
         </template>
 
-        <!-- Guest Links -->
+        <!-- Guest Right Side Controls -->
         <template v-else>
           <!-- Dark Mode Toggle for guests -->
           <button @click="toggleDarkMode" class="dark-mode-toggle" title="Toggle Dark Mode">
-            <img v-if="isDarkMode" src="../assets/lightModeToggle.svg" alt="Light Mode" class="toggle-icon" />
+            <img v-if="isDarkMode" src="../assets/lightModeToggle.png" alt="Light Mode" class="toggle-icon" />
             <img v-else src="../assets/darkModeToggle.svg" alt="Dark Mode" class="toggle-icon" />
           </button>
           
           <router-link to="/login" class="nav-link" @click="closeMenu">
             Login
           </router-link>
-          <router-link to="/register" class="btn btn-primary" @click="closeMenu">
+          <router-link to="/register" class="nav-link" @click="closeMenu">
             Sign Up
           </router-link>
         </template>
@@ -114,6 +130,17 @@ export default {
         .join('')
         .toUpperCase()
         .slice(0, 2)
+    })
+
+    const getHomeRoute = computed(() => {
+      if (isAuthenticated.value) {
+        if (isEmployer.value) {
+          return '/employer/dashboard'
+        } else if (isJobSeeker.value) {
+          return '/'
+        }
+      }
+      return '/'
     })
 
     const toggleMenu = () => {
@@ -171,6 +198,7 @@ export default {
       isJobSeeker,
       isEmployer,
       userInitials,
+      getHomeRoute,
       toggleMenu,
       closeMenu,
       toggleUserDropdown,
@@ -184,13 +212,20 @@ export default {
 
 <style scoped>
 .navbar {
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: background-color 0.3s, border-color 0.3s;
+  transition: background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+}
+
+/* Dark mode backdrop blur */
+.dark-mode .navbar {
+  background: rgba(0, 0, 0, 0.85);
 }
 
 .nav-container {
@@ -217,6 +252,7 @@ export default {
   height: 60px;
   width: auto;
   margin-right: 20px;
+  transition: opacity 0.3s ease 0.5s;
 }
 
 .nav-toggle {
@@ -320,12 +356,17 @@ export default {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: var(--text-muted);
   color: var(--bg-light);
   border: none;
   cursor: pointer;
   font-weight: bold;
   transition: transform 0.3s;
+}
+
+/* Dark mode avatar - keep colorful gradient */
+.dark-mode .user-avatar {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
 }
 
 .user-avatar:hover {

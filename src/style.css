@@ -1,32 +1,21 @@
 /* Global Styles */
 :root {
-  --bg-dark: oklch(0.92 0 245);
-  --bg: oklch(0.96 0 245);
-  --bg-light: oklch(1 0 245);
-  --text: oklch(0.15 0 245);
-  --text-muted: oklch(0.4 0 245);
-  --highlight: oklch(1 0 245);
-  --border: oklch(0.6 0 245);
-  --border-muted: oklch(0.7 0 245);
+  --accent: oklch(0.76 0.1 74);
+  --bg-dark:  oklch(0.92 0.01 245)  /* 0.92 lightness */
+  --bg:       oklch(0.96 0.01 245)  /* 0.96 lightness */
+  --bg-light: oklch(1 0.01 245) 
+  --text: oklch(0.15 0.02 245);
+  --text-muted: oklch(0.4 0.02 245);
+  --highlight: oklch(1 0.02 245);
+  --border: oklch(0.6 0.02 245);
+  --border-muted: oklch(0.7 0.02 245);
   --primary: oklch(0.4 0.1 245);
   --secondary: oklch(0.4 0.1 65);
-  --danger: oklch(0.5 0.05 30);
+  --danger: oklch(0.5 0.15 0);
   --warning: oklch(0.5 0.05 100);
   --success: oklch(0.5 0.05 160);
   --info: oklch(0.5 0.05 260);
   
-  /* Legacy variable mappings for compatibility */
-  --primary-color: var(--primary);
-  --primary-dark: oklch(0.3 0.1 245);
-  --secondary-color: var(--secondary);
-  --text-dark: var(--text);
-  --text-light: var(--text-muted);
-  --border-color: var(--border);
-  --background-light: var(--bg-light);
-  --background-white: var(--bg);
-  --success-color: var(--success);
-  --warning-color: var(--warning);
-  --danger-color: var(--danger);
   --shadow-sm: 0 2px 10px oklch(0 0 0 / 0.1);
   --shadow-md: 0 5px 20px oklch(0 0 0 / 0.15);
   --shadow-lg: 0 10px 30px oklch(0 0 0 / 0.2);
@@ -34,33 +23,22 @@
 
 /* Dark Mode Variables */
 .dark-mode {
-  --bg-dark: oklch(0.1 0 245);
-  --bg: oklch(0.15 0 245);
-  --bg-light: oklch(0.2 0 245);
-  --text: oklch(0.96 0 245);
-  --text-muted: oklch(0.76 0 245);
-  --highlight: oklch(0.5 0 245);
-  --border: oklch(0.4 0 245);
-  --border-muted: oklch(0.3 0 245);
+  --accent: oklch(0.76 0.1 74);
+  --bg-dark: oklch(0.05 0.01 245);
+  --bg: oklch(0.18 0.01 245);
+  --bg-light: oklch(0.25 0.01 245);
+  --text: oklch(0.96 0.02 245);
+  --text-muted: oklch(0.76 0.02 245);
+  --highlight: oklch(0.5 0.02 245);
+  --border: oklch(0.4 0.02 245);
+  --border-muted: oklch(0.3 0.02 245);
   --primary: oklch(0.76 0.1 245);
   --secondary: oklch(0.76 0.1 65);
-  --danger: oklch(0.7 0.05 30);
+  --danger: oklch(0.7 0.15 0);
   --warning: oklch(0.7 0.05 100);
   --success: oklch(0.7 0.05 160);
   --info: oklch(0.7 0.05 260);
   
-  /* Legacy variable mappings for compatibility */
-  --primary-color: var(--primary);
-  --primary-dark: oklch(0.6 0.1 245);
-  --secondary-color: var(--secondary);
-  --text-dark: var(--text);
-  --text-light: var(--text-muted);
-  --border-color: var(--border);
-  --background-light: var(--bg-light);
-  --background-white: var(--bg);
-  --success-color: var(--success);
-  --warning-color: var(--warning);
-  --danger-color: var(--danger);
   --shadow-sm: 0 2px 10px oklch(0 0 0 / 0.3);
   --shadow-md: 0 5px 20px oklch(0 0 0 / 0.4);
   --shadow-lg: 0 10px 30px oklch(0 0 0 / 0.5);
@@ -83,7 +61,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--text);
-  background-color: var(--bg);
+  background-color: var(--bg-dark);
   line-height: 1.6;
   transition: background-color 0.3s, color 0.3s;
 }
@@ -118,7 +96,7 @@ a {
 }
 
 a:hover {
-  color: var(--primary-dark);
+  color: oklch(0.3 0.1 245);
 }
 
 /* Utility Classes */
@@ -149,10 +127,25 @@ a:hover {
 /* Card Styles */
 .card {
   background: var(--bg);
-  padding: 20px;
+  padding: 25px;
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
-  transition: background-color 0.3s;
+  border: 1px solid var(--border);
+  transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Loading Spinner */
@@ -215,34 +208,70 @@ a:hover {
   text-align: center;
 }
 
+/* Light Mode Buttons */
 .btn-primary {
   background: var(--primary);
-  color: var(--bg-light);
+  color: white;
+  border: 2px solid var(--primary);
 }
-
 .btn-primary:hover {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary:disabled {
-  background: var(--text-muted);
-  cursor: not-allowed;
-  transform: none;
+  background: var(--bg-light);
+  color: var(--primary);
+  border: 2px solid var(--primary);
 }
 
 .btn-secondary {
+  background: var(--secondary);
+  color: white;
+  border: 2px solid var(--secondary);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-light);
+  color: var(--secondary);
+  border: 2px solid var(--secondary);
+}
+
+/* Dark Mode Buttons */
+.dark-mode .btn-primary {
   background: var(--bg);
   color: var(--primary);
   border: 2px solid var(--primary);
 }
 
-.btn-secondary:hover {
+.dark-mode .btn-primary:hover {
   background: var(--primary);
   color: var(--bg-light);
 }
 
+.dark-mode .btn-secondary {
+  background: var(--bg);
+  color: var(--secondary);
+  border: 2px solid var(--secondary);
+}
+
+.dark-mode .btn-secondary:hover {
+  background: var(--secondary);
+  color: var(--bg-light);
+}
+
+.btn-primary:disabled {
+  background: var(--text-muted);
+  color: var(--bg-light);
+  border: 2px solid var(--text-muted);
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-danger {
+  background: var(--bg-light);
+  color: var(--danger);
+  border: 2px solid var(--danger);
+}
+.btn-danger:hover {
+  background: var(--danger);
+  color: var(--bg-light);
+  border: 2px solid var(--danger);
+}
 .btn-block {
   width: 100%;
   display: block;
@@ -268,7 +297,7 @@ select {
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
-  background-color: var(--bg);
+  background-color: var(--bg-light);
   color: var(--text);
   transition: border-color 0.3s, background-color 0.3s;
 }
@@ -381,18 +410,18 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: var(--bg-dark);
   padding: 20px;
 }
 
 .auth-container {
   width: 100%;
-  max-width: 450px;
+  max-width: 550px;
 }
 
 .auth-card {
-  background: var(--bg);
-  padding: 40px;
+  background: var(--bg-light);
+  padding: 50px;
   border-radius: 15px;
   box-shadow: var(--shadow-lg);
 }
@@ -411,14 +440,83 @@ img {
 }
 
 /* Register Page Specific */
-.register-container {
-  max-width: 550px;
-}
 
 .user-type-selector {
   display: flex;
   gap: 15px;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
+  justify-content: center;
+}
+
+.user-type-selector .btn {
+  position: relative;
+  transition: all 0.3s ease;
+  border-width: 3px;
+  font-weight: 600;
+  opacity: 1;
+}
+
+.user-type-selector .btn-primary {
+  background: var(--primary) !important;
+  color: white !important;
+  border-color: var(--primary) !important;
+}
+
+.user-type-selector .btn-secondary {
+  background: var(--secondary) !important;
+  color: white !important;
+  border-color: var(--secondary) !important;
+}
+
+.user-type-selector .btn-primary:hover {
+  background: var(--primary) !important;
+  color: white !important;
+  border-color: var(--primary) !important;
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.user-type-selector .btn-secondary:hover {
+  background: var(--secondary) !important;
+  color: white !important;
+  border-color: var(--secondary) !important;
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.user-type-selector .btn.active {
+  transform: scale(1.1);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+  font-weight: 800;
+  opacity: 1;
+  border-width: 4px;
+  animation: pulse 2s infinite;
+}
+
+.user-type-selector .btn-primary.active {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: white !important;
+  box-shadow: 0 6px 25px rgba(64, 123, 255, 0.6);
+}
+
+.user-type-selector .btn-secondary.active {
+  background: var(--secondary) !important;
+  border-color: var(--secondary) !important;
+  color: white !important;
+  box-shadow: 0 6px 25px rgba(147, 51, 234, 0.6);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  }
+  100% {
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .type-btn {
@@ -442,6 +540,7 @@ img {
   background: var(--primary);
   color: var(--bg-light);
 }
+
 
 .role-specific-fields {
   border-top: 1px solid var(--border);
@@ -984,7 +1083,7 @@ img {
 
 /* Form Elements */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .form-group label {
@@ -994,6 +1093,9 @@ img {
   font-weight: 500;
 }
 
+.form-section {
+  background: var(--bg);
+
 .form-group input,
 .form-group textarea,
 .form-group select {
@@ -1002,7 +1104,7 @@ img {
   border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
-  background: var(--bg);
+  background: var(--bg-light);
   color: var(--text);
   transition: border-color 0.3s;
 }

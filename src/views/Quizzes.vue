@@ -10,7 +10,7 @@
       <div class="quizzes-section">
         <h2>Available Quizzes</h2>
         <div class="quizzes-grid">
-          <div class="quiz-card">
+          <div class="card card-interactive quiz-card">
             <div class="quiz-icon">🔨</div>
             <h3>Construction Basics</h3>
             <p>Test your knowledge on construction fundamentals</p>
@@ -23,7 +23,7 @@
             </router-link>
           </div>
 
-          <div class="quiz-card">
+          <div class="card card-interactive quiz-card">
             <div class="quiz-icon">⚡</div>
             <h3>Electrical Safety</h3>
             <p>Learn about electrical safety procedures</p>
@@ -36,7 +36,7 @@
             </router-link>
           </div>
 
-          <div class="quiz-card">
+          <div class="card card-interactive quiz-card">
             <div class="quiz-icon">🔧</div>
             <h3>Plumbing Skills</h3>
             <p>Master plumbing techniques and best practices</p>
@@ -58,7 +58,7 @@
           <p>You haven't earned any badges yet. Complete quizzes to earn badges!</p>
         </div>
         <div v-else class="badges-grid">
-          <div v-for="badge in badges" :key="badge.id" class="badge-card">
+          <div v-for="badge in badges" :key="badge.id" class="card badge-card">
             <div class="badge-icon">🏆</div>
             <h3>{{ badge.skill }}</h3>
             <p>{{ badge.level }} Level</p>
@@ -108,7 +108,7 @@ export default {
 <style scoped>
 .quizzes-page {
   min-height: calc(100vh - 70px);
-  background: #f8f9fa;
+  background: var(--bg-light);
   padding: 40px 20px;
 }
 
@@ -124,13 +124,13 @@ export default {
 
 .page-header h1 {
   font-size: 2.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 10px;
 }
 
 .page-header p {
   font-size: 1.1rem;
-  color: #7f8c8d;
+  color: var(--text-muted);
 }
 
 .quizzes-section,
@@ -141,7 +141,7 @@ export default {
 .quizzes-section h2,
 .badges-section h2 {
   font-size: 2rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 25px;
 }
 
@@ -152,17 +152,7 @@ export default {
 }
 
 .quiz-card {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   text-align: center;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.quiz-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
 .quiz-icon {
@@ -172,12 +162,12 @@ export default {
 
 .quiz-card h3 {
   font-size: 1.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 10px;
 }
 
 .quiz-card p {
-  color: #7f8c8d;
+  color: var(--text-muted);
   margin-bottom: 20px;
 }
 
@@ -186,7 +176,7 @@ export default {
   justify-content: center;
   gap: 20px;
   margin-bottom: 20px;
-  color: #7f8c8d;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -197,10 +187,6 @@ export default {
 }
 
 .badge-card {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   text-align: center;
 }
 
@@ -211,27 +197,28 @@ export default {
 
 .badge-card h3 {
   font-size: 1.3rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 8px;
 }
 
 .badge-card p {
-  color: #3498db;
+  color: var(--primary);
   font-weight: 600;
   margin-bottom: 10px;
 }
 
 .badge-date {
   font-size: 0.85rem;
-  color: #7f8c8d;
+  color: var(--text-muted);
 }
 
 .empty-state {
-  background: white;
+  background: var(--bg-light);
   padding: 60px 20px;
   border-radius: 12px;
   text-align: center;
-  color: #7f8c8d;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
 }
 </style>
 

@@ -78,8 +78,8 @@ export default {
 
 /* Footer Styles */
 .app-footer {
-  background: var(--text);
-  color: var(--bg-light);
+  background: var(--bg-dark);
+  color: var(--text);
   margin-top: 60px;
 }
 

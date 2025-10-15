@@ -4,7 +4,7 @@
       <h1>Post a New Job</h1>
       <p class="subtitle">Fill in the details to create your job listing</p>
 
-      <form @submit.prevent="handleSubmit" class="job-form">
+      <form @submit.prevent="handleSubmit" class="card job-form">
         <div class="form-section">
           <h2>Basic Information</h2>
           
@@ -105,7 +105,7 @@
         </div>
 
         <div class="form-actions">
-          <button type="button" @click="$router.back()" class="btn btn-secondary">
+          <button type="button" @click="$router.back()" class="btn btn-danger">
             Cancel
           </button>
           <button type="submit" class="btn btn-primary" :disabled="loading">
@@ -188,7 +188,7 @@ export default {
 <style scoped>
 .post-job-page {
   min-height: calc(100vh - 70px);
-  background: #f8f9fa;
+  background: var(--bg-dark);
   padding: 40px 20px;
 }
 
@@ -199,27 +199,24 @@ export default {
 
 .post-job-container h1 {
   font-size: 2.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 10px;
 }
 
 .subtitle {
-  color: #7f8c8d;
+  color: var(--text-muted);
   margin-bottom: 30px;
   font-size: 1.1rem;
 }
 
 .job-form {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  /* Card styling handled by global .card class */
 }
 
 .form-section {
   margin-bottom: 35px;
   padding-bottom: 35px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border);
 }
 
 .form-section:last-of-type {
@@ -228,7 +225,7 @@ export default {
 
 .form-section h2 {
   font-size: 1.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 20px;
 }
 
@@ -245,16 +242,19 @@ export default {
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  color: #2c3e50;
+  color: var(--text);
   font-weight: 500;
 }
 
-.form-group input,
+.form-group input{
+  color: var(--bg-light);
+}
+
 .form-group select,
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
@@ -264,7 +264,7 @@ export default {
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: var(--primary);
 }
 
 .form-actions {
@@ -277,8 +277,8 @@ export default {
 .error-message {
   margin-top: 20px;
   padding: 12px;
-  background: #fee;
-  color: #c33;
+  background: var(--danger);
+  color: var(--text);
   border-radius: 8px;
   font-size: 0.9rem;
 }

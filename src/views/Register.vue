@@ -1,6 +1,6 @@
 <template>
   <div class="auth-page">
-    <div class="register-container">
+    <div class="auth-container">
       <div class="auth-card">
         <h1>Create Account</h1>
         <p class="auth-subtitle">Join Bridge today</p>
@@ -10,17 +10,17 @@
           <div class="user-type-selector">
             <button
               type="button"
-              :class="['type-btn', { active: userType === 'jobseeker' }]"
+              :class="['btn', 'btn-primary', { active: userType === 'jobseeker' }]"
               @click="userType = 'jobseeker'"
             >
-              👷 Job Seeker
+              Job Seeker
             </button>
             <button
               type="button"
-              :class="['type-btn', { active: userType === 'employer' }]"
+              :class="['btn', 'btn-secondary', { active: userType === 'employer' }]"
               @click="userType = 'employer'"
             >
-              🏢 Employer
+              Employer
             </button>
           </div>
 
@@ -205,7 +205,7 @@ export default {
         if (userType.value === 'employer') {
           router.push('/employer/dashboard')
         } else {
-          router.push('/jobseeker/dashboard')
+          router.push('/')
         }
       } catch (err) {
         error.value = err.message || 'Failed to create account. Please try again.'

@@ -34,13 +34,18 @@
         </div>
       </div>
 
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-state">
+        <p>Loading candidates...</p>
+      </div>
+
       <!-- Candidates Grid -->
-      <div v-if="candidates.length === 0" class="empty-state">
+      <div v-else-if="candidates.length === 0" class="empty-state">
         <p>No candidates found. Try adjusting your filters.</p>
       </div>
 
       <div v-else class="candidates-grid">
-        <div v-for="candidate in candidates" :key="candidate.id" class="candidate-card">
+        <div v-for="candidate in candidates" :key="candidate.id" class="card card-interactive candidate-card">
           <div class="candidate-avatar">{{ getInitials(candidate.name) }}</div>
           
           <div class="candidate-info">
@@ -78,8 +83,10 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { db } from '../firebase/config'
+import { collection, getDocs, query, where } from 'firebase/firestore'
 
 export default {
   name: 'Candidates',
@@ -89,31 +96,40 @@ export default {
     const searchQuery = ref('')
     const selectedSkill = ref('')
     const selectedExperience = ref('')
+    const candidates = ref([])
+    const loading = ref(false)
 
-    // Sample candidates data (in production, fetch from Firestore)
-    const candidates = ref([
-      {
-        id: '1',
-        name: 'John Smith',
-        experience: 5,
-        skills: ['Construction', 'Carpentry', 'Safety'],
-        badges: ['Construction Basics', 'Safety First']
-      },
-      {
-        id: '2',
-        name: 'Mary Johnson',
-        experience: 8,
-        skills: ['Plumbing', 'Maintenance'],
-        badges: ['Plumbing Expert', 'Safety First', 'Quality Work']
-      },
-      {
-        id: '3',
-        name: 'David Lee',
-        experience: 3,
-        skills: ['Electrical', 'Installation'],
-        badges: ['Electrical Safety']
+    const fetchCandidates = async () => {
+      loading.value = true
+      try {
+        // Fetch all job seekers from the users collection
+        const q = query(
+          collection(db, 'users'),
+          where('role', '==', 'jobseeker')
+        )
+        
+        const querySnapshot = await getDocs(q)
+        const jobSeekers = []
+        querySnapshot.forEach((doc) => {
+          jobSeekers.push({ 
+            id: doc.id, 
+            ...doc.data(),
+            // Ensure skills is an array
+            skills: doc.data().skills || []
+          })
+        })
+        
+        candidates.value = jobSeekers
+      } catch (error) {
+        console.error('Error fetching candidates:', error)
+      } finally {
+        loading.value = false
       }
-    ])
+    }
+
+    onMounted(() => {
+      fetchCandidates()
+    })
 
     const getInitials = (name) => {
       if (!name) return '?'
@@ -135,17 +151,17 @@ export default {
       selectedSkill,
       selectedExperience,
       candidates,
+      loading,
       getInitials,
       contactCandidate
     }
   }
 }
 </script>
-
 <style scoped>
 .candidates-page {
   min-height: calc(100vh - 70px);
-  background: #f8f9fa;
+  background: var(--bg-dark);
   padding: 40px 20px;
 }
 
@@ -160,38 +176,42 @@ export default {
 
 .page-header h1 {
   font-size: 2.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 10px;
 }
 
 .page-header p {
   font-size: 1.1rem;
-  color: #7f8c8d;
+  color: var(--text-muted);
 }
 
 .filters-section {
-  background: white;
+  background: var(--bg);
   padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   margin-bottom: 30px;
+  border: 1px solid var(--border);
 }
 
 .search-input {
+  background: var(--bg-light);
   width: 100%;
   padding: 12px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
   margin-bottom: 15px;
+  background: var(--bg-light);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: var(--primary);
 }
 
 .filter-row {
+  background: var(--bg-light);
   display: flex;
   gap: 15px;
 }
@@ -199,23 +219,34 @@ export default {
 .filter-select {
   flex: 1;
   padding: 12px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
+  background: var(--bg-light);
 }
 
 .filter-select:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: var(--primary);
 }
 
-.empty-state {
-  background: white;
+.loading-state {
+  background: var(--bg-light);
   padding: 60px 20px;
   border-radius: 12px;
   text-align: center;
-  color: #7f8c8d;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.empty-state {
+  background: var(--bg-light);
+  padding: 60px 20px;
+  border-radius: 12px;
+  text-align: center;
+  color: var(--text-muted);
   font-size: 1.1rem;
+  border: 1px solid var(--border);
 }
 
 .candidates-grid {
@@ -225,23 +256,14 @@ export default {
 }
 
 .candidate-card {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.candidate-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  /* Card styling handled by global .card class */
 }
 
 .candidate-avatar {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -253,12 +275,12 @@ export default {
 
 .candidate-info h3 {
   font-size: 1.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 5px;
 }
 
 .experience {
-  color: #7f8c8d;
+  color: var(--text-muted);
   margin-bottom: 15px;
 }
 
@@ -270,8 +292,8 @@ export default {
 }
 
 .skill-tag {
-  background: #e8f4f8;
-  color: #3498db;
+  background: var(--bg-light);
+  color: var(--primary);
   padding: 6px 12px;
   border-radius: 15px;
   font-size: 0.85rem;
@@ -289,7 +311,7 @@ export default {
 }
 
 .badge-count {
-  color: #7f8c8d;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
@@ -312,4 +334,5 @@ export default {
   }
 }
 </style>
+
 

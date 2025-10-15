@@ -202,7 +202,7 @@ export default {
   text-align: center;
   padding: 60px 20px;
   font-size: 1.1rem;
-  color: #7f8c8d;
+  color: var(--text-muted);
 }
 
 .job-header {
@@ -215,7 +215,7 @@ export default {
 
 .job-header h1 {
   font-size: 2.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 15px;
 }
 
@@ -227,7 +227,7 @@ export default {
 }
 
 .job-meta span {
-  color: #7f8c8d;
+  color: var(--text-muted);
   font-size: 1.1rem;
 }
 
@@ -238,8 +238,8 @@ export default {
 }
 
 .tag {
-  background: #e8f4f8;
-  color: #3498db;
+  background: var(--bg-light);
+  color: var(--primary);
   padding: 6px 15px;
   border-radius: 20px;
   font-size: 0.9rem;
@@ -261,12 +261,12 @@ export default {
 
 .job-section h2 {
   font-size: 1.8rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 15px;
 }
 
 .job-section p {
-  color: #555;
+  color: var(--text-muted);
   line-height: 1.8;
   font-size: 1.05rem;
 }
@@ -278,13 +278,13 @@ export default {
 
 .job-section li {
   padding: 10px 0;
-  color: #555;
-  border-bottom: 1px solid #f0f0f0;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
 }
 
 .job-section li:before {
   content: "✓ ";
-  color: #3498db;
+  color: var(--primary);
   font-weight: bold;
   margin-right: 10px;
 }
@@ -314,7 +314,7 @@ export default {
 
 .modal-content h2 {
   margin-bottom: 25px;
-  color: #2c3e50;
+  color: var(--text);
 }
 
 .form-group {
@@ -324,7 +324,7 @@ export default {
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  color: #2c3e50;
+  color: var(--text);
   font-weight: 500;
 }
 
@@ -332,7 +332,7 @@ export default {
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
@@ -341,7 +341,7 @@ export default {
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: var(--primary);
 }
 
 .modal-actions {

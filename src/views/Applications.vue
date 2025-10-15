@@ -44,7 +44,7 @@
         <div
           v-for="application in filteredApplications"
           :key="application.id"
-          class="application-card"
+          class="card application-card"
         >
           <div class="application-header">
             <div>
@@ -139,7 +139,7 @@ export default {
 <style scoped>
 .applications-page {
   min-height: calc(100vh - 70px);
-  background: #f8f9fa;
+  background: var(--bg-light);
   padding: 40px 20px;
 }
 
@@ -154,23 +154,24 @@ export default {
 
 .page-header h1 {
   font-size: 2.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 10px;
 }
 
 .page-header p {
   font-size: 1.1rem;
-  color: #7f8c8d;
+  color: var(--text-muted);
 }
 
 .filter-tabs {
   display: flex;
   gap: 10px;
   margin-bottom: 30px;
-  background: white;
+  background: var(--bg-light);
   padding: 10px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
 }
 
 .tab {
@@ -178,7 +179,7 @@ export default {
   padding: 12px 20px;
   border: none;
   background: transparent;
-  color: #7f8c8d;
+  color: var(--text-muted);
   font-size: 1rem;
   cursor: pointer;
   border-radius: 8px;
@@ -186,23 +187,24 @@ export default {
 }
 
 .tab:hover {
-  background: #f8f9fa;
+  background: var(--bg-light);
 }
 
 .tab.active {
-  background: #3498db;
+  background: var(--primary);
   color: white;
 }
 
 .empty-state {
-  background: white;
+  background: var(--bg-light);
   padding: 60px 20px;
   border-radius: 12px;
   text-align: center;
+  border: 1px solid var(--border);
 }
 
 .empty-state p {
-  color: #7f8c8d;
+  color: var(--text-muted);
   margin-bottom: 20px;
   font-size: 1.1rem;
 }
@@ -214,10 +216,7 @@ export default {
 }
 
 .application-card {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  /* Card styling handled by global .card class */
 }
 
 .application-header {
@@ -229,12 +228,12 @@ export default {
 
 .application-header h3 {
   font-size: 1.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 5px;
 }
 
 .company {
-  color: #7f8c8d;
+  color: var(--text-muted);
   font-size: 1rem;
 }
 
@@ -246,18 +245,18 @@ export default {
 }
 
 .status-badge.pending {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--warning);
+  color: var(--text);
 }
 
 .status-badge.accepted {
-  background: #d4edda;
-  color: #155724;
+  background: var(--success);
+  color: var(--text);
 }
 
 .status-badge.rejected {
-  background: #f8d7da;
-  color: #721c24;
+  background: var(--danger);
+  color: var(--text);
 }
 
 .application-details {
@@ -273,7 +272,7 @@ export default {
 }
 
 .label {
-  color: #7f8c8d;
+  color: var(--text-muted);
   font-weight: 500;
 }
 

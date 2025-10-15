@@ -54,6 +54,15 @@
             </div>
           </div>
         </div>
+
+        <!-- Recent Applications (for job seekers) -->
+        <div class="profile-section">
+          <h2>Recent Applications</h2>
+          <div class="empty-state">
+            <p>You haven't applied to any jobs yet.</p>
+            <router-link to="/" class="btn btn-primary">Browse Jobs</router-link>
+          </div>
+        </div>
       </div>
 
       <!-- Employer Profile -->
@@ -77,6 +86,14 @@
               <label>Phone</label>
               <p>{{ userProfile?.phone }}</p>
             </div>
+          </div>
+        </div>
+
+        <!-- Recent Applications (for employers) -->
+        <div v-if="userProfile?.role === 'employer'" class="profile-section">
+          <h2>Recent Applications</h2>
+          <div class="empty-state">
+            <p>No applications yet.</p>
           </div>
         </div>
       </div>

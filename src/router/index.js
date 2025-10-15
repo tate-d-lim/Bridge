@@ -5,9 +5,8 @@ import { auth } from '../firebase/config'
 import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
-import CompanyReviews from '../views/JobListings.vue' // Renamed to CompanyReviews
+import CompanyReviews from '../views/CompanyReviews.vue' // Renamed to CompanyReviews
 import JobDetails from '../views/JobDetails.vue'
-import JobSeekerDashboard from '../views/JobSeekerDashboard.vue'
 import EmployerDashboard from '../views/EmployerDashboard.vue'
 import Profile from '../views/Profile.vue'
 import PostJob from '../views/PostJob.vue'
@@ -47,12 +46,6 @@ const routes = [
     name: 'JobDetails',
     component: JobDetails,
     meta: { requiresAuth: false }
-  },
-  {
-    path: '/jobseeker/dashboard',
-    name: 'JobSeekerDashboard',
-    component: JobSeekerDashboard,
-    meta: { requiresAuth: true, role: 'jobseeker' }
   },
   {
     path: '/employer/dashboard',
@@ -110,15 +103,42 @@ const router = createRouter({
 })
 
 // Navigation guard for authentication
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const currentUser = auth.currentUser
-
-  if (requiresAuth && !currentUser) {
-    next('/login')
-  } else {
-    next()
-  }
+  
+  // Wait for auth state to be determined
+  return new Promise((resolve) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      unsubscribe() // Unsubscribe after first call
+      
+      if (requiresAuth && !user) {
+        next('/login')
+        resolve()
+      } else if (to.path === '/' && user) {
+        // Redirect authenticated users to their appropriate dashboard
+        try {
+          // Get user profile to determine role
+          const userDoc = await user.getIdTokenResult()
+          const role = userDoc.claims.role
+          
+          if (role === 'employer') {
+            next('/employer/dashboard')
+          } else if (role === 'jobseeker') {
+            next('/')
+          } else {
+            next()
+          }
+        } catch (error) {
+          console.error('Error getting user role:', error)
+          next()
+        }
+        resolve()
+      } else {
+        next()
+        resolve()
+      }
+    })
+  })
 })
 
 export default router

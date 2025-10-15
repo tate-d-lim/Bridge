@@ -90,7 +90,7 @@ export default {
         if (userProfile.role === 'employer') {
           router.push('/employer/dashboard')
         } else {
-          router.push('/jobseeker/dashboard')
+          router.push('/')
         }
       } catch (err) {
         error.value = err.message || 'Failed to sign in. Please check your credentials.'

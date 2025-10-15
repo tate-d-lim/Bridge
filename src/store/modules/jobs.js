@@ -66,6 +66,33 @@ export default {
         throw error
       }
     },
+
+    async fetchJobsByEmployer({ commit }, employerId) {
+      commit('SET_LOADING', true)
+      try {
+        const q = query(
+          collection(db, 'jobs'), 
+          where('employerId', '==', employerId)
+        )
+        
+        const querySnapshot = await getDocs(q)
+        const jobs = []
+        querySnapshot.forEach((doc) => {
+          jobs.push({ id: doc.id, ...doc.data() })
+        })
+        
+        // Sort by createdAt in JavaScript since we can't use orderBy in the query
+        jobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        
+        commit('SET_JOBS', jobs)
+        commit('SET_LOADING', false)
+        return jobs
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        commit('SET_LOADING', false)
+        throw error
+      }
+    },
     
     async fetchJobById({ commit }, jobId) {
       commit('SET_LOADING', true)

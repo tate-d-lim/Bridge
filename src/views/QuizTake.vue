@@ -201,7 +201,7 @@ export default {
 <style scoped>
 .quiz-take-page {
   min-height: calc(100vh - 70px);
-  background: #f8f9fa;
+  background: var(--bg-light);
   padding: 40px 20px;
 }
 
@@ -211,47 +211,50 @@ export default {
 }
 
 .quiz-header {
-  background: white;
+  background: var(--bg-light);
   padding: 30px;
   border-radius: 12px 12px 0 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
 }
 
 .quiz-header h1 {
   font-size: 2rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 20px;
 }
 
 .quiz-progress span {
-  color: #7f8c8d;
+  color: var(--text-muted);
   margin-bottom: 10px;
   display: block;
 }
 
 .progress-bar {
   height: 8px;
-  background: #e0e0e0;
+  background: var(--border);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: #3498db;
+  background: var(--primary);
   transition: width 0.3s;
 }
 
 .quiz-content {
-  background: white;
+  background: var(--bg-light);
   padding: 30px;
   border-radius: 0 0 12px 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  border-top: none;
 }
 
 .question-card h2 {
   font-size: 1.5rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 30px;
 }
 
@@ -265,42 +268,42 @@ export default {
   gap: 15px;
   padding: 15px;
   margin-bottom: 15px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .option:hover {
-  border-color: #3498db;
-  background: #f8f9fa;
+  border-color: var(--primary);
+  background: var(--bg-light);
 }
 
 .option.selected {
-  border-color: #3498db;
-  background: #e8f4f8;
+  border-color: var(--primary);
+  background: var(--bg-light);
 }
 
 .option-letter {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #e0e0e0;
+  background: var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  color: #2c3e50;
+  color: var(--text);
 }
 
 .option.selected .option-letter {
-  background: #3498db;
+  background: var(--primary);
   color: white;
 }
 
 .option-text {
   flex: 1;
-  color: #2c3e50;
+  color: var(--text);
 }
 
 .quiz-actions {
@@ -310,10 +313,11 @@ export default {
 }
 
 .quiz-results {
-  background: white;
+  background: var(--bg-light);
   padding: 40px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
 }
 
 .results-card {
@@ -324,7 +328,7 @@ export default {
   width: 200px;
   height: 200px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   color: white;
   display: flex;
   flex-direction: column;
@@ -345,12 +349,12 @@ export default {
 
 .results-card h3 {
   font-size: 2rem;
-  color: #2c3e50;
+  color: var(--text);
   margin-bottom: 15px;
 }
 
 .results-card > p {
-  color: #7f8c8d;
+  color: var(--text-muted);
   font-size: 1.1rem;
   margin-bottom: 30px;
 }
