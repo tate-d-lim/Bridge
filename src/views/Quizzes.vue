@@ -48,6 +48,19 @@
               Start Quiz
             </router-link>
           </div>
+
+          <div class="card card-interactive quiz-card">
+            <div class="quiz-icon">📝</div>
+            <h3>Spelling Challenge</h3>
+            <p>Drag and drop letters to spell construction terms</p>
+            <div class="quiz-meta">
+              <span>⏱️ 10 mins</span>
+              <span>📊 Beginner</span>
+            </div>
+            <router-link to="/spelling-quiz" class="btn btn-primary btn-block">
+              Start Quiz
+            </router-link>
+          </div>
         </div>
       </div>
 

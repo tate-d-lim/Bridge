@@ -70,6 +70,36 @@ Make the questions practical and relevant for job seekers in Singapore. The corr
   return JSON.parse(jsonMatch[0]);
 }
 
+async function generateSpellingWords(numberOfWords, difficulty, skill) {
+  const prompt = `Generate ${numberOfWords} spelling words for a ${difficulty} level spelling quiz about ${skill}. 
+
+Format the response as a JSON array with this structure:
+[
+  {
+    "word": "WORD",
+    "hint": "A helpful hint about the word",
+    "letters": ["W", "O", "R", "D"]
+  }
+]
+
+Make the words practical and relevant for job seekers in Singapore. The letters array should contain each letter of the word as separate strings.`;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+  });
+
+  const text = response.text;
+
+  const jsonMatch = text.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) {
+    console.error("Gemini raw response:", text);
+    throw new Error("Failed to parse spelling words from AI response");
+  }
+
+  return JSON.parse(jsonMatch[0]);
+}
+
 app.get("/health", (req, res) => {
   res.json({ status: "ok", message: "Backend server is running" });
 });
@@ -103,6 +133,40 @@ app.post("/api/quizzes/generate", async (req, res) => {
     console.error("Error generating quiz:", error);
     res.status(500).json({
       error: "Failed to generate quiz",
+      message: error.message,
+    });
+  }
+});
+
+// Generate Spelling Quiz using Gemini AI
+app.post("/api/spelling-quiz/generate", async (req, res) => {
+  try {
+    const { skill, difficulty, numberOfWords = 5 } = req.body;
+
+    if (!skill || !difficulty) {
+      return res.status(400).json({ error: "Skill and difficulty are required" });
+    }
+
+    const words = await generateSpellingWords(numberOfWords, difficulty, skill);
+
+    // Save spelling quiz to Firestore
+    const quizRef = await db.collection("spellingQuizzes").add({
+      skill,
+      difficulty,
+      words,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      numberOfWords: words.length,
+    });
+
+    res.json({
+      success: true,
+      quizId: quizRef.id,
+      quiz: { id: quizRef.id, skill, difficulty, words },
+    });
+  } catch (error) {
+    console.error("Error generating spelling quiz:", error);
+    res.status(500).json({
+      error: "Failed to generate spelling quiz",
       message: error.message,
     });
   }

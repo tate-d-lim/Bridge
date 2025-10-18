@@ -13,6 +13,7 @@ import PostJob from '../views/PostJob.vue'
 import Chat from '../views/Chat.vue'
 import Quizzes from '../views/Quizzes.vue'
 import QuizTake from '../views/QuizTake.vue'
+import SpellingQuiz from '../views/SpellingQuiz.vue'
 import Applications from '../views/Applications.vue'
 import Candidates from '../views/Candidates.vue'
 
@@ -81,6 +82,12 @@ const routes = [
     path: '/quizzes/:id',
     name: 'QuizTake',
     component: QuizTake,
+    meta: { requiresAuth: true, role: 'jobseeker' }
+  },
+  {
+    path: '/spelling-quiz',
+    name: 'SpellingQuiz',
+    component: SpellingQuiz,
     meta: { requiresAuth: true, role: 'jobseeker' }
   },
   {
