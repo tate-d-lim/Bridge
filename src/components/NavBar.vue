@@ -28,9 +28,6 @@
             <router-link to="/quizzes" class="nav-link" @click="closeMenu">
               AI Quiz
             </router-link>
-            <router-link to="/achievements" class="nav-link" @click="closeMenu">
-              🏆 Achievements
-            </router-link>
           </template>
 
           <!-- Employer-specific links -->
@@ -72,6 +69,10 @@
                 <img v-if="isDarkMode" src="../assets/userDark.png" alt="" class="dropdown-icon" />
                 <img v-else src="../assets/user.svg" alt="" class="dropdown-icon" />
                 Profile
+              </router-link>
+              <router-link v-if="isJobSeeker" to="/achievements" class="dropdown-item" @click="closeMenus">
+                <img src="../assets/trophy-star.svg" alt="" class="dropdown-icon" />
+                Achievements
               </router-link>
               <router-link v-if="isJobSeeker" to="/applications" class="dropdown-item" @click="closeMenus">
                 <img src="../assets/briefcase.svg" alt="" class="dropdown-icon" /> Applications
