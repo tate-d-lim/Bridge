@@ -11,15 +11,15 @@
 
     <div class="job-details">
       <span class="detail-item">
-        <span class="icon">📍</span>
+        <img src="../assets/location.svg" alt="" class="icon-svg" />
         {{ job.location }}
       </span>
       <span class="detail-item">
-        <span class="icon">💰</span>
+        <img src="../assets/salary.svg" alt="" class="icon-svg" />
         ${{ job.salary }}
       </span>
       <span class="detail-item">
-        <span class="icon">⏰</span>
+        <img src="../assets/time-forward.svg" alt="" class="icon-svg" />
         {{ job.type || 'Full-time' }}
       </span>
     </div>
@@ -136,13 +136,15 @@ export default {
 .detail-item {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   color: var(--text-muted);
   font-size: 0.95rem;
 }
 
-.icon {
-  font-size: 1rem;
+.icon-svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
 }
 
 .job-tags {
