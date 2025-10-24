@@ -8,59 +8,40 @@
     <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="card stat-card">
-        <div class="stat-icon">💼</div>
+        <div class="stat-icon">
+          <img src="../assets/briefcase.svg" alt="Briefcase" />
+        </div>
         <div class="stat-info">
-          <h3>0</h3>
+          <h3>{{ employerJobs.length }}</h3>
           <p>Active Jobs</p>
         </div>
       </div>
       <div class="card stat-card">
-        <div class="stat-icon">📝</div>
+        <div class="stat-icon">
+          <img src="../assets/task-checklist.svg" alt="Application" />
+        </div>
         <div class="stat-info">
           <h3>0</h3>
           <p>Applications</p>
         </div>
       </div>
       <div class="card stat-card">
-        <div class="stat-icon">👥</div>
+        <div class="stat-icon">
+          <img src="../assets/candidates.svg" alt="Candidates" />
+        </div>
         <div class="stat-info">
           <h3>0</h3>
           <p>Candidates</p>
         </div>
       </div>
       <div class="card stat-card">
-        <div class="stat-icon">✅</div>
+        <div class="stat-icon">
+          <img src="../assets/hired.svg" alt="Hired" />
+        </div>
         <div class="stat-info">
           <h3>0</h3>
           <p>Hired</p>
         </div>
-      </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="quick-actions">
-      <h2>Quick Actions</h2>
-      <div class="actions-grid">
-        <router-link to="/employer/post-job" class="card card-interactive action-card">
-          <span class="action-icon">➕</span>
-          <h3>Post New Job</h3>
-          <p>Create a job listing</p>
-        </router-link>
-        <router-link to="/candidates" class="card card-interactive action-card">
-          <span class="action-icon">🔍</span>
-          <h3>Browse Candidates</h3>
-          <p>Find qualified workers</p>
-        </router-link>
-        <router-link to="/chat" class="card card-interactive action-card">
-          <span class="action-icon">💬</span>
-          <h3>Messages</h3>
-          <p>Chat with candidates</p>
-        </router-link>
-        <router-link to="/profile" class="card card-interactive action-card">
-          <span class="action-icon">🏢</span>
-          <h3>Company Profile</h3>
-          <p>Edit your profile</p>
-        </router-link>
       </div>
     </div>
 
@@ -201,6 +182,12 @@ export default {
 
 .stat-icon {
   font-size: 3rem;
+}
+
+.stat-icon img {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
 }
 
 .stat-info h3 {

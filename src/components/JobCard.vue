@@ -3,7 +3,7 @@
     <div class="job-card-header">
       <h3>{{ job.title }}</h3>
       <button @click="saveJob" class="save-btn" title="Save job">
-        💾
+        <img src="../assets/bookmark.svg" alt="Bookmark" class="save-icon" />
       </button>
     </div>
 
@@ -112,6 +112,12 @@ export default {
 .save-btn:hover {
   transform: scale(1.2);
   color: var(--primary);
+}
+
+.save-icon {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
 }
 
 .company {

@@ -575,7 +575,7 @@ img {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -734,7 +734,7 @@ img {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1240,4 +1240,19 @@ img {
   h1 { font-size: 1.5rem; }
   h2 { font-size: 1.3rem; }
   h3 { font-size: 1.1rem; }
+}
+
+/* Loading and Error States */
+.loading-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 60px 20px;
+  font-size: 1.1rem;
+}
+
+.error-state {
+  text-align: center;
+  color: var(--danger);
+  padding: 60px 20px;
+  font-size: 1.1rem;
 }
