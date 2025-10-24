@@ -80,7 +80,7 @@ const routes = [
     meta: { requiresAuth: true, role: 'jobseeker' }
   },
   {
-    path: '/quizzes/:id',
+    path: '/quiz-take/:id',
     name: 'QuizTake',
     component: QuizTake,
     meta: { requiresAuth: true, role: 'jobseeker' }
