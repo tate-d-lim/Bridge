@@ -1,6 +1,13 @@
 <template>
   <div class="profile-page">
     <div class="profile-container">
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-state">
+        <p>Loading profile...</p>
+      </div>
+      
+      <!-- Profile Content -->
+      <div v-else-if="userProfile">
       <div class="profile-header">
         <div class="avatar">
           <span>{{ getInitials }}</span>
@@ -12,7 +19,7 @@
           </p>
           <p v-else>{{ userProfile?.company }}</p>
         </div>
-        <button @click="editing = !editing" class="btn btn-primary">
+        <button v-if="!isViewingOtherProfile" @click="editing = !editing" class="btn btn-primary">
           {{ editing ? 'Cancel' : 'Edit Profile' }}
         </button>
       </div>
@@ -143,6 +150,12 @@
           </div>
         </div>
       </div>
+      </div>
+      
+      <!-- Error State -->
+      <div v-else class="error-state">
+        <p>Profile not found.</p>
+      </div>
     </div>
   </div>
 </template>
@@ -150,18 +163,32 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { useRoute } from 'vue-router'
+import { db } from '../firebase/config'
+import { doc, getDoc } from 'firebase/firestore'
 
 export default {
   name: 'Profile',
   setup() {
     const store = useStore()
+    const route = useRoute()
     const editing = ref(false)
+    const badges = ref([])
+    const viewedProfile = ref(null)
     const loading = ref(false)
 
-    const userProfile = computed(() => store.getters['auth/userProfile'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
-    const earnedBadges = computed(() => store.getters['badges/earnedBadges'] || [])
-    const userStats = computed(() => store.getters['badges/userStats'])
+    const currentUserProfile = computed(() => store.getters['auth/userProfile'])
+    
+    // Determine if we're viewing someone else's profile
+    const isViewingOtherProfile = computed(() => {
+      return route.params.id && route.params.id !== currentUser.value?.uid
+    })
+    
+    // Use viewed profile if viewing someone else, otherwise use current user's profile
+    const userProfile = computed(() => {
+      return isViewingOtherProfile.value ? viewedProfile.value : currentUserProfile.value
+    })
 
     const getInitials = computed(() => {
       if (!userProfile.value?.name) return '?'
@@ -173,28 +200,37 @@ export default {
         .slice(0, 2)
     })
 
-    const formatDate = (dateString) => {
-      if (!dateString) return ''
-      const date = dateString.toDate ? dateString.toDate() : new Date(dateString)
-      return date.toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric' 
-      })
+    const fetchViewedProfile = async (userId) => {
+      loading.value = true
+      try {
+        const userDoc = await getDoc(doc(db, 'users', userId))
+        if (userDoc.exists()) {
+          viewedProfile.value = { id: userDoc.id, ...userDoc.data() }
+        } else {
+          console.error('User profile not found')
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error)
+      } finally {
+        loading.value = false
+      }
     }
 
     onMounted(async () => {
-      if (userProfile.value?.role === 'jobseeker' && currentUser.value) {
-        loading.value = true
-        try {
-          await Promise.all([
-            store.dispatch('badges/fetchEarnedBadges', currentUser.value.uid),
-            store.dispatch('badges/initializeUserStats', currentUser.value.uid)
-          ])
-        } catch (error) {
-          console.error('Error fetching badges:', error)
-        } finally {
-          loading.value = false
+      // If viewing someone else's profile, fetch their data
+      if (isViewingOtherProfile.value) {
+        await fetchViewedProfile(route.params.id)
+      }
+      
+      // Fetch badges for job seekers (current user or viewed profile)
+      if (userProfile.value?.role === 'jobseeker') {
+        const userId = isViewingOtherProfile.value ? route.params.id : currentUser.value?.uid
+        if (userId) {
+          try {
+            badges.value = await store.dispatch('quizzes/fetchUserBadges', userId)
+          } catch (error) {
+            console.error('Error fetching badges:', error)
+          }
         }
       }
     })
@@ -202,11 +238,10 @@ export default {
     return {
       editing,
       userProfile,
-      earnedBadges,
-      userStats,
-      loading,
+      badges,
       getInitials,
-      formatDate
+      isViewingOtherProfile,
+      loading
     }
   }
 }

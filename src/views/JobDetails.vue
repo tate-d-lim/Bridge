@@ -18,12 +18,15 @@
           </div>
         </div>
         <div class="job-actions">
-          <button @click="applyForJob" class="btn btn-primary btn-large">
-            Apply Now
-          </button>
-          <button @click="saveJob" class="btn btn-secondary">
-            💾 Save
-          </button>
+          <div v-if="isJobSeeker">
+            <button @click="applyForJob" class="btn btn-primary btn-large">
+              Apply Now
+            </button>
+            <button @click="saveJob" class="btn btn-secondary">
+              <img src="../assets/bookmark.svg" alt="Bookmark" class="btn-icon" />
+              Save
+            </button>
+          </div>
         </div>
       </div>
 
@@ -104,7 +107,7 @@
 </template>
 
 <script>
-import { ref, onMounted, reactive } from 'vue'
+import { ref, onMounted, reactive, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 
@@ -122,6 +125,11 @@ export default {
     const application = reactive({
       coverLetter: '',
       resume: ''
+    })
+
+    const isJobSeeker = computed(() => {
+      const userProfile = store.getters['auth/userProfile']
+      return userProfile?.role === 'jobseeker'
     })
 
     const fetchJob = async () => {
@@ -182,6 +190,7 @@ export default {
       loading,
       showApplicationForm,
       application,
+      isJobSeeker,
       applyForJob,
       saveJob,
       submitApplication,
@@ -349,6 +358,13 @@ export default {
   gap: 15px;
   justify-content: flex-end;
   margin-top: 25px;
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  vertical-align: middle;
 }
 </style>
 
