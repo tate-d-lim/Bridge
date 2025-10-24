@@ -62,7 +62,13 @@
           <!-- User Menu -->
           <div class="user-menu">
             <button @click="toggleUserDropdown" class="user-avatar">
-              {{ userInitials }}
+              <img 
+                v-if="userProfile?.photoURL" 
+                :src="userProfile.photoURL" 
+                :alt="userProfile.name"
+                class="avatar-image"
+              />
+              <span v-else>{{ userInitials }}</span>
             </button>
             <div class="user-dropdown" :class="{ active: userDropdownOpen }">
               <router-link to="/profile" class="dropdown-item" @click="closeMenus">
@@ -201,6 +207,7 @@ export default {
       isAuthenticated,
       isJobSeeker,
       isEmployer,
+      userProfile,
       userInitials,
       getHomeRoute,
       toggleMenu,
@@ -366,6 +373,17 @@ export default {
   cursor: pointer;
   font-weight: bold;
   transition: transform 0.3s;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.user-avatar .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Dark mode avatar - keep colorful gradient */
@@ -469,6 +487,12 @@ export default {
 
   .user-avatar {
     width: 100%;
+    height: 50px;
+    border-radius: 8px;
+  }
+
+  .user-avatar .avatar-image {
+    width: 50px;
     height: 50px;
     border-radius: 8px;
   }

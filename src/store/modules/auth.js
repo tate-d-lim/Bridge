@@ -5,7 +5,7 @@ import {
   signOut,
   onAuthStateChanged 
 } from 'firebase/auth'
-import { doc, getDoc, setDoc } from 'firebase/firestore'
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 
 export default {
   namespaced: true,
@@ -100,6 +100,93 @@ export default {
         }
       } catch (error) {
         commit('SET_ERROR', error.message)
+        throw error
+      }
+    },
+    
+    async updateProfile({ commit, state }, updatedData) {
+      commit('SET_LOADING', true)
+      commit('SET_ERROR', null)
+      try {
+        const userId = state.user.uid
+        await updateDoc(doc(db, 'users', userId), {
+          ...updatedData,
+          updatedAt: new Date().toISOString()
+        })
+        
+        // Update local state
+        commit('SET_USER_PROFILE', {
+          ...state.userProfile,
+          ...updatedData
+        })
+        
+        commit('SET_LOADING', false)
+        return true
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        commit('SET_LOADING', false)
+        throw error
+      }
+    },
+    
+    async uploadProfilePicture({ commit, state }, file) {
+      commit('SET_LOADING', true)
+      commit('SET_ERROR', null)
+      try {
+        const userId = state.user.uid
+        
+        // Convert image to base64
+        const base64Image = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        
+        // Store base64 image directly in Firestore user document
+        await updateDoc(doc(db, 'users', userId), {
+          photoURL: base64Image,
+          updatedAt: new Date().toISOString()
+        })
+        
+        // Update local state
+        commit('SET_USER_PROFILE', {
+          ...state.userProfile,
+          photoURL: base64Image
+        })
+        
+        commit('SET_LOADING', false)
+        return base64Image
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        commit('SET_LOADING', false)
+        throw error
+      }
+    },
+    
+    async removeProfilePicture({ commit, state }) {
+      commit('SET_LOADING', true)
+      commit('SET_ERROR', null)
+      try {
+        const userId = state.user.uid
+        
+        // Remove photo URL from Firestore
+        await updateDoc(doc(db, 'users', userId), {
+          photoURL: null,
+          updatedAt: new Date().toISOString()
+        })
+        
+        // Update local state
+        commit('SET_USER_PROFILE', {
+          ...state.userProfile,
+          photoURL: null
+        })
+        
+        commit('SET_LOADING', false)
+        return true
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        commit('SET_LOADING', false)
         throw error
       }
     },

@@ -9,8 +9,53 @@
       <!-- Profile Content -->
       <div v-else-if="userProfile">
       <div class="profile-header">
-        <div class="avatar">
-          <span>{{ getInitials }}</span>
+        <div class="avatar-container">
+          <div class="avatar">
+            <img 
+              v-if="photoPreviewUrl" 
+              :src="photoPreviewUrl" 
+              :alt="userProfile.name"
+              class="avatar-image"
+            />
+            <img 
+              v-else-if="userProfile?.photoURL" 
+              :src="userProfile.photoURL" 
+              :alt="userProfile.name"
+              class="avatar-image"
+            />
+            <span v-else>{{ getInitials }}</span>
+          </div>
+          <input 
+            ref="fileInput"
+            type="file" 
+            accept="image/jpeg,image/jpg,image/png"
+            @change="handleFileUpload"
+            style="display: none"
+          />
+          <div class="avatar-actions">
+            <p v-if="uploadError" class="error-message">{{ uploadError }}</p>
+            <p v-if="selectedPhoto" class="photo-selected">New photo selected</p>
+            <div v-if="!isViewingOtherProfile && editing" class="photo-buttons">
+              <button 
+                @click="triggerFileInput"
+                class="btn-add-photo"
+                :disabled="uploadingPhoto"
+              >
+                <span v-if="uploadingPhoto" class="loading-emoji">⏳</span>
+                <img v-else src="../assets/add-profile-picture.svg" alt="" class="btn-icon" />
+                {{ userProfile?.photoURL || photoPreviewUrl ? 'Change Photo' : 'Add Photo' }}
+              </button>
+              <button 
+                v-if="userProfile?.photoURL || photoPreviewUrl"
+                @click="removePhoto"
+                class="btn-remove-photo"
+                :disabled="uploadingPhoto"
+              >
+                <img src="../assets/trash.svg" alt="" class="btn-icon" />
+                Remove
+              </button>
+            </div>
+          </div>
         </div>
         <div class="header-info">
           <h1>{{ userProfile?.name || 'User Profile' }}</h1>
@@ -19,10 +64,21 @@
           </p>
           <p v-else>{{ userProfile?.company }}</p>
         </div>
-        <button v-if="!isViewingOtherProfile" @click="editing = !editing" class="btn btn-primary">
-          {{ editing ? 'Cancel' : 'Edit Profile' }}
-        </button>
+        <div v-if="!isViewingOtherProfile" class="header-actions">
+          <button v-if="!editing" @click="startEditing" class="btn btn-primary">
+            Edit Profile
+          </button>
+          <div v-else class="edit-actions">
+            <button @click="saveProfile" :disabled="savingProfile" class="btn btn-primary">
+              {{ savingProfile ? 'Saving...' : 'Save' }}
+            </button>
+            <button @click="cancelEditing" class="btn btn-secondary">
+              Cancel
+            </button>
+          </div>
+        </div>
       </div>
+      <p v-if="saveError" class="error-message error-banner">{{ saveError }}</p>
 
       <!-- Job Seeker Profile -->
       <div v-if="userProfile?.role === 'jobseeker'" class="profile-content">
@@ -30,28 +86,73 @@
           <h2>Personal Information</h2>
           <div class="info-grid">
             <div class="info-item">
+              <label>Name</label>
+              <input 
+                v-if="editing" 
+                v-model="editableFields.name"
+                type="text" 
+                class="edit-input"
+                placeholder="Enter your name"
+              />
+              <p v-else>{{ userProfile?.name }}</p>
+            </div>
+            <div class="info-item">
               <label>Email</label>
-              <p>{{ userProfile?.email }}</p>
+              <p class="readonly-field">{{ userProfile?.email }}</p>
             </div>
             <div class="info-item">
               <label>Phone</label>
-              <p>{{ userProfile?.phone }}</p>
+              <input 
+                v-if="editing" 
+                v-model="editableFields.phone"
+                type="tel" 
+                class="edit-input"
+                placeholder="Enter your phone"
+              />
+              <p v-else>{{ userProfile?.phone || 'Not provided' }}</p>
+            </div>
+            <div class="info-item">
+              <label>Experience (years)</label>
+              <input 
+                v-if="editing" 
+                v-model="editableFields.experience"
+                type="number" 
+                min="0"
+                class="edit-input"
+                placeholder="Years of experience"
+              />
+              <p v-else>{{ userProfile?.experience || 0 }}</p>
             </div>
           </div>
         </div>
 
         <div class="profile-section">
           <h2>Skills</h2>
-          <div class="skills-container">
+          <div v-if="editing" class="skills-edit">
+            <textarea 
+              v-model="editableFields.skills"
+              class="edit-textarea"
+              placeholder="Enter skills separated by commas (e.g., JavaScript, Python, Communication)"
+              rows="3"
+            ></textarea>
+            <p class="help-text">Separate skills with commas</p>
+          </div>
+          <div v-else class="skills-container">
             <span v-for="skill in userProfile?.skills" :key="skill" class="skill-tag">
               {{ skill }}
             </span>
+            <p v-if="!userProfile?.skills || userProfile?.skills.length === 0" class="empty-text">
+              No skills added yet
+            </p>
           </div>
         </div>
 
         <div class="profile-section">
           <div class="section-header">
-            <h2>🏆 Badges & Achievements</h2>
+            <h2>
+              <img src="../assets/trophy-star.svg" alt="" class="section-icon" />
+              Badges & Achievements
+            </h2>
             <router-link to="/achievements" class="view-all-link">
               View All →
             </router-link>
@@ -62,7 +163,6 @@
           </div>
           
           <div v-else-if="earnedBadges.length === 0" class="empty-badges">
-            <div class="empty-icon">🎯</div>
             <p>No badges earned yet</p>
             <p class="empty-subtitle">Complete quizzes to earn your first badge!</p>
             <router-link to="/quizzes" class="btn btn-primary">Start Learning</router-link>
@@ -110,10 +210,45 @@
 
         <!-- Recent Applications (for job seekers) -->
         <div class="profile-section">
-          <h2>Recent Applications</h2>
-          <div class="empty-state">
+          <div class="section-header">
+            <h2>Recent Applications</h2>
+            <router-link 
+              v-if="recentApplications.length > 0" 
+              to="/applications" 
+              class="view-all-link"
+            >
+              View All →
+            </router-link>
+          </div>
+          
+          <div v-if="recentApplications.length === 0" class="empty-state">
             <p>You haven't applied to any jobs yet.</p>
             <router-link to="/" class="btn btn-primary">Browse Jobs</router-link>
+          </div>
+          
+          <div v-else class="recent-applications-list">
+            <div 
+              v-for="application in recentApplications" 
+              :key="application.id"
+              class="application-item"
+            >
+              <div class="application-main">
+                <div class="application-info">
+                  <h3>{{ application.jobTitle }}</h3>
+                  <p class="company-name">{{ application.company }}</p>
+                  <p class="application-date">Applied {{ formatDate(application.createdAt) }}</p>
+                </div>
+                <span :class="['status-badge', application.status]">
+                  {{ application.status }}
+                </span>
+              </div>
+              <router-link 
+                :to="`/jobs/${application.jobId}`" 
+                class="view-job-link"
+              >
+                View Job →
+              </router-link>
+            </div>
           </div>
         </div>
       </div>
@@ -124,20 +259,52 @@
           <h2>Company Information</h2>
           <div class="info-grid">
             <div class="info-item">
+              <label>Contact Name</label>
+              <input 
+                v-if="editing" 
+                v-model="editableFields.name"
+                type="text" 
+                class="edit-input"
+                placeholder="Enter contact name"
+              />
+              <p v-else>{{ userProfile?.name }}</p>
+            </div>
+            <div class="info-item">
               <label>Company Name</label>
-              <p>{{ userProfile?.company }}</p>
+              <input 
+                v-if="editing" 
+                v-model="editableFields.company"
+                type="text" 
+                class="edit-input"
+                placeholder="Enter company name"
+              />
+              <p v-else>{{ userProfile?.company }}</p>
             </div>
             <div class="info-item">
               <label>Industry</label>
-              <p>{{ userProfile?.industry }}</p>
+              <input 
+                v-if="editing" 
+                v-model="editableFields.industry"
+                type="text" 
+                class="edit-input"
+                placeholder="Enter industry"
+              />
+              <p v-else>{{ userProfile?.industry || 'Not provided' }}</p>
             </div>
             <div class="info-item">
               <label>Email</label>
-              <p>{{ userProfile?.email }}</p>
+              <p class="readonly-field">{{ userProfile?.email }}</p>
             </div>
             <div class="info-item">
               <label>Phone</label>
-              <p>{{ userProfile?.phone }}</p>
+              <input 
+                v-if="editing" 
+                v-model="editableFields.phone"
+                type="tel" 
+                class="edit-input"
+                placeholder="Enter phone number"
+              />
+              <p v-else>{{ userProfile?.phone || 'Not provided' }}</p>
             </div>
           </div>
         </div>
@@ -146,7 +313,8 @@
         <div v-if="userProfile?.role === 'employer'" class="profile-section">
           <h2>Recent Applications</h2>
           <div class="empty-state">
-            <p>No applications yet.</p>
+            <p>No recent applications to display.</p>
+            <router-link to="/employer/dashboard" class="btn btn-primary">View Dashboard</router-link>
           </div>
         </div>
       </div>
@@ -161,7 +329,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import { db } from '../firebase/config'
@@ -175,6 +343,14 @@ export default {
     const editing = ref(false)
     const viewedProfile = ref(null)
     const loading = ref(false)
+    const uploadingPhoto = ref(false)
+    const savingProfile = ref(false)
+    const fileInput = ref(null)
+    const recentApplications = ref([])
+    const uploadError = ref('')
+    const saveError = ref('')
+    const selectedPhoto = ref(null)
+    const photoPreviewUrl = ref(null)
 
     const currentUser = computed(() => store.getters['auth/currentUser'])
     const currentUserProfile = computed(() => store.getters['auth/userProfile'])
@@ -187,6 +363,16 @@ export default {
     // Use viewed profile if viewing someone else, otherwise use current user's profile
     const userProfile = computed(() => {
       return isViewingOtherProfile.value ? viewedProfile.value : currentUserProfile.value
+    })
+
+    // Editable fields that mirror userProfile
+    const editableFields = reactive({
+      name: '',
+      phone: '',
+      skills: '',
+      experience: '',
+      company: '',
+      industry: ''
     })
 
     const getInitials = computed(() => {
@@ -225,6 +411,200 @@ export default {
       })
     }
 
+    // Profile picture upload
+    const triggerFileInput = () => {
+      if (fileInput.value) {
+        fileInput.value.click()
+      }
+    }
+
+    const handleFileUpload = (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+
+      uploadError.value = ''
+
+      // Validate file type
+      if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+        uploadError.value = 'Please upload a JPG or PNG image'
+        return
+      }
+
+      // Validate file size (700KB max for Firestore base64 storage)
+      if (file.size > 700 * 1024) {
+        uploadError.value = 'Image size must be less than 700KB (Firestore limitation)'
+        return
+      }
+
+      // Store the file for upload on save
+      selectedPhoto.value = file
+      
+      // Create preview URL
+      if (photoPreviewUrl.value) {
+        URL.revokeObjectURL(photoPreviewUrl.value)
+      }
+      photoPreviewUrl.value = URL.createObjectURL(file)
+    }
+
+    // Profile editing
+    const startEditing = () => {
+      editing.value = true
+      // Copy current values to editable fields
+      editableFields.name = userProfile.value?.name || ''
+      editableFields.phone = userProfile.value?.phone || ''
+      editableFields.experience = userProfile.value?.experience || ''
+      editableFields.company = userProfile.value?.company || ''
+      editableFields.industry = userProfile.value?.industry || ''
+      
+      // Convert skills array to comma-separated string
+      if (userProfile.value?.skills && Array.isArray(userProfile.value.skills)) {
+        editableFields.skills = userProfile.value.skills.join(', ')
+      } else {
+        editableFields.skills = ''
+      }
+    }
+
+    const cancelEditing = () => {
+      editing.value = false
+      saveError.value = ''
+      uploadError.value = ''
+      
+      // Clear selected photo and preview
+      selectedPhoto.value = null
+      if (photoPreviewUrl.value) {
+        URL.revokeObjectURL(photoPreviewUrl.value)
+        photoPreviewUrl.value = null
+      }
+      
+      // Clear file input
+      if (fileInput.value) {
+        fileInput.value.value = ''
+      }
+    }
+
+    const removePhoto = async () => {
+      if (!confirm('Are you sure you want to remove your profile picture?')) {
+        return
+      }
+
+      uploadingPhoto.value = true
+      uploadError.value = ''
+      
+      try {
+        await store.dispatch('auth/removeProfilePicture')
+        
+        // Clear any selected photo or preview
+        selectedPhoto.value = null
+        if (photoPreviewUrl.value) {
+          URL.revokeObjectURL(photoPreviewUrl.value)
+          photoPreviewUrl.value = null
+        }
+        if (fileInput.value) {
+          fileInput.value.value = ''
+        }
+        
+        uploadError.value = ''
+      } catch (error) {
+        console.error('Error removing profile picture:', error)
+        uploadError.value = 'Failed to remove profile picture. Please try again.'
+      } finally {
+        uploadingPhoto.value = false
+      }
+    }
+
+    const saveProfile = async () => {
+      saveError.value = ''
+      
+      // Validate required fields
+      if (!editableFields.name.trim()) {
+        saveError.value = 'Name is required'
+        return
+      }
+
+      savingProfile.value = true
+      uploadingPhoto.value = false
+      
+      try {
+        console.log('Starting profile save...')
+        
+        // Upload profile picture first if one was selected
+        if (selectedPhoto.value) {
+          console.log('Uploading profile picture...')
+          uploadingPhoto.value = true
+          try {
+            await store.dispatch('auth/uploadProfilePicture', selectedPhoto.value)
+            console.log('Profile picture uploaded successfully')
+            // Clear the selected photo and preview after successful upload
+            selectedPhoto.value = null
+            if (photoPreviewUrl.value) {
+              URL.revokeObjectURL(photoPreviewUrl.value)
+              photoPreviewUrl.value = null
+            }
+            if (fileInput.value) {
+              fileInput.value.value = ''
+            }
+          } catch (error) {
+            console.error('Error uploading profile picture:', error)
+            saveError.value = 'Failed to upload profile picture. Please try again.'
+            uploadingPhoto.value = false
+            savingProfile.value = false
+            return
+          } finally {
+            uploadingPhoto.value = false
+          }
+        }
+
+        // Update other profile fields
+        console.log('Updating profile fields...')
+        const updatedData = {
+          name: editableFields.name.trim(),
+          phone: editableFields.phone.trim()
+        }
+
+        // Add role-specific fields
+        if (userProfile.value?.role === 'jobseeker') {
+          updatedData.experience = parseInt(editableFields.experience) || 0
+          // Parse skills from comma-separated string
+          updatedData.skills = editableFields.skills
+            .split(',')
+            .map(s => s.trim())
+            .filter(s => s.length > 0)
+        } else if (userProfile.value?.role === 'employer') {
+          updatedData.company = editableFields.company.trim()
+          updatedData.industry = editableFields.industry.trim()
+        }
+
+        console.log('Dispatching updateProfile action...', updatedData)
+        await store.dispatch('auth/updateProfile', updatedData)
+        console.log('Profile updated successfully')
+        
+        editing.value = false
+        saveError.value = ''
+      } catch (error) {
+        console.error('Error saving profile:', error)
+        saveError.value = error.message || 'Failed to save profile. Please try again.'
+      } finally {
+        console.log('Resetting saving state')
+        savingProfile.value = false
+        uploadingPhoto.value = false
+      }
+    }
+
+    // Fetch recent applications
+    const fetchRecentApplications = async () => {
+      if (currentUser.value && !isViewingOtherProfile.value) {
+        try {
+          const applications = await store.dispatch(
+            'applications/fetchUserApplications',
+            currentUser.value.uid
+          )
+          recentApplications.value = applications.slice(0, 5)
+        } catch (error) {
+          console.error('Error fetching applications:', error)
+        }
+      }
+    }
+
     onMounted(async () => {
       // If viewing someone else's profile, fetch their data
       if (isViewingOtherProfile.value) {
@@ -245,6 +625,11 @@ export default {
           }
         }
       }
+
+      // Fetch recent applications for current user
+      if (!isViewingOtherProfile.value && userProfile.value?.role === 'jobseeker') {
+        await fetchRecentApplications()
+      }
     })
 
     // Get data from badges store
@@ -259,18 +644,329 @@ export default {
       getInitials,
       isViewingOtherProfile,
       loading,
-      formatDate
+      formatDate,
+      fileInput,
+      uploadingPhoto,
+      uploadError,
+      triggerFileInput,
+      handleFileUpload,
+      startEditing,
+      cancelEditing,
+      saveProfile,
+      editableFields,
+      savingProfile,
+      saveError,
+      recentApplications,
+      selectedPhoto,
+      photoPreviewUrl,
+      removePhoto
     }
   }
 }
 </script>
 
 <style scoped>
+/* Avatar and Profile Picture */
+.avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  overflow: hidden;
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.photo-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-add-photo {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-add-photo:hover:not(:disabled) {
+  background: var(--bg-light);
+  transform: translateY(-1px);
+}
+
+.btn-add-photo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-remove-photo {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-remove-photo:hover:not(:disabled) {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-remove-photo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.loading-emoji {
+  font-size: 1rem;
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Error Messages */
+.error-message {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-top: 5px;
+}
+
+.error-banner {
+  background: var(--danger);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.photo-selected {
+  color: var(--success);
+  font-size: 0.85rem;
+  margin-top: 5px;
+  font-weight: 600;
+}
+
+/* Inline Editing */
+.edit-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--bg-light);
+  transition: all 0.3s;
+}
+
+.edit-input:hover {
+  border-color: var(--primary);
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.edit-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--bg-light);
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s;
+}
+
+.edit-textarea:hover {
+  border-color: var(--primary);
+}
+
+.edit-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.help-text {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.readonly-field {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.empty-text {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.skills-edit {
+  margin-top: 10px;
+}
+
+/* Recent Applications */
+.recent-applications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.application-item {
+  background: var(--bg-light);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+}
+
+.application-item:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.application-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.application-info h3 {
+  font-size: 1.2rem;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+
+.company-name {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 3px;
+}
+
+.application-date {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-badge.pending {
+  background: var(--warning);
+  color: var(--text);
+}
+
+.status-badge.accepted {
+  background: var(--success);
+  color: white;
+}
+
+.status-badge.rejected {
+  background: var(--danger);
+  color: white;
+}
+
+.view-job-link {
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.view-job-link:hover {
+  color: var(--text);
+}
+
+/* Section Headers */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.section-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
 }
 
 .view-all-link {
@@ -281,7 +977,7 @@ export default {
 }
 
 .view-all-link:hover {
-  color: var(--primary-dark);
+  color: var(--text);
 }
 
 .loading-state {
@@ -310,6 +1006,16 @@ export default {
 .empty-subtitle {
   color: var(--text-muted);
   font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-state p {
+  color: var(--text-muted);
   margin-bottom: 20px;
 }
 
@@ -423,6 +1129,12 @@ export default {
   transition: all 0.3s;
   border: none;
   cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-primary {
@@ -430,9 +1142,20 @@ export default {
   color: white;
 }
 
-.btn-primary:hover {
-  background: var(--primary-dark);
+.btn-primary:hover:not(:disabled) {
+  background: oklch(0.3 0.1 245);
   transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: var(--bg-light);
+  color: var(--text);
+  border: 2px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--bg);
+  border-color: var(--primary);
 }
 
 @media (max-width: 768px) {
@@ -442,6 +1165,44 @@ export default {
   
   .stats-summary {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .edit-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .edit-actions .btn {
+    width: 100%;
+  }
+
+  .application-main {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .status-badge {
+    align-self: flex-start;
+  }
+
+  .photo-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-add-photo,
+  .btn-remove-photo {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

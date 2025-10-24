@@ -24,20 +24,20 @@
 /* Dark Mode Variables */
 .dark-mode {
   --accent: oklch(0.76 0.1 74);
-  --bg-dark: oklch(0.05 0.01 245);
-  --bg: oklch(0.18 0.01 245);
-  --bg-light: oklch(0.25 0.01 245);
-  --text: oklch(0.96 0.02 245);
-  --text-muted: oklch(0.76 0.02 245);
-  --highlight: oklch(0.5 0.02 245);
-  --border: oklch(0.4 0.02 245);
-  --border-muted: oklch(0.3 0.02 245);
-  --primary: oklch(0.76 0.1 245);
-  --secondary: oklch(0.76 0.1 65);
-  --danger: oklch(0.7 0.15 0);
-  --warning: oklch(0.7 0.05 100);
-  --success: oklch(0.7 0.05 160);
-  --info: oklch(0.7 0.05 260);
+  --bg-dark: oklch(0.1 0.1 273);
+  --bg: oklch(0.15 0.1 273);
+  --bg-light: oklch(0.2 0.1 273);
+  --text: oklch(0.96 0.1 273);
+  --text-muted: oklch(0.76 0.1 273);
+  --highlight: oklch(0.5 0.2 273);
+  --border: oklch(0.4 0.2 273);
+  --border-muted: oklch(0.3 0.2 273);
+  --primary: oklch(0.76 0.2 273);
+  --secondary: oklch(0.76 0.2 93);
+  --danger: oklch(0.7 0.2 30);
+  --warning: oklch(0.7 0.2 100);
+  --success: oklch(0.7 0.2 160);
+  --info: oklch(0.7 0.2 260);
   
   --shadow-sm: 0 2px 10px oklch(0 0 0 / 0.3);
   --shadow-md: 0 5px 20px oklch(0 0 0 / 0.4);

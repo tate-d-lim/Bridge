@@ -46,7 +46,15 @@
 
       <div v-else class="candidates-grid">
         <div v-for="candidate in candidates" :key="candidate.id" class="card card-interactive candidate-card">
-          <div class="candidate-avatar">{{ getInitials(candidate.name) }}</div>
+          <div class="candidate-avatar">
+            <img 
+              v-if="candidate.photoURL" 
+              :src="candidate.photoURL" 
+              :alt="candidate.name"
+              class="avatar-image"
+            />
+            <span v-else>{{ getInitials(candidate.name) }}</span>
+          </div>
           
           <div class="candidate-info">
             <h3>{{ candidate.name }}</h3>
@@ -271,6 +279,13 @@ export default {
   font-size: 2rem;
   font-weight: bold;
   margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.candidate-avatar .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .candidate-info h3 {
