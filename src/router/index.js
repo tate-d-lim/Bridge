@@ -10,7 +10,7 @@ import JobDetails from '../views/JobDetails.vue'
 import EmployerDashboard from '../views/EmployerDashboard.vue'
 import Profile from '../views/Profile.vue'
 import PostJob from '../views/PostJob.vue'
-import Chat from '../views/Chat.vue'
+import ChatAbly from '../views/ChatAbly.vue'
 import Quizzes from '../views/Quizzes.vue'
 import QuizTake from '../views/QuizTake.vue'
 import Applications from '../views/Applications.vue'
@@ -68,7 +68,7 @@ const routes = [
   {
     path: '/chat/:chatId?',
     name: 'Chat',
-    component: Chat,
+    component: ChatAbly,
     meta: { requiresAuth: true }
   },
   {
