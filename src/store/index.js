@@ -4,6 +4,7 @@ import jobs from './modules/jobs'
 import chat from './modules/chat'
 import quizzes from './modules/quizzes'
 import applications from './modules/applications'
+import badges from './modules/badges'
 
 export default createStore({
   modules: {
@@ -11,7 +12,8 @@ export default createStore({
     jobs,
     chat,
     quizzes,
-    applications
+    applications,
+    badges
   }
 })
 

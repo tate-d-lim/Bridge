@@ -423,12 +423,19 @@ export default {
     const submitQuizResult = async () => {
       try {
         const user = store.getters['auth/currentUser']
+        const isPerfect = score.value === 100
+        
+        console.log('Submitting spelling quiz:', { score: score.value, isPerfect })
+        
         await store.dispatch('quizzes/submitQuizResult', {
           userId: user.uid,
           quizId: 'spelling-quiz',
           score: score.value,
-          answers: []
+          answers: [],
+          isPerfect
         })
+        
+        console.log('Spelling quiz submitted!')
       } catch (error) {
         console.error('Error submitting quiz:', error)
       }

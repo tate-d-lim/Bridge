@@ -4,6 +4,7 @@
     <main class="main-content">
       <router-view />
     </main>
+    <BadgeNotification />
     <footer class="app-footer">
       <div class="footer-content">
         <div class="footer-section">
@@ -47,11 +48,13 @@
 import { onMounted } from 'vue'
 import { useStore } from 'vuex'
 import NavBar from './components/NavBar.vue'
+import BadgeNotification from './components/BadgeNotification.vue'
 
 export default {
   name: 'App',
   components: {
-    NavBar
+    NavBar,
+    BadgeNotification
   },
   setup() {
     const store = useStore()

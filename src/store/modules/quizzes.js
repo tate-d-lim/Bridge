@@ -88,7 +88,7 @@ export default {
       }
     },
     
-    async submitQuizResult({ commit }, { userId, quizId, score, answers }) {
+    async submitQuizResult({ commit, dispatch, rootState }, { userId, quizId, score, answers, isPerfect = false }) {
       commit('SET_LOADING', true)
       try {
         const resultData = {
@@ -101,18 +101,8 @@ export default {
         
         await addDoc(collection(db, 'quizResults'), resultData)
         
-        // Award badge if score is high enough
-        if (score >= 80) {
-          const quizDoc = await getDoc(doc(db, 'quizzes', quizId))
-          const quiz = quizDoc.data()
-          
-          await addDoc(collection(db, 'badges'), {
-            userId,
-            skill: quiz.skill,
-            level: quiz.difficulty,
-            earnedAt: new Date().toISOString()
-          })
-        }
+        // Update user stats and check for new badges using the badges module
+        await dispatch('badges/updateUserStats', { userId, score, isPerfect }, { root: true })
         
         commit('SET_LOADING', false)
       } catch (error) {

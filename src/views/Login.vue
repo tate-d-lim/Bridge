@@ -113,5 +113,8 @@ export default {
 
 <style scoped>
 /* Login page specific styles - most styles are now in external stylesheet */
+.checkbox span {
+  margin-left: 8px;
+}
 </style>
 

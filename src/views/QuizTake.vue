@@ -157,19 +157,48 @@ export default {
       })
       
       score.value = Math.round((correct / questions.value.length) * 100)
+      const isPerfect = correct === questions.value.length
       quizCompleted.value = true
 
-      // Submit to backend
+      // Submit to backend and update badges
       try {
         const user = store.getters['auth/currentUser']
+        
+        if (!user) {
+          console.error('No user logged in')
+          return
+        }
+        
+        console.log('Submitting quiz result:', {
+          userId: user.uid,
+          score: score.value,
+          isPerfect,
+          isWin: score.value >= 80
+        })
+        
         await store.dispatch('quizzes/submitQuizResult', {
           userId: user.uid,
           quizId: 'quiz-1',
           score: score.value,
-          answers: answers.value
+          answers: answers.value,
+          isPerfect
         })
+        
+        console.log('Quiz submitted successfully! Check for badge notifications.')
+        
+        // Small delay to ensure badge notification shows
+        setTimeout(() => {
+          const newBadges = store.getters['badges/newlyEarnedBadges']
+          if (newBadges && newBadges.length > 0) {
+            console.log('🎉 New badges earned:', newBadges)
+          } else {
+            console.log('No new badges this time. Keep playing!')
+          }
+        }, 1000)
+        
       } catch (error) {
         console.error('Error submitting quiz:', error)
+        console.error('Error details:', error.message, error.stack)
       }
     }
 

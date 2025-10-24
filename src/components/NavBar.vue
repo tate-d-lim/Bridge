@@ -28,6 +28,9 @@
             <router-link to="/quizzes" class="nav-link" @click="closeMenu">
               AI Quiz
             </router-link>
+            <router-link to="/achievements" class="nav-link" @click="closeMenu">
+              🏆 Achievements
+            </router-link>
           </template>
 
           <!-- Employer-specific links -->

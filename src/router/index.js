@@ -16,6 +16,7 @@ import QuizTake from '../views/QuizTake.vue'
 import SpellingQuiz from '../views/SpellingQuiz.vue'
 import Applications from '../views/Applications.vue'
 import Candidates from '../views/Candidates.vue'
+import Achievements from '../views/Achievements.vue'
 
 const routes = [
   {
@@ -101,6 +102,12 @@ const routes = [
     name: 'Candidates',
     component: Candidates,
     meta: { requiresAuth: true, role: 'employer' }
+  },
+  {
+    path: '/achievements',
+    name: 'Achievements',
+    component: Achievements,
+    meta: { requiresAuth: true, role: 'jobseeker' }
   }
 ]
 

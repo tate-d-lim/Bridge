@@ -3,7 +3,7 @@
     <div class="quizzes-container">
       <div class="page-header">
         <h1>Skill Development Quizzes</h1>
-        <p>Take AI-generated quizzes to upskill and earn badges</p>
+        <p>Take AI-generated quizzes to test your skills and knowledge</p>
       </div>
 
       <!-- Available Quizzes -->
@@ -63,58 +63,13 @@
           </div>
         </div>
       </div>
-
-      <!-- My Badges -->
-      <div class="badges-section">
-        <h2>My Badges</h2>
-        <div v-if="badges.length === 0" class="empty-state">
-          <p>You haven't earned any badges yet. Complete quizzes to earn badges!</p>
-        </div>
-        <div v-else class="badges-grid">
-          <div v-for="badge in badges" :key="badge.id" class="card badge-card">
-            <div class="badge-icon">🏆</div>
-            <h3>{{ badge.skill }}</h3>
-            <p>{{ badge.level }} Level</p>
-            <span class="badge-date">Earned {{ formatDate(badge.earnedAt) }}</span>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
-import { useStore } from 'vuex'
-
 export default {
-  name: 'Quizzes',
-  setup() {
-    const store = useStore()
-    const badges = ref([])
-
-    const currentUser = computed(() => store.getters['auth/currentUser'])
-
-    const formatDate = (dateString) => {
-      const date = new Date(dateString)
-      return date.toLocaleDateString()
-    }
-
-    onMounted(async () => {
-      if (currentUser.value) {
-        try {
-          badges.value = await store.dispatch('quizzes/fetchUserBadges', currentUser.value.uid)
-        } catch (error) {
-          console.error('Error fetching badges:', error)
-        }
-      }
-    })
-
-    return {
-      badges,
-      formatDate
-    }
-  }
+  name: 'Quizzes'
 }
 </script>
 
@@ -146,13 +101,11 @@ export default {
   color: var(--text-muted);
 }
 
-.quizzes-section,
-.badges-section {
+.quizzes-section {
   margin-bottom: 50px;
 }
 
-.quizzes-section h2,
-.badges-section h2 {
+.quizzes-section h2 {
   font-size: 2rem;
   color: var(--text);
   margin-bottom: 25px;
@@ -191,47 +144,6 @@ export default {
   margin-bottom: 20px;
   color: var(--text-muted);
   font-size: 0.9rem;
-}
-
-.badges-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-}
-
-.badge-card {
-  text-align: center;
-}
-
-.badge-icon {
-  font-size: 3.5rem;
-  margin-bottom: 15px;
-}
-
-.badge-card h3 {
-  font-size: 1.3rem;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.badge-card p {
-  color: var(--primary);
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.badge-date {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-}
-
-.empty-state {
-  background: var(--bg-light);
-  padding: 60px 20px;
-  border-radius: 12px;
-  text-align: center;
-  color: var(--text-muted);
-  border: 1px solid var(--border);
 }
 </style>
 
