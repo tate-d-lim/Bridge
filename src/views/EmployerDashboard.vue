@@ -21,7 +21,7 @@
           <img src="../assets/task-checklist.svg" alt="Application" />
         </div>
         <div class="stat-info">
-          <h3>0</h3>
+          <h3>{{ totalApplications }}</h3>
           <p>Applications</p>
         </div>
       </div>
@@ -84,9 +84,78 @@
 
     <!-- Recent Applications -->
     <div class="recent-section">
-      <h2>Recent Applications</h2>
-      <div class="empty-state">
+      <div class="section-header">
+        <h2>Recent Applications</h2>
+        <div class="header-actions">
+          <button @click="fetchRecentApplications" class="btn btn-secondary" :disabled="loadingApplications">
+            {{ loadingApplications ? 'Refreshing...' : 'Refresh' }}
+          </button>
+          <router-link to="/employer/applications" class="btn btn-primary">View All Applications</router-link>
+        </div>
+      </div>
+      
+      <div v-if="loadingApplications" class="loading-state">
+        <p>Loading applications...</p>
+      </div>
+      
+      <div v-else-if="recentApplications.length === 0" class="empty-state">
         <p>No applications yet.</p>
+        <p class="empty-subtitle">Applications will appear here when candidates apply to your jobs.</p>
+      </div>
+      
+      <div v-else class="applications-list">
+        <div v-for="application in recentApplications" :key="application.id" class="card application-card">
+          <div class="application-header">
+            <div>
+              <h3>{{ application.jobTitle }}</h3>
+              <p class="candidate-info">Applied by: {{ application.candidateName || 'Unknown Candidate' }}</p>
+              <p class="application-date">Applied {{ formatDate(application.createdAt) }}</p>
+            </div>
+            <span :class="['status-badge', application.status]">
+              {{ application.status.charAt(0).toUpperCase() + application.status.slice(1) }}
+            </span>
+          </div>
+          
+          <div class="application-details">
+            <div class="detail-item">
+              <img src="../assets/location.svg" alt="Location" class="detail-icon" />
+              <span>{{ application.location }}</span>
+            </div>
+            <div class="detail-item">
+              <img src="../assets/salary.svg" alt="Salary" class="detail-icon" />
+              <span>${{ application.salary }}</span>
+            </div>
+          </div>
+
+          <!-- Application Information -->
+          <div class="application-info">
+            <div class="info-section">
+              <h4>Cover Letter</h4>
+              <p class="cover-letter">{{ application.coverLetter }}</p>
+            </div>
+            
+            <div class="info-section">
+              <h4>Resume</h4>
+              <p class="resume-info">{{ application.resume }}</p>
+            </div>
+          </div>
+
+          <div class="application-actions">
+            <router-link :to="`/applications/${application.id}`" class="btn btn-secondary">
+              View Application
+            </router-link>
+            <button @click="updateApplicationStatus(application.id, 'accepted')" 
+                    v-if="application.status === 'pending'" 
+                    class="btn btn-success">
+              Accept
+            </button>
+            <button @click="updateApplicationStatus(application.id, 'rejected')" 
+                    v-if="application.status === 'pending'" 
+                    class="btn btn-danger">
+              Reject
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -102,10 +171,17 @@ export default {
     const store = useStore()
     
     const employerJobs = ref([])
+    const recentApplications = ref([])
+    const allApplications = ref([])
     const loading = ref(false)
+    const loadingApplications = ref(false)
 
     const userProfile = computed(() => store.getters['auth/userProfile'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
+    
+    const totalApplications = computed(() => {
+      return allApplications.value.length
+    })
 
     const fetchEmployerJobs = async () => {
       if (!currentUser.value) {
@@ -126,20 +202,99 @@ export default {
       }
     }
 
+    const fetchRecentApplications = async () => {
+      if (!currentUser.value || employerJobs.value.length === 0) {
+        return
+      }
+      
+      loadingApplications.value = true
+      try {
+        // Get all applications for the employer's jobs
+        const fetchedApplications = []
+        
+        for (const job of employerJobs.value) {
+          try {
+            const jobApplications = await store.dispatch('applications/fetchJobApplications', job.id)
+            fetchedApplications.push(...jobApplications)
+          } catch (error) {
+            console.error('Error fetching applications for job:', job.id, error)
+          }
+        }
+        
+        // Sort by creation date
+        fetchedApplications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        
+        // Store all applications for total count
+        allApplications.value = fetchedApplications
+        
+        // Take the most recent 5 for display
+        recentApplications.value = fetchedApplications.slice(0, 5)
+        
+        console.log('Fetched all applications:', allApplications.value.length)
+        console.log('Recent applications:', recentApplications.value.length)
+      } catch (error) {
+        console.error('Error fetching recent applications:', error)
+      } finally {
+        loadingApplications.value = false
+      }
+    }
+
+    const updateApplicationStatus = async (applicationId, status) => {
+      try {
+        await store.dispatch('applications/updateApplicationStatus', {
+          applicationId,
+          status
+        })
+        
+        // Update the local state
+        const application = recentApplications.value.find(app => app.id === applicationId)
+        if (application) {
+          application.status = status
+        }
+        
+        alert(`Application ${status} successfully!`)
+      } catch (error) {
+        console.error('Error updating application status:', error)
+        alert('Failed to update application status. Please try again.')
+      }
+    }
+
+    const formatDate = (dateString) => {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    }
+
     const editJob = (jobId) => {
       // For now, show an alert that edit functionality is coming soon
       alert('Edit job functionality is coming soon! For now, you can view the job details.')
     }
 
-    onMounted(() => {
-      fetchEmployerJobs()
+    onMounted(async () => {
+      await fetchEmployerJobs()
+      // Fetch applications after jobs are loaded
+      await fetchRecentApplications()
+      
+      // Set up auto-refresh every 30 seconds
+      setInterval(async () => {
+        await fetchRecentApplications()
+      }, 30000)
     })
 
     return {
       userProfile,
       employerJobs,
+      recentApplications,
+      allApplications,
+      totalApplications,
       loading,
-      editJob
+      loadingApplications,
+      editJob,
+      updateApplicationStatus,
+      formatDate
     }
   }
 }
@@ -235,6 +390,168 @@ export default {
 
 .action-card p {
   color: var(--text-muted);
+}
+
+/* Recent Applications Styles */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.section-header h2 {
+  font-size: 1.8rem;
+  color: var(--text);
+}
+
+.applications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.application-card {
+  /* Card styling handled by global .card class */
+}
+
+.application-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 20px;
+}
+
+.application-header h3 {
+  font-size: 1.5rem;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+
+.candidate-info {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 3px;
+}
+
+.application-date {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.status-badge.pending {
+  background: var(--warning);
+  color: var(--text);
+}
+
+.status-badge.accepted {
+  background: var(--success);
+  color: white;
+}
+
+.status-badge.rejected {
+  background: var(--danger);
+  color: white;
+}
+
+.application-details {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.detail-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.detail-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.application-info {
+  margin: 20px 0;
+  padding: 20px;
+  background: var(--bg-light);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.info-section {
+  margin-bottom: 20px;
+}
+
+.info-section:last-child {
+  margin-bottom: 0;
+}
+
+.info-section h4 {
+  font-size: 1rem;
+  color: var(--text);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.cover-letter {
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.resume-info {
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.application-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.btn-success:hover {
+  background: oklch(0.4 0.1 145);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: oklch(0.4 0.1 15);
+}
+
+.empty-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 5px;
 }
 
 .recent-section {

@@ -98,6 +98,18 @@ const routes = [
     meta: { requiresAuth: true, role: 'jobseeker' }
   },
   {
+    path: '/applications/:id',
+    name: 'ApplicationDetails',
+    component: () => import('../views/ApplicationDetails.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/employer/applications',
+    name: 'AllApplications',
+    component: () => import('../views/AllApplications.vue'),
+    meta: { requiresAuth: true, role: 'employer' }
+  },
+  {
     path: '/candidates',
     name: 'Candidates',
     component: Candidates,

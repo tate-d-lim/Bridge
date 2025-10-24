@@ -48,11 +48,11 @@
         >
           <div class="application-header">
             <div>
-              <h3>{{ application.jobTitle }}</h3>
-              <p class="company">{{ application.company }}</p>
+              <h3>{{ application.jobTitle || 'Job Title Not Available' }}</h3>
+              <p class="company">{{ application.company || 'Company Not Available' }}</p>
             </div>
             <span :class="['status-badge', application.status]">
-              {{ application.status }}
+              {{ application.status.charAt(0).toUpperCase() + application.status.slice(1) }}
             </span>
           </div>
           
@@ -62,12 +62,25 @@
               <span>{{ formatDate(application.createdAt) }}</span>
             </div>
             <div class="detail-item">
-              <span class="label">Location:</span>
+              <img src="../assets/location.svg" alt="Location" class="detail-icon" />
               <span>{{ application.location }}</span>
             </div>
             <div class="detail-item">
-              <span class="label">Salary:</span>
+              <img src="../assets/salary.svg" alt="Salary" class="detail-icon" />
               <span>${{ application.salary }}</span>
+            </div>
+          </div>
+
+          <!-- Application Information -->
+          <div class="application-info">
+            <div class="info-section">
+              <h4>Cover Letter</h4>
+              <p class="cover-letter">{{ application.coverLetter }}</p>
+            </div>
+            
+            <div class="info-section">
+              <h4>Resume</h4>
+              <p class="resume-info">{{ application.resume }}</p>
             </div>
           </div>
 
@@ -86,13 +99,15 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
+import { useRoute } from 'vue-router'
 
 export default {
   name: 'Applications',
   setup() {
     const store = useStore()
+    const route = useRoute()
     const activeFilter = ref('all')
     const applications = ref([])
 
@@ -114,17 +129,35 @@ export default {
       })
     }
 
-    onMounted(async () => {
+    const fetchApplications = async () => {
       if (currentUser.value) {
         try {
           applications.value = await store.dispatch(
             'applications/fetchUserApplications',
             currentUser.value.uid
           )
+          
+          console.log('Fetched applications:', applications.value)
+          console.log('First application:', applications.value[0])
+          
+          // If there are pending applications and we're on the default "all" filter,
+          // switch to "pending" to highlight new applications
+          if (activeFilter.value === 'all' && applications.value.some(app => app.status === 'pending')) {
+            activeFilter.value = 'pending'
+          }
         } catch (error) {
           console.error('Error fetching applications:', error)
         }
       }
+    }
+
+    onMounted(() => {
+      fetchApplications()
+    })
+
+    // Watch for route changes to refresh applications
+    watch(() => route.path, () => {
+      fetchApplications()
     })
 
     return {
@@ -215,9 +248,6 @@ export default {
   gap: 20px;
 }
 
-.application-card {
-  /* Card styling handled by global .card class */
-}
 
 .application-header {
   display: flex;
@@ -269,11 +299,57 @@ export default {
 .detail-item {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .label {
   color: var(--text-muted);
   font-weight: 500;
+}
+
+.detail-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.application-info {
+  margin: 20px 0;
+  padding: 20px;
+  background: var(--bg-light);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.info-section {
+  margin-bottom: 20px;
+}
+
+.info-section:last-child {
+  margin-bottom: 0;
+}
+
+.info-section h4 {
+  font-size: 1rem;
+  color: var(--text);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.cover-letter {
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.resume-info {
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .application-actions {
