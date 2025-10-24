@@ -173,7 +173,6 @@ export default {
     const store = useStore()
     const route = useRoute()
     const editing = ref(false)
-    const badges = ref([])
     const viewedProfile = ref(null)
     const loading = ref(false)
 
@@ -216,32 +215,51 @@ export default {
       }
     }
 
+    const formatDate = (dateString) => {
+      if (!dateString) return 'Unknown'
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      })
+    }
+
     onMounted(async () => {
       // If viewing someone else's profile, fetch their data
       if (isViewingOtherProfile.value) {
         await fetchViewedProfile(route.params.id)
       }
       
-      // Fetch badges for job seekers (current user or viewed profile)
+      // Fetch badges and stats for job seekers (current user or viewed profile)
       if (userProfile.value?.role === 'jobseeker') {
         const userId = isViewingOtherProfile.value ? route.params.id : currentUser.value?.uid
         if (userId) {
           try {
-            badges.value = await store.dispatch('quizzes/fetchUserBadges', userId)
+            // Fetch earned badges from badges store
+            await store.dispatch('badges/fetchEarnedBadges', userId)
+            // Fetch user stats from badges store
+            await store.dispatch('badges/initializeUserStats', userId)
           } catch (error) {
-            console.error('Error fetching badges:', error)
+            console.error('Error fetching badges and stats:', error)
           }
         }
       }
     })
 
+    // Get data from badges store
+    const earnedBadges = computed(() => store.getters['badges/earnedBadges'])
+    const userStats = computed(() => store.getters['badges/userStats'])
+
     return {
       editing,
       userProfile,
-      badges,
+      earnedBadges,
+      userStats,
       getInitials,
       isViewingOtherProfile,
-      loading
+      loading,
+      formatDate
     }
   }
 }

@@ -173,7 +173,7 @@ export default {
   max-width: 1200px;
   margin: 0 auto;
   gap: 60px;
-  background: var(--highlight);
+  background: var(--);
 }
 
 .hero-content {
