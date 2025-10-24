@@ -168,16 +168,18 @@ export default {
 .hero {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 80px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  gap: 60px;
+  justify-content: center;
+  padding: 80px 60px;
+  gap: 80px;
   background: var(--);
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .hero-content {
   flex: 1;
+  max-width: 600px;
 }
 
 .hero h1 {
@@ -185,6 +187,7 @@ export default {
   color: var(--text);
   margin-bottom: 20px;
   font-weight: 700;
+  line-height: 1.2;
 }
 
 .hero-subtitle {
@@ -208,11 +211,15 @@ export default {
 
 .hero-image {
   flex: 1;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 600px;
 }
 
 .hero-image img {
-  max-width: 100%;
+  width: 100%;
+  max-width: 500px;
   height: auto;
   border-radius: 10px;
 }
