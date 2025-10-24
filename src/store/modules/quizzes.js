@@ -59,6 +59,10 @@ export default {
         throw error
       }
     },
+
+    setCurrentQuiz({ commit }, quiz) {
+      commit('SET_CURRENT_QUIZ', quiz)
+    },
     
     async generateQuiz({ commit }, { skill, difficulty }) {
       commit('SET_LOADING', true)
