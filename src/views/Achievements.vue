@@ -1,240 +1,135 @@
 <template>
   <div class="achievements-page">
     <div class="achievements-container">
-      <!-- Header with Stats -->
+      <!-- Simplified Header -->
       <div class="achievements-header">
-        <h1>🏆 Achievements</h1>
-        <p>Track your progress and unlock badges through your quiz journey</p>
+        <h1>Achievements</h1>
+        <p class="subtitle">{{ earnedBadgeCount }} of {{ totalBadgeCount }} badges unlocked</p>
         
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">🎮</div>
-            <div class="stat-info">
-              <h3>{{ userStats?.totalPlays || 0 }}</h3>
-              <p>Total Plays</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon">🏆</div>
-            <div class="stat-info">
-              <h3>{{ userStats?.totalWins || 0 }}</h3>
-              <p>Wins</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-info">
-              <h3>{{ userStats?.winPercentage || 0 }}%</h3>
-              <p>Win Rate</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon">⭐</div>
-            <div class="stat-info">
-              <h3>{{ userStats?.bestScore || 0 }}%</h3>
-              <p>Best Score</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon">🔥</div>
-            <div class="stat-info">
-              <h3>{{ userStats?.currentDayStreak || 0 }}</h3>
-              <p>Day Streak</p>
-            </div>
-          </div>
-          
-          <div class="stat-card">
-            <div class="stat-icon">🎯</div>
-            <div class="stat-info">
-              <h3>{{ earnedBadgeCount }}/{{ totalBadgeCount }}</h3>
-              <p>Badges</p>
-            </div>
-          </div>
+        <!-- Minimal Progress Bar -->
+        <div class="progress-bar">
+          <div class="progress-fill" :style="{ width: `${badgeProgress}%` }"></div>
         </div>
         
-        <div class="progress-section">
-          <div class="progress-header">
-            <span>Badge Collection Progress</span>
-            <span>{{ badgeProgress }}%</span>
+        <!-- Streamlined Stats -->
+        <div class="stats-row">
+          <div class="stat">
+            <span class="stat-value">{{ userStats?.totalPlays || 0 }}</span>
+            <span class="stat-label">Plays</span>
           </div>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: `${badgeProgress}%` }"></div>
+          <div class="stat">
+            <span class="stat-value">{{ userStats?.totalWins || 0 }}</span>
+            <span class="stat-label">Wins</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ userStats?.winPercentage || 0 }}%</span>
+            <span class="stat-label">Win Rate</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ userStats?.currentDayStreak || 0 }}</span>
+            <span class="stat-label">Streak</span>
           </div>
         </div>
       </div>
 
-      <!-- Badge Categories -->
+      <!-- Simplified Badge Categories -->
       <div class="badges-section">
         <!-- Performance Badges -->
         <div class="badge-category">
-          <div class="category-header">
-            <h2>🥇 Performance Badges</h2>
-            <p>Earned by achieving quiz wins</p>
-          </div>
+          <h2 class="category-title">Performance</h2>
           <div class="badges-grid">
             <div
               v-for="badge in allBadges.performance"
               :key="badge.id"
-              :class="['badge-card', { earned: badge.earned, locked: !badge.earned }]"
+              :class="['badge-card', { earned: badge.earned }]"
             >
               <div class="badge-icon" :class="`tier-${badge.tier}`">
                 {{ badge.icon }}
               </div>
-              <h3>{{ badge.name }}</h3>
-              <p>{{ badge.description }}</p>
-              <div class="badge-requirement">
-                <div class="requirement-bar">
-                  <div 
-                    class="requirement-fill" 
-                    :style="{ width: `${getProgress(badge)}%` }"
-                  ></div>
-                </div>
-                <span class="requirement-text">
-                  {{ getCurrentValue(badge) }} / {{ badge.requirement }}
-                </span>
+              <div class="badge-content">
+                <h3>{{ badge.name }}</h3>
+                <p class="badge-progress">{{ getCurrentValue(badge) }} / {{ badge.requirement }}</p>
               </div>
-              <span v-if="badge.earned" class="earned-badge">✓ Unlocked</span>
-              <span v-else class="locked-badge">🔒 Locked</span>
             </div>
           </div>
         </div>
 
         <!-- Participation Badges -->
         <div class="badge-category">
-          <div class="category-header">
-            <h2>📚 Participation Badges</h2>
-            <p>Unlocked by completing quizzes</p>
-          </div>
+          <h2 class="category-title">Participation</h2>
           <div class="badges-grid">
             <div
               v-for="badge in allBadges.participation"
               :key="badge.id"
-              :class="['badge-card', { earned: badge.earned, locked: !badge.earned }]"
+              :class="['badge-card', { earned: badge.earned }]"
             >
               <div class="badge-icon" :class="`tier-${badge.tier}`">
                 {{ badge.icon }}
               </div>
-              <h3>{{ badge.name }}</h3>
-              <p>{{ badge.description }}</p>
-              <div class="badge-requirement">
-                <div class="requirement-bar">
-                  <div 
-                    class="requirement-fill" 
-                    :style="{ width: `${getProgress(badge)}%` }"
-                  ></div>
-                </div>
-                <span class="requirement-text">
-                  {{ getCurrentValue(badge) }} / {{ badge.requirement }}
-                </span>
+              <div class="badge-content">
+                <h3>{{ badge.name }}</h3>
+                <p class="badge-progress">{{ getCurrentValue(badge) }} / {{ badge.requirement }}</p>
               </div>
-              <span v-if="badge.earned" class="earned-badge">✓ Unlocked</span>
-              <span v-else class="locked-badge">🔒 Locked</span>
             </div>
           </div>
         </div>
 
         <!-- Streak Badges -->
         <div class="badge-category">
-          <div class="category-header">
-            <h2>🔥 Streak Badges</h2>
-            <p>Maintain consecutive days of play</p>
-          </div>
+          <h2 class="category-title">Daily Streaks</h2>
           <div class="badges-grid">
             <div
               v-for="badge in allBadges.streak"
               :key="badge.id"
-              :class="['badge-card', { earned: badge.earned, locked: !badge.earned }]"
+              :class="['badge-card', { earned: badge.earned }]"
             >
               <div class="badge-icon" :class="`tier-${badge.tier}`">
                 {{ badge.icon }}
               </div>
-              <h3>{{ badge.name }}</h3>
-              <p>{{ badge.description }}</p>
-              <div class="badge-requirement">
-                <div class="requirement-bar">
-                  <div 
-                    class="requirement-fill" 
-                    :style="{ width: `${getProgress(badge)}%` }"
-                  ></div>
-                </div>
-                <span class="requirement-text">
-                  {{ getCurrentValue(badge) }} / {{ badge.requirement }}
-                </span>
+              <div class="badge-content">
+                <h3>{{ badge.name }}</h3>
+                <p class="badge-progress">{{ getCurrentValue(badge) }} / {{ badge.requirement }}</p>
               </div>
-              <span v-if="badge.earned" class="earned-badge">✓ Unlocked</span>
-              <span v-else class="locked-badge">🔒 Locked</span>
             </div>
           </div>
         </div>
 
         <!-- Win Streak Badges -->
         <div class="badge-category">
-          <div class="category-header">
-            <h2>⭐ Win Streak Badges</h2>
-            <p>Win multiple quizzes in a row</p>
-          </div>
+          <h2 class="category-title">Win Streaks</h2>
           <div class="badges-grid">
             <div
               v-for="badge in allBadges.winStreak"
               :key="badge.id"
-              :class="['badge-card', { earned: badge.earned, locked: !badge.earned }]"
+              :class="['badge-card', { earned: badge.earned }]"
             >
               <div class="badge-icon" :class="`tier-${badge.tier}`">
                 {{ badge.icon }}
               </div>
-              <h3>{{ badge.name }}</h3>
-              <p>{{ badge.description }}</p>
-              <div class="badge-requirement">
-                <div class="requirement-bar">
-                  <div 
-                    class="requirement-fill" 
-                    :style="{ width: `${getProgress(badge)}%` }"
-                  ></div>
-                </div>
-                <span class="requirement-text">
-                  {{ getCurrentValue(badge) }} / {{ badge.requirement }}
-                </span>
+              <div class="badge-content">
+                <h3>{{ badge.name }}</h3>
+                <p class="badge-progress">{{ getCurrentValue(badge) }} / {{ badge.requirement }}</p>
               </div>
-              <span v-if="badge.earned" class="earned-badge">✓ Unlocked</span>
-              <span v-else class="locked-badge">🔒 Locked</span>
             </div>
           </div>
         </div>
 
         <!-- Perfect Score Badges -->
         <div class="badge-category">
-          <div class="category-header">
-            <h2>💯 Perfect Score Badges</h2>
-            <p>Achieve 100% quiz scores</p>
-          </div>
+          <h2 class="category-title">Perfect Scores</h2>
           <div class="badges-grid">
             <div
               v-for="badge in allBadges.perfect"
               :key="badge.id"
-              :class="['badge-card', { earned: badge.earned, locked: !badge.earned }]"
+              :class="['badge-card', { earned: badge.earned }]"
             >
               <div class="badge-icon" :class="`tier-${badge.tier}`">
                 {{ badge.icon }}
               </div>
-              <h3>{{ badge.name }}</h3>
-              <p>{{ badge.description }}</p>
-              <div class="badge-requirement">
-                <div class="requirement-bar">
-                  <div 
-                    class="requirement-fill" 
-                    :style="{ width: `${getProgress(badge)}%` }"
-                  ></div>
-                </div>
-                <span class="requirement-text">
-                  {{ getCurrentValue(badge) }} / {{ badge.requirement }}
-                </span>
+              <div class="badge-content">
+                <h3>{{ badge.name }}</h3>
+                <p class="badge-progress">{{ getCurrentValue(badge) }} / {{ badge.requirement }}</p>
               </div>
-              <span v-if="badge.earned" class="earned-badge">✓ Unlocked</span>
-              <span v-else class="locked-badge">🔒 Locked</span>
             </div>
           </div>
         </div>
@@ -320,278 +215,243 @@ export default {
 .achievements-page {
   min-height: calc(100vh - 70px);
   background: var(--bg);
-  padding: 40px 20px;
+  padding: 60px 20px;
 }
 
 .achievements-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
+/* Simplified Header */
 .achievements-header {
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 60px;
 }
 
 .achievements-header h1 {
-  font-size: 3rem;
-  color: var(--text);
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-.achievements-header > p {
-  color: var(--text-muted);
-  font-size: 1.2rem;
-  margin-bottom: 40px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
-}
-
-.stat-card {
-  background: var(--bg-light);
-  padding: 25px;
-  border-radius: 15px;
-  border: 2px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  transition: all 0.3s;
-}
-
-.stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: var(--primary);
-}
-
-.stat-icon {
   font-size: 2.5rem;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  border-radius: 12px;
-  flex-shrink: 0;
-}
-
-.stat-info h3 {
-  font-size: 2rem;
   color: var(--text);
-  margin-bottom: 5px;
-  font-weight: 700;
-}
-
-.stat-info p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.progress-section {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 30px;
-  background: var(--bg-light);
-  border-radius: 15px;
-  border: 2px solid var(--border);
-}
-
-.progress-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   font-weight: 600;
-  color: var(--text);
-  font-size: 1.1rem;
+  letter-spacing: -0.02em;
 }
 
+.subtitle {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-bottom: 30px;
+  font-weight: 400;
+}
+
+/* Minimal Progress Bar */
 .progress-bar {
-  height: 20px;
+  max-width: 500px;
+  margin: 0 auto 40px;
+  height: 6px;
   background: var(--border);
-  border-radius: 10px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
-  transition: width 0.5s ease;
-  border-radius: 10px;
+  background: var(--primary);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Streamlined Stats Row */
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Simplified Badge Section */
 .badges-section {
-  margin-top: 50px;
+  margin-top: 60px;
 }
 
 .badge-category {
-  margin-bottom: 60px;
+  margin-bottom: 48px;
 }
 
-.category-header {
-  margin-bottom: 30px;
-}
-
-.category-header h2 {
-  font-size: 2rem;
+.category-title {
+  font-size: 1.25rem;
   color: var(--text);
-  margin-bottom: 8px;
-  font-weight: 700;
+  margin-bottom: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.category-header p {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-}
-
+/* Clean Badge Grid */
 .badges-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 25px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
 }
 
+/* Minimalist Badge Card */
 .badge-card {
   background: var(--bg-light);
-  border: 2px solid var(--border);
-  border-radius: 15px;
-  padding: 30px;
-  text-align: center;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  width: 280px;
+  max-width: 100%;
+}
+
+.badge-card:not(.earned) {
+  opacity: 0.5;
+}
+
+.badge-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .badge-card.earned {
   border-color: var(--primary);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background: var(--bg-light);
 }
 
-.badge-card.locked {
-  opacity: 0.6;
-}
-
-.badge-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
+/* Compact Badge Icon */
 .badge-icon {
-  font-size: 4rem;
-  width: 100px;
-  height: 100px;
+  font-size: 2rem;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  margin: 0 auto 20px;
-  transition: transform 0.3s;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
 .badge-card:hover .badge-icon {
-  transform: scale(1.1) rotate(5deg);
+  transform: scale(1.05);
 }
 
 .badge-icon.tier-bronze {
   background: linear-gradient(135deg, #cd7f32 0%, #b8860b 100%);
-  box-shadow: 0 4px 15px rgba(205, 127, 50, 0.3);
 }
 
 .badge-icon.tier-silver {
   background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
-  box-shadow: 0 4px 15px rgba(192, 192, 192, 0.3);
 }
 
 .badge-icon.tier-gold {
   background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
 }
 
 .badge-icon.tier-platinum {
   background: linear-gradient(135deg, #e5e4e2 0%, #b0c4de 100%);
-  box-shadow: 0 4px 15px rgba(176, 196, 222, 0.5);
+}
+
+/* Badge Content */
+.badge-content {
+  flex: 1;
+  text-align: left;
+  min-width: 0;
 }
 
 .badge-card h3 {
-  font-size: 1.4rem;
+  font-size: 1rem;
   color: var(--text);
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.badge-card p {
-  color: var(--text-muted);
-  margin-bottom: 20px;
-  font-size: 0.95rem;
-  min-height: 40px;
-}
-
-.badge-requirement {
-  margin: 20px 0;
-}
-
-.requirement-bar {
-  height: 8px;
-  background: var(--border);
-  border-radius: 4px;
+  margin-bottom: 4px;
+  font-weight: 500;
   overflow: hidden;
-  margin-bottom: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.requirement-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
-  transition: width 0.5s ease;
-  border-radius: 4px;
-}
-
-.requirement-text {
-  font-size: 0.9rem;
+.badge-progress {
+  font-size: 0.875rem;
   color: var(--text-muted);
-  font-weight: 600;
+  margin: 0;
+  font-weight: 400;
 }
 
-.earned-badge {
-  display: inline-block;
-  padding: 8px 20px;
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
-  color: white;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.locked-badge {
-  display: inline-block;
-  padding: 8px 20px;
-  background: var(--border);
-  color: var(--text-muted);
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
+  .achievements-page {
+    padding: 40px 16px;
+  }
+
   .achievements-header h1 {
     font-size: 2rem;
   }
   
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .stats-row {
+    gap: 32px;
   }
-  
+
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
   .badges-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
-  
-  .category-header h2 {
+
+  .category-title {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-row {
+    gap: 24px;
+  }
+
+  .stat-value {
     font-size: 1.5rem;
+  }
+
+  .badge-card {
+    padding: 20px 16px;
+    gap: 12px;
+  }
+
+  .badge-icon {
+    font-size: 1.75rem;
+    width: 48px;
+    height: 48px;
+  }
+
+  .badge-card h3 {
+    font-size: 0.9375rem;
   }
 }
 </style>
