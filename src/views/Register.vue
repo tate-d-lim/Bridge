@@ -8,20 +8,34 @@
         <form @submit.prevent="handleRegister">
           <!-- User Type Selection -->
           <div class="user-type-selector">
-            <button
-              type="button"
-              :class="['btn', 'btn-primary', { active: userType === 'jobseeker' }]"
+            <div
+              :class="['selection-option', { selected: userType === 'jobseeker' }]"
               @click="userType = 'jobseeker'"
             >
-              Job Seeker
-            </button>
-            <button
-              type="button"
-              :class="['btn', 'btn-secondary', { active: userType === 'employer' }]"
+              <div class="option-icon">
+                <img src="../assets/user.svg" alt="Job Seeker" />
+              </div>
+              <div class="option-content">
+                <h3>Job Seeker</h3>
+              </div>
+              <div class="selection-indicator">
+                <span v-if="userType === 'jobseeker'" class="checkmark">✓</span>
+              </div>
+            </div>
+            <div
+              :class="['selection-option', { selected: userType === 'employer' }]"
               @click="userType = 'employer'"
             >
-              Employer
-            </button>
+              <div class="option-icon">
+                <img src="../assets/candidates.svg" alt="Employer" />
+              </div>
+              <div class="option-content">
+                <h3>Employer</h3>
+              </div>
+              <div class="selection-indicator">
+                <span v-if="userType === 'employer'" class="checkmark">✓</span>
+              </div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -227,6 +241,126 @@ export default {
 </script>
 
 <style scoped>
-/* Register page specific styles - most styles are now in external stylesheet */
+.user-type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.selection-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.selection-option:hover {
+  border-color: var(--text-muted);
+  background: var(--bg-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.selection-option.selected {
+  border-color: var(--primary);
+  background: var(--bg-light);
+  box-shadow: 0 4px 16px rgba(64, 123, 255, 0.15);
+}
+
+.dark-mode .selection-option.selected {
+  background: var(--bg);
+  box-shadow: 0 4px 16px rgba(64, 123, 255, 0.25);
+}
+
+.option-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-light);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.option-icon img {
+  width: 24px;
+  height: 24px;
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.selection-option.selected .option-icon {
+  background: var(--bg-light);
+  transform: scale(1.05);
+}
+
+.selection-option.selected .option-icon img {
+  opacity: 1;
+  filter: none;
+}
+
+.option-content {
+  flex: 1;
+  text-align: left;
+}
+
+.option-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.selection-indicator {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.selection-option.selected .selection-indicator {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkmark {
+  color: white;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .user-type-selector {
+    grid-template-columns: 1fr;
+  }
+  
+  .option-icon {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .option-icon img {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .selection-option {
+    padding: 14px;
+  }
+}
 </style>
 
