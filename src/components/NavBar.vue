@@ -22,6 +22,9 @@
 
           <!-- Job Seeker-specific links -->
           <template v-if="isJobSeeker">
+            <router-link to="/browse-jobs" class="nav-link" @click="closeMenu">
+              Browse Jobs
+            </router-link>
             <router-link to="/reviews" class="nav-link" @click="closeMenu">
               Company Reviews
             </router-link>
@@ -41,6 +44,15 @@
           </template>
         </template>
 
+        <!-- Non-authenticated user navigation -->
+        <template v-else>
+          <router-link to="/" class="nav-link" @click="closeMenu">
+            Home
+          </router-link>
+          <router-link to="/browse-jobs" class="nav-link" @click="closeMenu">
+            Browse Jobs
+          </router-link>
+        </template>
 
         <!-- Spacer to push right items to the right -->
         <div class="nav-spacer"></div>

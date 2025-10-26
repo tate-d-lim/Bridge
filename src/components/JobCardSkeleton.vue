@@ -1,0 +1,199 @@
+<template>
+  <div class="job-card-skeleton">
+    <div class="job-card-wrapper">
+      <div class="job-card-header-skeleton">
+        <div class="job-title-section-skeleton">
+          <div class="skeleton skeleton-title"></div>
+          <div class="skeleton skeleton-company"></div>
+        </div>
+        <div class="skeleton skeleton-button"></div>
+      </div>
+
+      <div class="job-details-skeleton">
+        <div class="skeleton skeleton-detail"></div>
+        <div class="skeleton skeleton-detail"></div>
+        <div class="skeleton skeleton-detail"></div>
+      </div>
+
+      <div class="job-tags-skeleton">
+        <div class="skeleton skeleton-tag"></div>
+        <div class="skeleton skeleton-tag"></div>
+      </div>
+
+      <div class="job-description-skeleton">
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton skeleton-line short"></div>
+      </div>
+
+      <div class="job-footer-skeleton">
+        <div class="skeleton skeleton-date"></div>
+        <div class="skeleton skeleton-button-large"></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'JobCardSkeleton'
+}
+</script>
+
+<style scoped>
+.job-card-skeleton {
+  display: flex;
+  height: 100%;
+}
+
+.job-card-wrapper {
+  background: var(--bg);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Header Skeleton */
+.job-card-header-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.job-title-section-skeleton {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 75%;
+}
+
+.skeleton-company {
+  height: 14px;
+  width: 50%;
+}
+
+.skeleton-button {
+  height: 36px;
+  width: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Details Skeleton */
+.job-details-skeleton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.skeleton-detail {
+  height: 14px;
+  width: 80px;
+}
+
+/* Tags Skeleton */
+.job-tags-skeleton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.skeleton-tag {
+  height: 20px;
+  width: 60px;
+  border-radius: 12px;
+}
+
+/* Description Skeleton */
+.job-description-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.skeleton-line {
+  height: 14px;
+  width: 100%;
+}
+
+.skeleton-line.short {
+  width: 83.33%;
+}
+
+/* Footer Skeleton */
+.job-footer-skeleton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: auto;
+}
+
+.skeleton-date {
+  height: 12px;
+  width: 80px;
+}
+
+.skeleton-button-large {
+  height: 36px;
+  width: 96px;
+  border-radius: 8px;
+}
+
+/* Skeleton Animation */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-light) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    var(--bg-light) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .job-card-wrapper {
+    padding: 16px;
+  }
+  
+  .skeleton-title {
+    height: 18px;
+  }
+  
+  .job-details-skeleton {
+    gap: 8px;
+  }
+  
+  .skeleton-detail {
+    font-size: 0.7rem;
+    width: 60px;
+  }
+}
+</style>
+

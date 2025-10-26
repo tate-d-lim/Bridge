@@ -18,69 +18,23 @@
       </div>
     </section>
 
-    <!-- Browse Jobs Section -->
-    <section id="jobs-section" class="browse-jobs">
-      <div class="jobs-header">
-        <h2>Browse Available Jobs</h2>
-        <p>Find your next opportunity from top employers in Singapore</p>
-      </div>
+    <!-- How It Works Section -->
+    <HowItWorks />
 
-      <!-- Job Filters -->
-      <div class="filters-container">
-        <input
-          type="text"
-          v-model="searchQuery"
-          placeholder="Search jobs by title, company..."
-          class="search-input"
-        />
-        <select v-model="selectedCategory" class="filter-select">
-          <option value="">All Categories</option>
-          <option value="construction">Construction</option>
-          <option value="hospitality">Hospitality</option>
-          <option value="manufacturing">Manufacturing</option>
-          <option value="healthcare">Healthcare</option>
-          <option value="logistics">Logistics</option>
-        </select>
-        <button @click="applyFilters" class="btn btn-primary">Search</button>
-      </div>
+    <!-- Category Chips Section -->
+    <CategoryChips @category-selected="onCategorySelected" />
 
-      <!-- Job Listings -->
-      <div class="jobs-container">
-        <div v-if="loading" class="loading">
-          <p>Loading jobs...</p>
-        </div>
-        <div v-else-if="filteredJobs.length === 0" class="no-results">
-          <p>No jobs found. Try adjusting your search.</p>
-        </div>
-        <div v-else class="jobs-grid">
-          <JobCard
-            v-for="job in filteredJobs.slice(0, 6)"
-            :key="job.id"
-            :job="job"
-          />
-        </div>
+    <!-- Call to Action for Browse Jobs -->
+    <section class="cta-browse-jobs">
+      <div class="container">
+        <h2>Ready to Find Your Next Job?</h2>
+        <p>Browse through hundreds of job opportunities from top employers in Singapore</p>
+        <router-link to="/browse-jobs" class="btn btn-primary btn-large">Browse All Jobs</router-link>
       </div>
     </section>
 
     <!-- Stats Section - Only show when not logged in -->
-    <section v-if="!isAuthenticated" class="stats">
-      <div class="stat-item">
-        <h3>10,000+</h3>
-        <p>Active Job Seekers</p>
-      </div>
-      <div class="stat-item">
-        <h3>5,000+</h3>
-        <p>Registered Employers</p>
-      </div>
-      <div class="stat-item">
-        <h3>15,000+</h3>
-        <p>Jobs Posted</p>
-      </div>
-      <div class="stat-item">
-        <h3>8,000+</h3>
-        <p>Successful Hires</p>
-      </div>
-    </section>
+    <StatsSection v-if="!isAuthenticated" />
 
     <!-- CTA Section - Only show when not logged in -->
     <section v-if="!isAuthenticated" class="cta">
@@ -92,68 +46,46 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import JobCard from '../components/JobCard.vue'
+import CategoryChips from '../components/CategoryChips.vue'
+import HowItWorks from '../components/HowItWorks.vue'
+import StatsSection from '../components/StatsSection.vue'
 
 export default {
   name: 'Home',
   components: {
-    JobCard
+    CategoryChips,
+    HowItWorks,
+    StatsSection
   },
   setup() {
     const store = useStore()
+    const loading = computed(() => store.getters['jobs/loading'])
     
-    const searchQuery = ref('')
-    const selectedCategory = ref('')
-    const loading = ref(false)
-
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
-    const jobs = computed(() => store.getters['jobs/allJobs'])
 
-    const filteredJobs = computed(() => {
-      let result = jobs.value
+    const onCategorySelected = (category) => {
+      // Redirect to browse jobs page with selected category
+      window.location.href = `/browse-jobs?category=${category.id}`
+    }
 
-      if (searchQuery.value) {
-        result = result.filter(job =>
-          job.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          job.company.toLowerCase().includes(searchQuery.value.toLowerCase())
-        )
-      }
-
-      if (selectedCategory.value) {
-        result = result.filter(job => 
-          job.category === selectedCategory.value
-        )
-      }
-
-      return result
-    })
-
-    const applyFilters = async () => {
-      loading.value = true
+    const fetchJobs = async () => {
       try {
-        await store.dispatch('jobs/fetchJobs', {
-          category: selectedCategory.value
-        })
+        await store.dispatch('jobs/fetchJobs')
       } catch (error) {
         console.error('Error fetching jobs:', error)
-      } finally {
-        loading.value = false
       }
     }
 
     onMounted(() => {
-      applyFilters()
+      fetchJobs()
     })
 
     return {
-      searchQuery,
-      selectedCategory,
-      loading,
       isAuthenticated,
-      filteredJobs,
-      applyFilters
+      loading,
+      onCategorySelected
     }
   }
 }
@@ -293,30 +225,29 @@ export default {
   gap: 25px;
 }
 
-.stats {
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  padding: 80px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-  gap: 30px;
-}
 
-.stat-item {
+.cta-browse-jobs {
+  background: var(--bg-light);
+  padding: 80px 20px;
   text-align: center;
 }
 
-.stat-item h3 {
-  font-size: 3rem;
-  color: var(--primary);
-  margin-bottom: 10px;
+.cta-browse-jobs h2 {
+  font-size: 2.5rem;
   font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  line-height: 1.2;
 }
 
-.stat-item p {
+.cta-browse-jobs p {
   font-size: 1.1rem;
   color: var(--text-muted);
+  margin-bottom: 30px;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .cta {

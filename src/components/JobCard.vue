@@ -1,47 +1,75 @@
 <template>
-  <div class="card card-interactive job-card">
-    <div class="job-card-header">
-      <h3>{{ job.title }}</h3>
-      <button @click="saveJob" class="save-btn" title="Save job">
-        <img src="../assets/bookmark.svg" alt="Bookmark" class="save-icon" />
-      </button>
-    </div>
+  <div 
+    class="job-card"
+    @click="handleViewDetails"
+  >
+    <div class="job-card-wrapper">
+      <div class="job-card-header">
+        <div class="job-title-section">
+          <h3 class="job-title">{{ job.title }}</h3>
+          <p class="company-name">{{ job.company }}</p>
+        </div>
+        <button 
+          @click.stop="handleBookmark" 
+          class="bookmark-btn"
+          :class="{ active: isBookmarked }"
+        >
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+          </svg>
+        </button>
+      </div>
 
-    <p class="company">{{ job.company }}</p>
+      <div class="job-details">
+        <div class="detail-item">
+          <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span>{{ job.location }}</span>
+        </div>
+        <div class="detail-item">
+          <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>${{ job.salary }}</span>
+        </div>
+        <div class="detail-item">
+          <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>{{ capitalize(job.type || 'full-time') }}</span>
+        </div>
+      </div>
 
-    <div class="job-details">
-      <span class="detail-item">
-        <img src="../assets/location.svg" alt="" class="icon-svg" />
-        {{ job.location }}
-      </span>
-      <span class="detail-item">
-        <img src="../assets/salary.svg" alt="" class="icon-svg" />
-        ${{ job.salary }}
-      </span>
-      <span class="detail-item">
-        <img src="../assets/time-forward.svg" alt="" class="icon-svg" />
-        {{ job.type || 'Full-time' }}
-      </span>
-    </div>
+      <div class="job-tags">
+        <span 
+          v-for="tag in tags" 
+          :key="tag" 
+          class="tag"
+        >
+          {{ tag }}
+        </span>
+      </div>
 
-    <div class="job-tags">
-      <span class="tag">{{ job.category }}</span>
-    </div>
+      <p class="job-description">
+        {{ truncateDescription(job.description) }}
+      </p>
 
-    <p class="job-description">
-      {{ truncateDescription(job.description) }}
-    </p>
-
-    <div class="job-footer">
-      <span class="posted-date">{{ formatDate(job.createdAt) }}</span>
-      <router-link :to="`/jobs/${job.id}`" class="btn btn-primary">
-        View Details
-      </router-link>
+      <div class="job-footer">
+        <span class="posted-date">{{ formatDate(job.createdAt) }}</span>
+        <button class="view-details-btn">
+          View Details
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+
 export default {
   name: 'JobCard',
   props: {
@@ -50,14 +78,41 @@ export default {
       required: true
     }
   },
-  methods: {
-    truncateDescription(description) {
+  setup(props) {
+    const router = useRouter()
+    const isBookmarked = ref(false)
+
+    const tags = computed(() => {
+      const tagsList = []
+      if (props.job.category) {
+        tagsList.push(props.job.category)
+      }
+      // Add any additional tags from the job object if they exist
+      if (props.job.tags && Array.isArray(props.job.tags)) {
+        tagsList.push(...props.job.tags)
+      }
+      return tagsList
+    })
+
+    const handleBookmark = (e) => {
+      e.stopPropagation()
+      isBookmarked.value = !isBookmarked.value
+      // TODO: Implement bookmark functionality
+      console.log('Job bookmarked:', props.job.id)
+    }
+
+    const handleViewDetails = () => {
+      router.push(`/jobs/${props.job.id}`)
+    }
+
+    const truncateDescription = (description) => {
       if (!description) return ''
       return description.length > 120 
         ? description.substring(0, 120) + '...' 
         : description
-    },
-    formatDate(dateString) {
+    }
+
+    const formatDate = (dateString) => {
       if (!dateString) return 'Recently'
       const date = new Date(dateString)
       const now = new Date()
@@ -69,10 +124,21 @@ export default {
       if (diffDays < 7) return `${diffDays} days ago`
       if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
       return date.toLocaleDateString()
-    },
-    saveJob() {
-      // TODO: Implement save job functionality
-      console.log('Job saved:', this.job.id)
+    }
+
+    const capitalize = (str) => {
+      if (!str) return ''
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+    }
+
+    return {
+      isBookmarked,
+      tags,
+      handleBookmark,
+      handleViewDetails,
+      truncateDescription,
+      formatDate,
+      capitalize
     }
   }
 }
@@ -81,106 +147,199 @@ export default {
 <style scoped>
 .job-card {
   display: flex;
-  flex-direction: column;
   height: 100%;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
+.job-card:hover {
+  transform: translateY(-4px);
+}
+
+.job-card-wrapper {
+  background: var(--bg);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.job-card:hover .job-card-wrapper {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Header */
 .job-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
-  margin-bottom: 10px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.job-card-header h3 {
-  font-size: 1.5rem;
-  color: var(--text);
-  margin: 0;
+.job-title-section {
   flex: 1;
+  min-width: 0;
 }
 
-.save-btn {
-  background: none;
-  border: none;
-  font-size: 1.3rem;
-  cursor: pointer;
-  padding: 5px;
-  transition: transform 0.2s;
-  color: var(--text-muted);
+.job-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+  transition: color 0.3s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.save-btn:hover {
-  transform: scale(1.2);
+.job-card:hover .job-title {
   color: var(--primary);
 }
 
-.save-icon {
-  width: 20px;
-  height: 20px;
-  vertical-align: middle;
-}
-
-.company {
+.company-name {
+  font-size: 0.875rem;
   color: var(--text-muted);
-  font-size: 1.1rem;
-  margin-bottom: 15px;
+  margin: 0;
 }
 
+/* Bookmark Button */
+.bookmark-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.bookmark-btn:hover {
+  background: var(--bg-light);
+}
+
+.bookmark-btn.active {
+  color: var(--primary);
+  transform: scale(1.1);
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Job Details */
 .job-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 15px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .detail-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  font-size: 0.75rem;
   color: var(--text-muted);
-  font-size: 0.95rem;
 }
 
-.icon-svg {
-  width: 16px;
-  height: 16px;
-  opacity: 0.7;
+.icon-xs {
+  width: 14px;
+  height: 14px;
 }
 
+/* Tags */
 .job-tags {
   display: flex;
-  gap: 8px;
-  margin-bottom: 15px;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .tag {
-  background: var(--bg);
-  color: var(--primary);
-  padding: 6px 12px;
-  border-radius: 15px;
-  font-size: 0.85rem;
-  text-transform: capitalize;
-  border: 1px solid var(--border);
-}
-
-.job-description {
+  background: var(--bg-light);
   color: var(--text);
-  line-height: 1.6;
-  margin-bottom: 20px;
-  flex: 1;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
 }
 
+/* Description */
+.job-description {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Footer */
 .job-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 15px;
-  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: auto;
 }
 
 .posted-date {
+  font-size: 0.75rem;
   color: var(--text-muted);
-  font-size: 0.9rem;
+}
+
+.view-details-btn {
+  background: var(--bg-light);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.job-card:hover .view-details-btn {
+  background: var(--primary);
+  color: var(--bg-light);
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .job-card-wrapper {
+    padding: 16px;
+  }
+  
+  .job-title {
+    font-size: 1.1rem;
+  }
+  
+  .job-details {
+    gap: 8px;
+  }
+  
+  .detail-item {
+    font-size: 0.7rem;
+  }
 }
 </style>
 

@@ -21,10 +21,13 @@
           <select v-model="selectedIndustry" class="filter-select">
             <option value="">All Industries</option>
             <option value="construction">Construction</option>
-            <option value="hospitality">Hospitality</option>
             <option value="manufacturing">Manufacturing</option>
-            <option value="healthcare">Healthcare</option>
+            <option value="hospitality">Hospitality</option>
+            <option value="maintenance">Maintenance</option>
             <option value="logistics">Logistics</option>
+            <option value="cleaning">Cleaning</option>
+            <option value="security">Security</option>
+            <option value="facilities">Facilities</option>
           </select>
         </div>
 

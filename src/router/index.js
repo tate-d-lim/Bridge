@@ -26,6 +26,12 @@ const routes = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/browse-jobs',
+    name: 'BrowseJobs',
+    component: () => import('../views/BrowseJobs.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: Login,
