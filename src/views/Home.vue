@@ -14,7 +14,33 @@
         </div>
       </div>
       <div class="hero-image">
-        <img src="../assets/migrantWorkerHappy.png" alt="Happy Migrant Workers" />
+        <div class="carousel-container">
+          <div class="carousel-wrapper">
+            <div 
+              class="carousel-slide" 
+              :class="{ active: currentSlide === index }"
+              v-for="(image, index) in heroImages" 
+              :key="index"
+            >
+              <img :src="image.src" :alt="image.alt" />
+            </div>
+          </div>
+          
+          <!-- Carousel Navigation Dots -->
+          <div class="carousel-dots">
+            <button
+              v-for="(image, index) in heroImages"
+              :key="index"
+              @click="currentSlide = index"
+              class="dot"
+              :class="{ active: currentSlide === index }"
+            ></button>
+          </div>
+          
+          <!-- Carousel Arrows -->
+          <button @click="previousSlide" class="carousel-arrow carousel-arrow-prev">‹</button>
+          <button @click="nextSlide" class="carousel-arrow carousel-arrow-next">›</button>
+        </div>
       </div>
     </section>
 
@@ -46,11 +72,14 @@
 </template>
 
 <script>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import CategoryChips from '../components/CategoryChips.vue'
 import HowItWorks from '../components/HowItWorks.vue'
 import StatsSection from '../components/StatsSection.vue'
+import migrantWorkerHappy from '../assets/migrantWorkerHappy.png'
+import migrantWorker1 from '../assets/migrantWorker1.png'
+import migrantWorker2 from '../assets/migrantWorker2.png'
 
 export default {
   name: 'Home',
@@ -64,6 +93,35 @@ export default {
     const loading = computed(() => store.getters['jobs/loading'])
     
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
+    
+    const currentSlide = ref(0)
+    let autoSlideInterval = null
+
+    const heroImages = [
+      { src: migrantWorkerHappy, alt: 'Happy Migrant Workers' },
+      { src: migrantWorker1, alt: 'Migrant Workers' },
+      { src: migrantWorker2, alt: 'Professional Workers' }
+    ]
+
+    const nextSlide = () => {
+      currentSlide.value = (currentSlide.value + 1) % heroImages.length
+    }
+
+    const previousSlide = () => {
+      currentSlide.value = (currentSlide.value - 1 + heroImages.length) % heroImages.length
+    }
+
+    const startAutoSlide = () => {
+      autoSlideInterval = setInterval(() => {
+        nextSlide()
+      }, 5000) // Change slide every 5 seconds
+    }
+
+    const stopAutoSlide = () => {
+      if (autoSlideInterval) {
+        clearInterval(autoSlideInterval)
+      }
+    }
 
     const onCategorySelected = (category) => {
       // Redirect to browse jobs page with selected category
@@ -80,12 +138,21 @@ export default {
 
     onMounted(() => {
       fetchJobs()
+      startAutoSlide()
+    })
+
+    onUnmounted(() => {
+      stopAutoSlide()
     })
 
     return {
       isAuthenticated,
       loading,
-      onCategorySelected
+      onCategorySelected,
+      heroImages,
+      currentSlide,
+      nextSlide,
+      previousSlide
     }
   }
 }
@@ -149,11 +216,98 @@ export default {
   max-width: 600px;
 }
 
-.hero-image img {
+/* Carousel Styles */
+.carousel-container {
+  position: relative;
   width: 100%;
   max-width: 500px;
-  height: auto;
+  margin: 0 auto;
+}
+
+.carousel-wrapper {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  overflow: hidden;
   border-radius: 10px;
+}
+
+.carousel-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.carousel-slide.active {
+  opacity: 1;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+/* Carousel Navigation Dots */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.dot.active {
+  background: var(--primary);
+  width: 24px;
+  border-radius: 5px;
+}
+
+/* Carousel Arrows */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  z-index: 10;
+}
+
+.carousel-arrow:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.carousel-arrow-prev {
+  left: 10px;
+}
+
+.carousel-arrow-next {
+  right: 10px;
 }
 
 .browse-jobs {

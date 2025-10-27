@@ -1,193 +1,184 @@
 <template>
   <div class="quizzes-page">
-    <div class="quizzes-container">
-      <div class="page-header">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <div class="hero-icon">
+          <img src="/icons/brain.svg" alt="Brain" />
+        </div>
         <h1>Skill Development Quizzes</h1>
-        <p>Take AI-generated quizzes to test your skills and knowledge</p>
+        <p>
+          Take AI-generated quizzes to test your skills and knowledge. Choose your difficulty level and start learning today.
+        </p>
       </div>
+    </section>
 
-      <!-- Quiz Levels -->
-      <div class="quiz-levels">
-        <!-- Beginner Level -->
-        <div class="level-section">
-          <h2 class="level-title beginner">🟢 Beginner Level</h2>
-          <div class="category-carousel">
-            <div class="carousel-container">
-              <div class="carousel-track" :style="{ transform: `translateX(-${beginnerCarouselIndex * 100}%)` }">
-                <div v-for="topic in topics" :key="`beginner-${topic.id}`" class="carousel-slide">
-                  <div class="card card-interactive quiz-card" @click="startQuiz(topic.name, 'beginner')">
-                    <div class="quiz-icon">{{ topic.icon }}</div>
-                    <h3>{{ topic.name }}</h3>
-                    <p>{{ topic.description }}</p>
-                  </div>
-                </div>
-              </div>
-              <button 
-                class="carousel-btn prev" 
-                @click="prevBeginner"
-                :disabled="beginnerCarouselIndex === 0"
-              >
-                ‹
-              </button>
-              <button 
-                class="carousel-btn next" 
-                @click="nextBeginner"
-                :disabled="beginnerCarouselIndex >= maxIndex"
-              >
-                ›
-              </button>
-            </div>
-          </div>
+    <!-- Quiz Content -->
+    <section class="quiz-content">
+      <div v-for="(difficulty, diffIndex) in difficulties" :key="difficulty.level" class="quiz-section">
+        <!-- Difficulty Header -->
+        <div class="difficulty-header">
+          <div class="color-bar" :class="difficulty.colorClass"></div>
+          <span class="badge" :class="difficulty.badgeClass">
+            {{ difficulty.level }} Level
+          </span>
+          <div class="header-line" :class="difficulty.colorClass + '-line'"></div>
         </div>
 
-        <!-- Intermediate Level -->
-        <div class="level-section">
-          <h2 class="level-title intermediate">🟡 Intermediate Level</h2>
-          <div class="category-carousel">
-            <div class="carousel-container">
-              <div class="carousel-track" :style="{ transform: `translateX(-${intermediateCarouselIndex * 100}%)` }">
-                <div v-for="topic in topics" :key="`intermediate-${topic.id}`" class="carousel-slide">
-                  <div class="card card-interactive quiz-card" @click="startQuiz(topic.name, 'intermediate')">
-                    <div class="quiz-icon">{{ topic.icon }}</div>
-                    <h3>{{ topic.name }}</h3>
-                    <p>{{ topic.description }}</p>
-                  </div>
+        <!-- Quiz Cards Grid -->
+        <div class="quiz-grid">
+          <div 
+            v-for="(quiz, quizIndex) in difficulty.quizzes" 
+            :key="quiz.id"
+            class="quiz-card"
+            :class="difficulty.colorClass + '-card'"
+            @click="startQuiz(quiz.title, difficulty.level)"
+          >
+            <div class="quiz-gradient" :class="difficulty.colorClass"></div>
+            <div class="quiz-card-content">
+              <div class="quiz-card-header">
+                <div class="quiz-icon" :class="difficulty.iconBgClass">
+                  <img :src="quiz.icon" :alt="quiz.title" />
+                </div>
+                <span class="duration-badge">
+                  <img src="/icons/clock.svg" alt="Clock" class="badge-icon" />
+                  {{ quiz.duration }}
+                </span>
+              </div>
+              <h3>{{ quiz.title }}</h3>
+              <p>{{ quiz.description }}</p>
+              <div class="quiz-info">
+                <div class="info-item">
+                  <img src="/icons/file-text.svg" alt="Questions" class="info-icon" />
+                  <span>{{ quiz.questions }} questions</span>
                 </div>
               </div>
-              <button 
-                class="carousel-btn prev" 
-                @click="prevIntermediate"
-                :disabled="intermediateCarouselIndex === 0"
-              >
-                ‹
-              </button>
-              <button 
-                class="carousel-btn next" 
-                @click="nextIntermediate"
-                :disabled="intermediateCarouselIndex >= maxIndex"
-              >
-                ›
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Advanced Level -->
-        <div class="level-section">
-          <h2 class="level-title advanced">🔴 Advanced Level</h2>
-          <div class="category-carousel">
-            <div class="carousel-container">
-              <div class="carousel-track" :style="{ transform: `translateX(-${advancedCarouselIndex * 100}%)` }">
-                <div v-for="topic in topics" :key="`advanced-${topic.id}`" class="carousel-slide">
-                  <div class="card card-interactive quiz-card" @click="startQuiz(topic.name, 'advanced')">
-                    <div class="quiz-icon">{{ topic.icon }}</div>
-                    <h3>{{ topic.name }}</h3>
-                    <p>{{ topic.description }}</p>
-                  </div>
-                </div>
-              </div>
-              <button 
-                class="carousel-btn prev" 
-                @click="prevAdvanced"
-                :disabled="advancedCarouselIndex === 0"
-              >
-                ‹
-              </button>
-              <button 
-                class="carousel-btn next" 
-                @click="nextAdvanced"
-                :disabled="advancedCarouselIndex >= maxIndex"
-              >
-                ›
+              <button class="start-btn">
+                <img src="/icons/play.svg" alt="Play" class="btn-icon" />
+                Start Quiz
               </button>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- Bottom CTA -->
+    <section class="bottom-cta">
+      <div class="cta-card">
+        <img src="/icons/sparkles.svg" alt="Award" class="cta-icon" />
+        <h3>Ready to Test Your Skills?</h3>
+        <p>
+          Complete quizzes to earn certificates and showcase your knowledge to potential employers.
+        </p>
+        <div class="cta-buttons">
+          <router-link to="/achievements" class="btn btn-primary">View My Achievements</router-link>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useStore } from 'vuex'
-import { quizApi } from '../services/api'
 
 export default {
   name: 'Quizzes',
   setup() {
     const router = useRouter()
-    const store = useStore()
 
-    // Carousel indices
-    const beginnerCarouselIndex = ref(0)
-    const intermediateCarouselIndex = ref(0)
-    const advancedCarouselIndex = ref(0)
-
-    // Topics for each level
-    const topics = ref([
+    const difficulties = ref([
       {
-        id: 'construction-basics',
-        name: 'Construction Basics',
-        description: 'Learn fundamental construction concepts',
-        icon: '🏗️'
+        level: "Beginner",
+        colorClass: "green",
+        badgeClass: "green-badge",
+        iconBgClass: "green-icon-bg",
+        quizzes: [
+          {
+            id: "spelling-basics",
+            title: "Spelling Quiz",
+            description: "Improve your English spelling skills",
+            icon: "/icons/file-text.svg",
+            duration: "10 min",
+            questions: 15
+          },
+          {
+            id: "basic-safety",
+            title: "Basic Safety",
+            description: "Introduction to workplace safety",
+            icon: "/icons/check-circle.svg",
+            duration: "8 min",
+            questions: 12
+          }
+        ]
       },
       {
-        id: 'workplace-safety',
-        name: 'Workplace Safety',
-        description: 'Essential safety protocols and procedures',
-        icon: '🛡️'
+        level: "Intermediate",
+        colorClass: "amber",
+        badgeClass: "amber-badge",
+        iconBgClass: "amber-icon-bg",
+        quizzes: [
+          {
+            id: "construction-basics",
+            title: "Construction Basics",
+            description: "Learn fundamental construction concepts",
+            icon: "/icons/hammer.svg",
+            duration: "15 min",
+            questions: 20
+          },
+          {
+            id: "workplace-safety-inter",
+            title: "Workplace Safety",
+            description: "Essential safety protocols and procedures",
+            icon: "/icons/check-circle.svg",
+            duration: "12 min",
+            questions: 18
+          },
+          {
+            id: "communication",
+            title: "Communication Skills",
+            description: "Effective workplace communication",
+            icon: "/icons/users.svg",
+            duration: "10 min",
+            questions: 15
+          }
+        ]
       },
       {
-        id: 'spelling-quiz',
-        name: 'Spelling Quiz',
-        description: 'Improve your English spelling skills',
-        icon: '📝'
+        level: "Advanced",
+        colorClass: "red",
+        badgeClass: "red-badge",
+        iconBgClass: "red-icon-bg",
+        quizzes: [
+          {
+            id: "construction-advanced",
+            title: "Advanced Construction",
+            description: "Master complex construction techniques",
+            icon: "/icons/hammer.svg",
+            duration: "20 min",
+            questions: 25
+          },
+          {
+            id: "safety-management",
+            title: "Safety Management",
+            description: "Advanced safety protocols and leadership",
+            icon: "/icons/sparkles.svg",
+            duration: "18 min",
+            questions: 22
+          },
+          {
+            id: "documentation",
+            title: "Documentation & Compliance",
+            description: "Professional documentation standards",
+            icon: "/icons/file-text.svg",
+            duration: "15 min",
+            questions: 20
+          }
+        ]
       }
     ])
 
-    // Computed properties
-    const maxIndex = computed(() => Math.ceil(topics.value.length / 2) - 1)
-
-    // Carousel navigation functions
-    const nextBeginner = () => {
-      if (beginnerCarouselIndex.value < maxIndex.value) {
-        beginnerCarouselIndex.value++
-      }
-    }
-
-    const prevBeginner = () => {
-      if (beginnerCarouselIndex.value > 0) {
-        beginnerCarouselIndex.value--
-      }
-    }
-
-    const nextIntermediate = () => {
-      if (intermediateCarouselIndex.value < maxIndex.value) {
-        intermediateCarouselIndex.value++
-      }
-    }
-
-    const prevIntermediate = () => {
-      if (intermediateCarouselIndex.value > 0) {
-        intermediateCarouselIndex.value--
-      }
-    }
-
-    const nextAdvanced = () => {
-      if (advancedCarouselIndex.value < maxIndex.value) {
-        advancedCarouselIndex.value++
-      }
-    }
-
-    const prevAdvanced = () => {
-      if (advancedCarouselIndex.value > 0) {
-        advancedCarouselIndex.value--
-      }
-    }
-
-    // Start quiz function
     const startQuiz = async (category, difficulty) => {
       // Handle spelling quiz routing
       if (category === 'Spelling Quiz') {
@@ -202,22 +193,8 @@ export default {
       router.push(`/quiz-take/${quizId}`)
     }
 
-    onMounted(() => {
-      console.log('Quizzes page mounted')
-    })
-
     return {
-      topics,
-      beginnerCarouselIndex,
-      intermediateCarouselIndex,
-      advancedCarouselIndex,
-      maxIndex,
-      nextBeginner,
-      prevBeginner,
-      nextIntermediate,
-      prevIntermediate,
-      nextAdvanced,
-      prevAdvanced,
+      difficulties,
       startQuiz
     }
   }
@@ -227,205 +204,405 @@ export default {
 <style scoped>
 .quizzes-page {
   min-height: calc(100vh - 70px);
-  background: var(--bg-light);
-  padding: 20px;
+  background: linear-gradient(to bottom, var(--bg), var(--bg-light));
 }
 
-.quizzes-container {
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(to bottom right, rgba(var(--primary-rgb), 0.1), var(--bg), var(--bg));
+  border-bottom: 1px solid var(--border);
+  padding: 48px 0;
+}
+
+.hero-content {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.hero-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(var(--primary-rgb), 0.1);
+  margin: 0 auto 24px;
+}
+
+.hero-icon img {
+  width: 32px;
+  height: 32px;
+}
+
+.hero-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.hero-content p {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Quiz Content */
+.quiz-content {
+  padding: 48px 20px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.page-header {
-  text-align: center;
-  margin-bottom: 40px;
+.quiz-section {
+  margin-bottom: 48px;
 }
 
-.page-header h1 {
-  font-size: 2.5rem;
-  color: var(--text);
-  margin-bottom: 10px;
-}
-
-.page-header p {
-  font-size: 1.2rem;
-  color: var(--text-muted);
-}
-
-.quiz-levels {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-}
-
-.level-section {
-  background: var(--bg-light);
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
-}
-
-.level-title {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
+/* Difficulty Header */
+.difficulty-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
-.level-title.beginner {
-  color: #10b981;
+.color-bar {
+  height: 3px;
+  width: 48px;
+  border-radius: 2px;
 }
 
-.level-title.intermediate {
-  color: #f59e0b;
+.color-bar.green {
+  background: linear-gradient(to right, #10b981, #10b981);
 }
 
-.level-title.advanced {
-  color: #ef4444;
+.color-bar.amber {
+  background: linear-gradient(to right, #f59e0b, #f59e0b);
 }
 
-.category-carousel {
-  position: relative;
-  overflow: hidden;
+.color-bar.red {
+  background: linear-gradient(to right, #ef4444, #ef4444);
 }
 
-.carousel-container {
-  position: relative;
-  width: 100%;
+.badge {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.813rem;
+  font-weight: 600;
+  border: 1px solid;
 }
 
-.carousel-track {
-  display: flex;
-  transition: transform 0.3s ease-in-out;
+.green-badge {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.2);
 }
 
-.carousel-slide {
-  flex: 0 0 50%;
-  padding: 0 10px;
-  min-width: 0;
+.amber-badge {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border-color: rgba(245, 158, 11, 0.2);
 }
 
+.red-badge {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.header-line {
+  height: 3px;
+  flex: 1;
+  background: var(--border);
+}
+
+.header-line.green-line {
+  background: #10b981;
+}
+
+.header-line.amber-line {
+  background: #f59e0b;
+}
+
+.header-line.red-line {
+  background: #ef4444;
+}
+
+/* Quiz Grid */
+.quiz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* Quiz Card */
 .quiz-card {
-  background: var(--bg-light);
-  border: 2px solid var(--border);
+  background: var(--bg);
+  border: 2px solid transparent;
   border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-  transition: all 0.3s ease;
+  overflow: hidden;
   cursor: pointer;
-  height: 200px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  transition: all 0.3s;
+  height: 100%;
+}
+
+.quiz-card.green-card {
+  border-color: #10b981;
+}
+
+.quiz-card.amber-card {
+  border-color: #f59e0b;
+}
+
+.quiz-card.red-card {
+  border-color: #ef4444;
 }
 
 .quiz-card:hover {
-  border-color: var(--primary);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-md);
 }
 
+.quiz-gradient {
+  height: 3px;
+  width: 100%;
+}
+
+.quiz-gradient.green {
+  background: linear-gradient(to right, #10b981, #10b981);
+}
+
+.quiz-gradient.amber {
+  background: linear-gradient(to right, #f59e0b, #f59e0b);
+}
+
+.quiz-gradient.red {
+  background: linear-gradient(to right, #ef4444, #ef4444);
+}
+
+.quiz-card-content {
+  padding: 20px;
+}
+
+.quiz-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
 .quiz-icon {
-  font-size: 2.5rem;
-  margin-bottom: 15px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid;
+  transition: transform 0.3s;
 }
 
-.quiz-card h3 {
-  font-size: 1.3rem;
-  color: var(--text);
-  margin-bottom: 10px;
+.quiz-card:hover .quiz-icon {
+  transform: scale(1.1);
 }
 
-.quiz-card p {
+.green-icon-bg {
+  background: linear-gradient(to bottom right, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+  border-color: rgba(16, 185, 129, 0.1);
+}
+
+.amber-icon-bg {
+  background: linear-gradient(to bottom right, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+  border-color: rgba(245, 158, 11, 0.1);
+}
+
+.red-icon-bg {
+  background: linear-gradient(to bottom right, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+  border-color: rgba(239, 68, 68, 0.1);
+}
+
+.quiz-icon img {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.duration-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--bg-light);
+  border-radius: 4px;
+  font-size: 0.75rem;
   color: var(--text-muted);
-  font-size: 0.9rem;
+}
+
+.badge-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.quiz-card-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px 0;
+  transition: color 0.2s;
+}
+
+.quiz-card:hover h3 {
+  color: var(--primary);
+}
+
+.quiz-card-content p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0 0 16px 0;
   line-height: 1.4;
 }
 
-.carousel-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+.quiz-info {
+  margin-bottom: 16px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.813rem;
+  color: var(--text-muted);
+}
+
+.info-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.start-btn {
+  width: 100%;
+  padding: 12px;
   background: var(--primary);
   color: white;
   border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 1.2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
 }
 
-.carousel-btn:hover:not(:disabled) {
-  background: var(--primary-dark);
-  transform: translateY(-50%) scale(1.1);
+.start-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
-.carousel-btn:disabled {
-  background: var(--border);
-  cursor: not-allowed;
-  opacity: 0.5;
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(1);
 }
 
-.carousel-btn.prev {
-  left: 10px;
+/* Bottom CTA */
+.bottom-cta {
+  padding: 48px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.carousel-btn.next {
-  right: 10px;
+.cta-card {
+  background: linear-gradient(to bottom right, rgba(var(--primary-rgb), 0.05), rgba(var(--primary-rgb), 0.1));
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  border-radius: 12px;
+  padding: 48px 32px;
+  text-align: center;
 }
 
-/* Responsive Design */
+.cta-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  opacity: 0.8;
+}
+
+.cta-card h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+
+.cta-card p {
+  font-size: 1rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin: 0 auto 24px;
+  line-height: 1.6;
+}
+
+.cta-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.cta-buttons .btn {
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-light);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .quizzes-page {
-    padding: 10px;
+  .hero-content h1 {
+    font-size: 1.75rem;
   }
-  
-  .level-section {
-    padding: 20px;
-  }
-  
-  .carousel-slide {
-    flex: 0 0 100%;
-  }
-  
-  .quiz-card {
-    height: 180px;
-  }
-  
-  .quiz-icon {
-    font-size: 2rem;
-  }
-  
-  .quiz-card h3 {
-    font-size: 1.1rem;
-  }
-  
-  .quiz-card p {
-    font-size: 0.8rem;
-  }
-}
 
-@media (max-width: 480px) {
-  .page-header h1 {
-    font-size: 2rem;
+  .quiz-grid {
+    grid-template-columns: 1fr;
   }
-  
-  .page-header p {
-    font-size: 1rem;
+
+  .cta-buttons {
+    flex-direction: column;
   }
-  
-  .level-title {
-    font-size: 1.5rem;
-  }
-  
-  .quiz-card {
-    height: 160px;
-    padding: 15px;
+
+  .btn {
+    width: 100%;
   }
 }
 </style>

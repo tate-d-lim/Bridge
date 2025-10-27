@@ -61,14 +61,14 @@
         <template v-if="isAuthenticated">
           <!-- Dark Mode Toggle -->
           <button @click="toggleDarkMode" class="dark-mode-toggle" title="Toggle Dark Mode">
-            <img v-if="isDarkMode" src="../assets/lightModeToggle.png" alt="Light Mode" class="toggle-icon" />
-            <img v-else src="../assets/darkModeToggle.svg" alt="Dark Mode" class="toggle-icon" />
+            <img v-if="isDarkMode" src="../assets/moon-white.svg" alt="Light Mode" class="toggle-icon" />
+            <img v-else src="../assets/moon-black.svg" alt="Dark Mode" class="toggle-icon" />
           </button>
 
           <!-- Messages Icon -->
           <router-link to="/chat" class="nav-link chat-icon" @click="closeMenu">
             <img v-if="isDarkMode" src="../assets/darkModeMessages.png" alt="Messages" class="envelope-icon" />
-            <img v-else src="../assets/envelope.svg" alt="Messages" class="envelope-icon" />
+            <img v-else src="../assets/messages-light.svg" alt="Messages" class="envelope-icon" />
           </router-link>
 
           <!-- User Menu -->
@@ -108,8 +108,8 @@
         <template v-else>
           <!-- Dark Mode Toggle for guests -->
           <button @click="toggleDarkMode" class="dark-mode-toggle" title="Toggle Dark Mode">
-            <img v-if="isDarkMode" src="../assets/lightModeToggle.png" alt="Light Mode" class="toggle-icon" />
-            <img v-else src="../assets/darkModeToggle.svg" alt="Dark Mode" class="toggle-icon" />
+            <img v-if="isDarkMode" src="../assets/moon-white.svg" alt="Light Mode" class="toggle-icon" />
+            <img v-else src="../assets/moon-black.svg" alt="Dark Mode" class="toggle-icon" />
           </button>
           
           <router-link to="/login" class="nav-link" @click="closeMenu">
@@ -412,15 +412,22 @@ export default {
   top: 100%;
   right: 0;
   margin-top: 10px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
-  min-width: 150px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 180px;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
   transition: all 0.3s;
+  overflow: hidden;
+}
+
+.dark-mode .user-dropdown {
+  background: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .user-dropdown.active {
@@ -432,21 +439,30 @@ export default {
 .dropdown-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   padding: 12px 20px;
   text-decoration: none;
-  color: var(--text);
+  color: #333333;
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
-  transition: background 0.3s, color 0.3s;
-  font-size: 1rem;
+  transition: background 0.2s, color 0.2s;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .dropdown-item:hover {
-  background: var(--bg-light);
+  background: #f5f5f5;
+}
+
+.dark-mode .dropdown-item {
+  color: #ffffff;
+}
+
+.dark-mode .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .dropdown-icon {

@@ -14,20 +14,32 @@
           </div>
           <p>Connecting employers with skilled migrant workers in Singapore</p>
         </div>
-        <div class="footer-section">
+        <div class="footer-section" v-if="!isAuthenticated || isJobSeeker">
           <h4>For Job Seekers</h4>
           <ul>
-            <li><router-link to="/browse-jobs">Browse Jobs</router-link></li>
-            <li><router-link to="/quizzes">Take Quizzes</router-link></li>
-            <li><router-link to="/applications">My Applications</router-link></li>
+            <li v-if="!isAuthenticated || isJobSeeker">
+              <router-link to="/browse-jobs">Browse Jobs</router-link>
+            </li>
+            <li v-if="!isAuthenticated || isJobSeeker">
+              <router-link to="/quizzes">Take Quizzes</router-link>
+            </li>
+            <li v-if="!isAuthenticated || isJobSeeker">
+              <router-link to="/applications">My Applications</router-link>
+            </li>
           </ul>
         </div>
-        <div class="footer-section">
+        <div class="footer-section" v-if="!isAuthenticated || isEmployer">
           <h4>For Employers</h4>
           <ul>
-            <li><router-link to="/employer/post-job">Post a Job</router-link></li>
-            <li><router-link to="/candidates">Find Candidates</router-link></li>
-            <li><router-link to="/employer/dashboard">Dashboard</router-link></li>
+            <li v-if="!isAuthenticated || isEmployer">
+              <router-link to="/employer/post-job">Post a Job</router-link>
+            </li>
+            <li v-if="!isAuthenticated || isEmployer">
+              <router-link to="/candidates">Find Candidates</router-link>
+            </li>
+            <li v-if="!isAuthenticated || isEmployer">
+              <router-link to="/employer/dashboard">Dashboard</router-link>
+            </li>
           </ul>
         </div>
         <div class="footer-section">
@@ -48,7 +60,7 @@
 </template>
 
 <script>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import NavBar from './components/NavBar.vue'
 import BadgeNotification from './components/BadgeNotification.vue'
@@ -68,8 +80,15 @@ export default {
       store.dispatch('auth/initAuthListener')
     })
 
+    const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
+    const isEmployer = computed(() => store.getters['auth/isEmployer'])
+    const isJobSeeker = computed(() => store.getters['auth/isJobSeeker'])
+
     return {
-      bridgeLogo
+      bridgeLogo,
+      isAuthenticated,
+      isEmployer,
+      isJobSeeker
     }
   }
 }

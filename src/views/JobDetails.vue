@@ -1,69 +1,147 @@
 <template>
   <div class="job-details">
-    <div v-if="loading" class="loading">Loading job details...</div>
+    <div v-if="loading" class="loading">
+      <p>Loading job details...</p>
+    </div>
 
     <div v-else-if="job" class="job-content">
       <!-- Job Header -->
       <div class="job-header">
         <div class="job-header-content">
-          <h1>{{ job.title }}</h1>
-          <div class="job-meta">
-            <span class="company">🏢 {{ job.company }}</span>
-            <span class="location">📍 {{ job.location }}</span>
-            <span class="salary">💰 ${{ job.salary }}</span>
+          <div class="company-avatar">
+            <div class="avatar-fallback">
+              {{ getCompanyInitials(job.company) }}
+            </div>
           </div>
-          <div class="job-tags">
-            <span class="tag">{{ job.category }}</span>
-            <span class="tag">{{ job.type }}</span>
+          <div class="job-title-section">
+            <h1>{{ job.title }}</h1>
+            <p class="company-name">{{ job.company }}</p>
           </div>
         </div>
-        <div class="job-actions">
-          <div v-if="isJobSeeker">
-            <button @click="applyForJob" class="btn btn-primary btn-large">
-              Apply Now
-            </button>
-            <button @click="saveJob" class="btn btn-secondary">
-              <img src="../assets/bookmark.svg" alt="Bookmark" class="btn-icon" />
-              Save
-            </button>
+
+        <div class="job-tags">
+          <span class="badge" v-for="tag in jobTags" :key="tag">{{ tag }}</span>
+        </div>
+      </div>
+
+      <!-- Key Details Grid -->
+      <div class="details-grid">
+        <div class="detail-card">
+          <div class="detail-icon">
+            <img :src="salaryIcon" alt="Salary" />
+          </div>
+          <div class="detail-content">
+            <p class="detail-label">Salary</p>
+            <p class="detail-value">${{ job.salary }}/mo</p>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-icon">
+            <img :src="locationIcon" alt="Location" />
+          </div>
+          <div class="detail-content">
+            <p class="detail-label">Location</p>
+            <p class="detail-value">{{ job.location }}</p>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-icon">
+            <img :src="briefcaseIcon" alt="Job Type" />
+          </div>
+          <div class="detail-content">
+            <p class="detail-label">Job Type</p>
+            <p class="detail-value">{{ capitalize(job.type) }}</p>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-icon">
+            <img :src="clockIcon" alt="Posted" />
+          </div>
+          <div class="detail-content">
+            <p class="detail-label">Posted</p>
+            <p class="detail-value">{{ formatDate(job.createdAt) }}</p>
           </div>
         </div>
       </div>
+
+      <div class="separator"></div>
 
       <!-- Job Description -->
-      <div class="job-section">
-        <h2>Job Description</h2>
-        <p>{{ job.description }}</p>
+      <div class="section">
+        <div class="section-header">
+          <img :src="briefcaseIcon" alt="Briefcase" class="section-icon" />
+          <h3>Job Description</h3>
+        </div>
+        <p class="section-text">{{ job.description }}</p>
+        <p class="section-text">
+          We are looking for dedicated and hardworking individuals to join our team. 
+          This role offers competitive compensation, good working conditions, and opportunities for career advancement.
+        </p>
       </div>
+
+      <div class="separator"></div>
 
       <!-- Requirements -->
-      <div class="job-section">
-        <h2>Requirements</h2>
-        <ul>
-          <li v-for="(req, index) in job.requirements" :key="index">
-            {{ req }}
+      <div class="section">
+        <div class="section-header">
+          <img src="/public/icons/check-circle.svg" alt="Requirements" class="section-icon" />
+          <h3>Requirements</h3>
+        </div>
+        <ul class="requirements-list">
+          <li v-for="(req, index) in job.requirements" :key="index" class="requirement-item">
+            <img src="/public/icons/check-circle.svg" alt="Check" class="check-icon" />
+            <span>{{ req }}</span>
           </li>
         </ul>
       </div>
 
-      <!-- Responsibilities -->
-      <div class="job-section" v-if="job.responsibilities">
-        <h2>Responsibilities</h2>
-        <ul>
-          <li v-for="(resp, index) in job.responsibilities" :key="index">
-            {{ resp }}
-          </li>
-        </ul>
-      </div>
+      <div class="separator"></div>
 
       <!-- Benefits -->
-      <div class="job-section" v-if="job.benefits">
-        <h2>Benefits</h2>
-        <ul>
-          <li v-for="(benefit, index) in job.benefits" :key="index">
-            {{ benefit }}
-          </li>
-        </ul>
+      <div class="section">
+        <div class="section-header">
+          <img src="/public/icons/sparkles.svg" alt="Benefits" class="section-icon" />
+          <h3>Benefits</h3>
+        </div>
+        <div class="benefits-grid">
+          <div class="benefit-item" v-for="(benefit, index) in job.benefits" :key="index">
+            <img src="/public/icons/check-circle.svg" alt="Check" class="check-icon-small" />
+            <span>{{ benefit }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
+      <!-- Company Info -->
+      <div class="section">
+        <div class="section-header">
+          <img src="/public/icons/building.svg" alt="Company" class="section-icon" />
+          <h3>About {{ job.company }}</h3>
+        </div>
+        <p class="section-text">
+          A leading employer in Singapore committed to providing quality jobs and excellent working conditions for all employees.
+        </p>
+        <div class="company-contact">
+        <div class="contact-item">
+          <img :src="envelopeIcon" alt="Email" />
+          <span>contact@{{ job.company.toLowerCase().replace(/\s+/g, '') }}.com</span>
+        </div>
+        <div class="contact-item">
+          <img :src="phoneIcon" alt="Phone" />
+          <span>+65 6XXX XXXX</span>
+        </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions" v-if="isJobSeeker">
+        <button @click="applyForJob" class="btn btn-primary">
+          Apply Now
+        </button>
       </div>
 
       <!-- Application Form Modal -->
@@ -107,9 +185,15 @@
 </template>
 
 <script>
-import { ref, onMounted, reactive, computed } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
+import briefcaseIcon from '../assets/briefcase.svg'
+import locationIcon from '../assets/location.svg'
+import salaryIcon from '../assets/salary.svg'
+import envelopeIcon from '../assets/envelope.svg'
+import phoneIcon from '../assets/phone.svg'
+import clockIcon from '../assets/clock.svg'
 
 export default {
   name: 'JobDetails',
@@ -131,6 +215,39 @@ export default {
       const userProfile = store.getters['auth/userProfile']
       return userProfile?.role === 'jobseeker'
     })
+
+    const jobTags = computed(() => {
+      if (!job.value) return []
+      return [job.value.category, job.value.type].filter(Boolean)
+    })
+
+    const getCompanyInitials = (name) => {
+      return name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    }
+
+    const capitalize = (str) => {
+      if (!str) return ''
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+    }
+
+    const formatDate = (timestamp) => {
+      if (!timestamp) return 'Recently'
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
+      const now = new Date()
+      const diffTime = Math.abs(now - date)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays === 0) return 'Today'
+      if (diffDays === 1) return 'Yesterday'
+      if (diffDays < 7) return `${diffDays} days ago`
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+      return `${Math.floor(diffDays / 30)} months ago`
+    }
 
     const fetchJob = async () => {
       loading.value = true
@@ -154,7 +271,6 @@ export default {
     }
 
     const saveJob = () => {
-      // TODO: Implement save job functionality
       console.log('Job saved')
     }
 
@@ -191,6 +307,16 @@ export default {
       showApplicationForm,
       application,
       isJobSeeker,
+      jobTags,
+      briefcaseIcon,
+      locationIcon,
+      salaryIcon,
+      envelopeIcon,
+      phoneIcon,
+      clockIcon,
+      getCompanyInitials,
+      capitalize,
+      formatDate,
       applyForJob,
       saveJob,
       submitApplication,
@@ -214,90 +340,279 @@ export default {
   color: var(--text-muted);
 }
 
+.job-content {
+  width: 100%;
+}
+
+/* Job Header */
 .job-header {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
-.job-header h1 {
-  font-size: 2.5rem;
-  color: var(--text);
-  margin-bottom: 15px;
-}
-
-.job-meta {
+.job-header-content {
   display: flex;
-  gap: 25px;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.job-meta span {
+.company-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-fallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background: var(--bg-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 1.25rem;
+  border: 2px solid var(--border);
+}
+
+.dark-mode .avatar-fallback {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.job-title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.job-title-section h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.company-name {
+  font-size: 1rem;
   color: var(--text-muted);
-  font-size: 1.1rem;
+  margin: 0;
 }
 
 .job-tags {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.tag {
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
   background: var(--bg-light);
-  color: var(--primary);
-  padding: 6px 15px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-}
-
-.job-actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.job-section {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 25px;
-}
-
-.job-section h2 {
-  font-size: 1.8rem;
   color: var(--text);
-  margin-bottom: 15px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  border: 1px solid var(--border);
 }
 
-.job-section p {
+/* Details Grid */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.detail-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--bg-light);
+  transition: all 0.2s;
+}
+
+.detail-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.detail-icon img {
+  width: 20px;
+  height: 20px;
+  opacity: 0.6;
+}
+
+.detail-content {
+  min-width: 0;
+}
+
+.detail-label {
+  font-size: 0.75rem;
   color: var(--text-muted);
-  line-height: 1.8;
-  font-size: 1.05rem;
+  margin: 0 0 2px 0;
 }
 
-.job-section ul {
+.detail-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+/* Separator */
+.separator {
+  height: 1px;
+  background: var(--border);
+  margin: 24px 0;
+}
+
+/* Section */
+.section {
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.section-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+}
+
+.section-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.section-text {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Requirements List */
+.requirements-list {
   list-style: none;
   padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.job-section li {
-  padding: 10px 0;
+.requirement-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.875rem;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  line-height: 1.4;
 }
 
-.job-section li:before {
-  content: "✓ ";
-  color: var(--primary);
-  font-weight: bold;
-  margin-right: 10px;
+.check-icon {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
 }
 
+/* Benefits Grid */
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.check-icon-small {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Company Contact */
+.company-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.contact-item img {
+  width: 16px;
+  height: 16px;
+  opacity: 0.6;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 12px;
+  padding: 24px 0;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--bg-light);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--bg);
+}
+
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -305,25 +620,56 @@ export default {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .modal-content {
-  background: white;
-  padding: 40px;
-  border-radius: 15px;
+  background: #ffffff;
+  padding: 32px;
+  border-radius: 12px;
   max-width: 600px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+.dark-mode .modal-content {
+  background: #1a1a1a;
 }
 
 .modal-content h2 {
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   color: var(--text);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .form-group {
@@ -341,30 +687,67 @@ export default {
 .form-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 1px solid var(--border);
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
+  background: #ffffff;
+  color: #333333;
+  transition: all 0.2s;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+}
+
+.dark-mode .modal-content {
+  background: #1a1a1a !important;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .form-group input,
+.dark-mode .form-group textarea {
+  background: #2a2a2a !important;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff !important;
+}
+
+.dark-mode .form-group label {
+  color: #ffffff !important;
+}
+
+.dark-mode .modal-content h2 {
+  color: #ffffff !important;
 }
 
 .modal-actions {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   justify-content: flex-end;
-  margin-top: 25px;
+  margin-top: 24px;
 }
 
-.btn-icon {
-  width: 16px;
-  height: 16px;
-  margin-right: 8px;
-  vertical-align: middle;
+.modal-actions .btn {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .benefits-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
-
