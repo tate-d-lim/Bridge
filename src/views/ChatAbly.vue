@@ -18,7 +18,7 @@
           <div
             v-for="room in chatRooms"
             :key="room.id"
-            :class="['chat-room-item', { active: activeRoom === room.id }]"
+            :class="['chat-room-item', { active: activeRoom === (room.roomName || room.id) }]"
             @click="selectRoom(room)"
           >
             <div class="room-avatar">
@@ -28,8 +28,8 @@
             <div class="room-info">
               <h3>{{ getRoomDisplayName(room) }}</h3>
               <p class="last-message">{{ room.lastMessage || 'No messages yet' }}</p>
-              <div v-if="getTypingUsers(room.id).length > 0" class="typing-indicator">
-                {{ getTypingUsers(room.id).map(userId => getCachedUsername(userId, room)).join(', ') }} is typing...
+              <div v-if="getTypingUsers(room.roomName || room.id).length > 0" class="typing-indicator">
+                {{ getTypingUsers(room.roomName || room.id).map(userId => getCachedUsername(userId, room)).join(', ') }} is typing...
               </div>
             </div>
             <div class="room-meta">
@@ -37,9 +37,16 @@
                 {{ formatTime(room.lastMessageAt) }}
               </span>
               <div v-if="getUnreadCount(room.id) > 0" class="unread-badge">
-                {{ getUnreadCount(room.id) }}
+                {{ getUnreadCount(room.id) > 99 ? '99+' : getUnreadCount(room.id) }}
               </div>
             </div>
+            <button 
+              @click.stop="deleteChatRoom(room)"
+              class="btn-delete-room"
+              title="Delete conversation"
+            >
+              🗑️
+            </button>
           </div>
           
           <div v-if="chatRooms.length === 0" class="empty-rooms">
@@ -330,6 +337,7 @@ export default {
     
     // Computed properties
     const currentUser = computed(() => store.getters['auth/currentUser'])
+    const userProfile = computed(() => store.getters['auth/userProfile'])
     const isConnected = computed(() => {
       return store.getters['chatAbly/isConnected']
     })
@@ -361,9 +369,13 @@ export default {
       // For direct messages, show the other participant's name
       if (room.participants && room.participants.length === 2) {
         const otherParticipantId = room.participants.find(p => p !== currentUser.value.uid)
-        if (otherParticipantId && room.participantNames) {
+        if (otherParticipantId && room.participantNames && room.participantNames.length === 2) {
+          // Find which index the other participant is at
           const otherParticipantIndex = room.participants.indexOf(otherParticipantId)
-          return room.participantNames[otherParticipantIndex] || otherParticipantId
+          // Get the corresponding name from participantNames array
+          if (otherParticipantIndex !== -1 && room.participantNames[otherParticipantIndex]) {
+            return room.participantNames[otherParticipantIndex]
+          }
         }
         return otherParticipantId || 'Unknown User'
       }
@@ -381,13 +393,13 @@ export default {
         }
       }
       
-      // Fallback: try to find in current user
+      // Check if this is the current user
       if (userId === currentUser.value?.uid) {
-        return currentUser.value?.name || currentUser.value?.email || 'You'
+        return userProfile.value?.name || currentUser.value?.displayName || currentUser.value?.email || 'You'
       }
       
-      // Return the ID as fallback
-      return userId
+      // Return the ID as fallback (instead of showing email)
+      return userId.substring(0, 8) // Show first 8 chars of ID
     }
     
     // Memoized username mapping for better performance
@@ -439,12 +451,15 @@ export default {
       return store.getters['chatAbly/getTypingUsers'](roomName)
     }
     
-    const getUnreadCount = (roomName) => {
-      return store.getters['chatAbly/getUnreadCount'](roomName)
+    const getUnreadCount = (roomId) => {
+      return store.getters['chatAbly/getUnreadCount'](roomId)
     }
     
     const getCurrentRoom = () => {
-      return store.getters['chatAbly/getRoomById'](activeRoom.value)
+      const activeRoomName = activeRoom.value
+      if (!activeRoomName) return null
+      // Find room by roomName (Ably room name) or by id
+      return chatRooms.value.find(room => (room.roomName || room.id) === activeRoomName) || null
     }
     
     const isRoomActive = (room) => {
@@ -459,10 +474,11 @@ export default {
     }
     
     const selectRoom = async (room) => {
-      if (activeRoom.value === room.id) return
+      const roomName = room.roomName || room.id
+      if (activeRoom.value === roomName) return
       
       try {
-        await store.dispatch('chatAbly/joinRoom', { roomName: room.id })
+        await store.dispatch('chatAbly/joinRoom', { roomName })
         await nextTick()
         // Force scroll to bottom when entering a room
         setTimeout(() => {
@@ -527,6 +543,20 @@ export default {
         })
       } catch (error) {
         console.error('Error deleting message:', error)
+      }
+    }
+    
+    const deleteChatRoom = async (room) => {
+      if (!confirm('Are you sure you want to delete this conversation? This will hide it from your chat list, but the other participant will still see it.')) return
+      
+      try {
+        await store.dispatch('chatAbly/deleteChatRoomForUser', {
+          roomId: room.id,
+          userId: currentUser.value.uid
+        })
+      } catch (error) {
+        console.error('Error deleting chat room:', error)
+        alert('Error deleting conversation: ' + error.message)
       }
     }
     
@@ -681,8 +711,13 @@ export default {
     const startChatWithUser = async (user) => {
       try {
         const participants = [currentUser.value.uid, user.id]
-        const participantNames = [currentUser.value.displayName || 'You', user.name]
-        const participantRoles = [currentUser.value.role || 'user', user.role]
+        // Get current user's name from profile, fall back to auth displayName or email
+        const currentUserName = userProfile.value?.name || currentUser.value?.displayName || currentUser.value?.email || 'You'
+        const otherUserName = user.name || user.displayName || 'Unknown User'
+        const participantNames = [currentUserName, otherUserName]
+        // Get current user's role from profile
+        const currentUserRole = userProfile.value?.role || 'user'
+        const participantRoles = [currentUserRole, user.role]
         
         const roomId = await store.dispatch('chatAbly/createRoom', { 
           participants,
@@ -860,6 +895,7 @@ export default {
       editMessageText,
       reactions,
       currentUser,
+      userProfile,
       isConnected,
       connectionStatus,
       clientId,
@@ -887,6 +923,7 @@ export default {
       editMessage,
       saveEditMessage,
       deleteMessage,
+      deleteChatRoom,
       closeEditModal,
       handleTyping,
       handleFocus,
@@ -1017,6 +1054,7 @@ export default {
   margin: 0 15px;
   border-radius: 15px;
   margin-bottom: 8px;
+  overflow: hidden;
 }
 
 .chat-room-item:hover {
@@ -1080,6 +1118,37 @@ export default {
 
 .chat-room-item.active .online-indicator {
   border-color: white;
+}
+
+.btn-delete-room {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  background: rgba(239, 68, 68, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  z-index: 10;
+}
+
+.chat-room-item:hover .btn-delete-room {
+  opacity: 1;
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.btn-delete-room:hover {
+  background: var(--danger) !important;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
 }
 
 .room-info {

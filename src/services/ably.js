@@ -9,9 +9,25 @@ let chatClient = null
 export const initializeAbly = (clientId) => {
   console.log('Initializing Ably with clientId:', clientId)
   
+  // Always close and recreate to ensure correct clientId
   if (realtimeClient && chatClient) {
-    console.log('Ably clients already exist, returning existing clients')
-    return { realtimeClient, chatClient }
+    const currentClientId = realtimeClient.auth.clientId
+    console.log('Existing clientId:', currentClientId, 'New clientId:', clientId)
+    
+    if (currentClientId && currentClientId !== clientId) {
+      console.log('ClientId mismatch detected. Closing old connection.')
+      realtimeClient.connection.close()
+    } else if (currentClientId && currentClientId === clientId) {
+      console.log('ClientId matches, reusing existing clients')
+      return { realtimeClient, chatClient }
+    } else {
+      console.log('Existing clients have no clientId, will recreate')
+    }
+    
+    // Close existing connection
+    realtimeClient.connection.close()
+    realtimeClient = null
+    chatClient = null
   }
 
   const apiKey = import.meta.env.VITE_ABLY_API_KEY
@@ -22,13 +38,23 @@ export const initializeAbly = (clientId) => {
     throw new Error('VITE_ABLY_API_KEY environment variable is required')
   }
 
-  console.log('Creating Ably Realtime client...')
+  console.log('Creating Ably Realtime client with clientId:', clientId)
   // Create Ably Realtime client
   realtimeClient = new Ably.Realtime({
     key: apiKey,
     clientId: clientId,
     recover: true, // Enable connection recovery
-    echoMessages: false // Don't echo our own messages
+    echoMessages: false, // Don't echo our own messages
+    recoverKey: `recover-${clientId}` // Unique recover key per user
+  })
+  
+  // Verify clientId after connection
+  realtimeClient.connection.once('connected', () => {
+    const actualClientId = realtimeClient.auth.clientId
+    console.log('Ably connected with clientId:', actualClientId, 'Expected:', clientId)
+    if (actualClientId !== clientId) {
+      console.error('ERROR: clientId mismatch! Actual:', actualClientId, 'Expected:', clientId)
+    }
   })
 
   // Add connection event listeners for debugging
