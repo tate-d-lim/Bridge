@@ -84,13 +84,6 @@
 
           <div class="quiz-actions">
             <button
-              v-if="currentQuestion > 0"
-              @click="previousQuestion"
-              class="btn btn-secondary"
-            >
-              Previous
-            </button>
-            <button
               v-if="currentQuestion < questions.length - 1"
               @click="nextQuestion"
               :disabled="selectedAnswer === null"
@@ -124,6 +117,28 @@
           <p v-else>
             You need 80% or higher to earn a badge. Keep practicing!
           </p>
+
+          <!-- Add Summary Section -->
+          <div class="quiz-summary">
+            <h3>Quiz Summary</h3>
+            <div v-for="(question, index) in questions" :key="index" class="summary-item">
+              <div class="summary-question">
+                <span class="question-number">Q{{index + 1}}.</span>
+                <p>{{ question.question }}</p>
+              </div>
+              <div class="summary-answers">
+                <div class="user-answer" :class="{ correct: answers[index] === question.correctAnswer }">
+                  <strong>Your Answer:</strong> 
+                  <span>{{ question.options[answers[index]] }}</span>
+                  <span class="answer-icon">{{ answers[index] === question.correctAnswer ? '✓' : '✗' }}</span>
+                </div>
+                <div v-if="answers[index] !== question.correctAnswer" class="correct-answer">
+                  <strong>Correct Answer:</strong> 
+                  <span>{{ question.options[question.correctAnswer] }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div class="results-actions">
             <router-link to="/quizzes" class="btn btn-secondary">
@@ -197,58 +212,35 @@ export default {
     }
 
     const selectAnswer = (index) => {
-      // clear any previous feedback state/timeout before applying new
-      clearFeedback()
+      // Prevent multiple selections
+      if (selectedAnswer.value !== null) return;
 
-      selectedAnswer.value = index
-      
-      // Show feedback immediately with enhanced visual effects
-      showFeedback.value = true
-      isAnswerCorrect.value = index === questions.value[currentQuestion.value].correctAnswer
-      
-      // Add visual feedback to the selected option
-      const selectedElement = document.querySelector(`[data-option-index="${index}"]`)
-      if (selectedElement) {
-        if (isAnswerCorrect.value) {
-          selectedElement.classList.add('correct-answer')
-        } else {
-          selectedElement.classList.add('incorrect-answer')
-        }
-      }
-      
-      // Show correct answer with visual effects
-      const correctIndex = questions.value[currentQuestion.value].correctAnswer
-      const correctElement = document.querySelector(`[data-option-index="${correctIndex}"]`)
-      if (correctElement) {
-        correctElement.classList.add('show-correct')
-      }
-      
-      // Hide feedback after 4 seconds and allow progression
-      feedbackTimeout.value = setTimeout(() => {
-        clearFeedback()
-      }, 4000)
+      // clear any previous feedback state/timeout before applying new
+      clearFeedback();
+
+      selectedAnswer.value = index;
+      showFeedback.value = true;
+      isAnswerCorrect.value = index === questions.value[currentQuestion.value].correctAnswer;
+
+      // No need to manually add classes - they will be handled by Vue's class bindings
     }
 
     const nextQuestion = () => {
       if (selectedAnswer.value !== null) {
         answers.value[currentQuestion.value] = selectedAnswer.value
-        // clear feedback for current question before moving
         clearFeedback()
         currentQuestion.value++
         selectedAnswer.value = answers.value[currentQuestion.value] ?? null
       }
     }
 
-    const previousQuestion = () => {
-      // clear feedback for current question before moving
-      clearFeedback()
-      currentQuestion.value--
-      selectedAnswer.value = answers.value[currentQuestion.value] ?? null
-    }
-
     const submitQuiz = async () => {
-      // ensure current selection saved and feedback cleared
-      answers.value[currentQuestion.value] = selectedAnswer.value
+      console.log('Submit quiz triggered')
+      // Save the last answer before submitting
+      if (selectedAnswer.value !== null) {
+        answers.value[currentQuestion.value] = selectedAnswer.value
+      }
+      
       clearFeedback()
       
       // Calculate score
@@ -259,11 +251,14 @@ export default {
         }
       })
       
+      // Set the score and mark quiz as completed
       score.value = Math.round((correct / questions.value.length) * 100)
-      const isPerfect = correct === questions.value.length
-      quizCompleted.value = true
+      quizCompleted.value = true // This triggers the results view
 
-      // Submit to backend and update badges
+      console.log('Answers:', answers.value)
+      console.log('Score:', score.value)
+      console.log('Quiz completed:', quizCompleted.value)
+  
       try {
         const user = store.getters['auth/currentUser']
         
@@ -272,36 +267,18 @@ export default {
           return
         }
         
-        console.log('Submitting quiz result:', {
-          userId: user.uid,
-          score: score.value,
-          isPerfect,
-          isWin: score.value >= 80
-        })
-        
+        // Submit quiz results to backend
         await store.dispatch('quizzes/submitQuizResult', {
           userId: user.uid,
-          quizId: 'quiz-1',
+          quizId: currentQuiz.value?.id || 'quiz-1',
           score: score.value,
           answers: answers.value,
-          isPerfect
+          isPerfect: score.value === 100
         })
         
-        console.log('Quiz submitted successfully! Check for badge notifications.')
-        
-        // Small delay to ensure badge notification shows
-        setTimeout(() => {
-          const newBadges = store.getters['badges/newlyEarnedBadges']
-          if (newBadges && newBadges.length > 0) {
-            console.log('🎉 New badges earned:', newBadges)
-          } else {
-            console.log('No new badges this time. Keep playing!')
-          }
-        }, 1000)
-        
+        console.log('Quiz submitted successfully')
       } catch (error) {
         console.error('Error submitting quiz:', error)
-        console.error('Error details:', error.message, error.stack)
       }
     }
 
@@ -607,7 +584,6 @@ export default {
       currentLoadingImage,
       selectAnswer,
       nextQuestion,
-      previousQuestion,
       submitQuiz,
       retakeQuiz,
       testStore,
@@ -701,6 +677,18 @@ export default {
 .option.selected {
   border-color: var(--primary);
   background: var(--bg-light);
+}
+
+.option.correct {
+  border-color: #10b981 !important;
+  background: #ecfdf5 !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.option.incorrect {
+  border-color: #ef4444 !important;
+  background: #fef2f2 !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
 }
 
 .option-letter {
@@ -966,6 +954,104 @@ export default {
   height: 100%;
   object-fit: contain;
   transition: opacity 0.3s ease;
+}
+
+/* ...existing styles... */
+
+.quiz-summary {
+  margin: 30px 0;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.quiz-summary h3 {
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+
+.summary-item {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.summary-question {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.question-number {
+  font-weight: bold;
+  color: var(--primary);
+  min-width: 40px;
+}
+
+.summary-answers {
+  margin-left: 40px;
+  padding: 10px;
+  background: var(--bg-light);
+  border-radius: 8px;
+}
+
+.user-answer, .correct-answer {
+  padding: 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-answer {
+  margin-bottom: 5px;
+}
+
+.user-answer.correct {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.user-answer:not(.correct) {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+.correct-answer {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.answer-icon {
+  margin-left: auto;
+  font-weight: bold;
+}
+
+/* Update option styles for better feedback */
+.option.selected.correct {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.option.selected.incorrect {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.feedback-icon {
+  margin-left: auto;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.feedback-icon.correct {
+  color: #10b981;
+}
+
+.feedback-icon.incorrect {
+  color: #ef4444;
 }
 </style>
 
