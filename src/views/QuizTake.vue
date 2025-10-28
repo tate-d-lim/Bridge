@@ -33,77 +33,81 @@
       </div>
 
       <div v-else>
-        <div class="quiz-header">
-          <h1>{{ currentQuiz?.skill || 'Quiz' }} - {{ currentQuiz?.difficulty || 'Quiz' }}</h1>
-          <div class="quiz-progress">
-            <span>Question {{ currentQuestion + 1 }} of {{ questions.length }}</span>
-            <div class="progress-bar">
-              <div class="progress-fill" :style="{ width: `${progress}%` }"></div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="!quizCompleted" class="quiz-content">
-        <div class="question-card">
-          <h2>{{ questions[currentQuestion].question }}</h2>
-          
-          <div class="options">
-            <div
-              v-for="(option, index) in questions[currentQuestion].options"
-              :key="index"
-              :class="['option', { 
-                selected: selectedAnswer === index,
-                correct: showFeedback && index === questions[currentQuestion].correctAnswer,
-                incorrect: showFeedback && selectedAnswer === index && index !== questions[currentQuestion].correctAnswer
-              }]"
-              :data-option-index="index"
-              @click="selectAnswer(index)"
-            >
-              <div class="option-letter">{{ String.fromCharCode(65 + index) }}</div>
-              <div class="option-text">{{ option }}</div>
-              <div v-if="showFeedback && index === questions[currentQuestion].correctAnswer" class="feedback-icon correct">✓</div>
-              <div v-if="showFeedback && selectedAnswer === index && index !== questions[currentQuestion].correctAnswer" class="feedback-icon incorrect">✗</div>
-            </div>
-          </div>
-
-          <!-- Feedback Message -->
-          <div v-if="showFeedback" class="feedback-message" :class="{ correct: isAnswerCorrect, incorrect: !isAnswerCorrect }">
-            <div class="feedback-content">
-              <div class="feedback-icon-large">
-                {{ isAnswerCorrect ? '🎉' : '❌' }}
-              </div>
-              <div class="feedback-text">
-                <h3>{{ isAnswerCorrect ? 'Correct!' : 'Incorrect' }}</h3>
-                <p v-if="!isAnswerCorrect">
-                  The correct answer is: <strong>{{ questions[currentQuestion].options[questions[currentQuestion].correctAnswer] }}</strong>
-                </p>
-                <p v-else>Well done! You got it right.</p>
+        <!-- Quiz In Progress -->
+        <template v-if="!quizCompleted">
+          <div class="quiz-header">
+            <h1>{{ currentQuiz?.skill || 'Quiz' }} - {{ currentQuiz?.difficulty || 'Quiz' }}</h1>
+            <div class="quiz-progress">
+              <span>Question {{ currentQuestion + 1 }} of {{ questions.length }}</span>
+              <div class="progress-bar">
+                <div class="progress-fill" :style="{ width: `${progress}%` }"></div>
               </div>
             </div>
           </div>
 
-          <div class="quiz-actions">
-            <button
-              v-if="currentQuestion < questions.length - 1"
-              @click="nextQuestion"
-              :disabled="selectedAnswer === null"
-              class="btn btn-primary"
-            >
-              Next
-            </button>
-            <button
-              v-else
-              @click="submitQuiz"
-              :disabled="selectedAnswer === null"
-              class="btn btn-primary"
-            >
-              Submit Quiz
-            </button>
-          </div>
-        </div>
-      </div>
+          <div class="quiz-content">
+            <div class="question-card">
+              <h2>{{ questions[currentQuestion].question }}</h2>
+              
+              <div class="options">
+                <div
+                  v-for="(option, index) in questions[currentQuestion].options"
+                  :key="index"
+                  :class="['option', { 
+                    selected: selectedAnswer === index,
+                    correct: showFeedback && index === questions[currentQuestion].correctAnswer,
+                    incorrect: showFeedback && selectedAnswer === index && index !== questions[currentQuestion].correctAnswer
+                  }]"
+                  :data-option-index="index"
+                  @click="selectAnswer(index)"
+                >
+                  <div class="option-letter">{{ String.fromCharCode(65 + index) }}</div>
+                  <div class="option-text">{{ option }}</div>
+                  <div v-if="showFeedback && index === questions[currentQuestion].correctAnswer" class="feedback-icon correct">✓</div>
+                  <div v-if="showFeedback && selectedAnswer === index && index !== questions[currentQuestion].correctAnswer" class="feedback-icon incorrect">✗</div>
+                </div>
+              </div>
 
-      <div v-else class="quiz-results">
+              <!-- Feedback Message -->
+              <div v-if="showFeedback" class="feedback-message" :class="{ correct: isAnswerCorrect, incorrect: !isAnswerCorrect }">
+                <div class="feedback-content">
+                  <div class="feedback-icon-large">
+                    {{ isAnswerCorrect ? '🎉' : '❌' }}
+                  </div>
+                  <div class="feedback-text">
+                    <h3>{{ isAnswerCorrect ? 'Correct!' : 'Incorrect' }}</h3>
+                    <p v-if="!isAnswerCorrect">
+                      The correct answer is: <strong>{{ questions[currentQuestion].options[questions[currentQuestion].correctAnswer] }}</strong>
+                    </p>
+                    <p v-else>Well done! You got it right.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="quiz-actions">
+                <button
+                  v-if="currentQuestion < questions.length - 1"
+                  @click="nextQuestion"
+                  :disabled="selectedAnswer === null"
+                  class="btn btn-primary"
+                >
+                  Next
+                </button>
+                <button
+                  v-else
+                  @click="submitQuiz"
+                  :disabled="selectedAnswer === null"
+                  class="btn btn-primary"
+                >
+                  Submit Quiz
+                </button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Quiz Results -->
+        <div v-else class="quiz-results">
         <div class="results-card">
           <div class="score-circle">
             <h2>{{ score }}%</h2>
@@ -573,6 +577,7 @@ export default {
     return {
       currentQuestion,
       selectedAnswer,
+      answers,
       questions,
       progress,
       quizCompleted,
