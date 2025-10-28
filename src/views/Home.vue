@@ -4,28 +4,29 @@
     <section v-if="!isAuthenticated" class="hero">
       <div class="hero-content">
         <h1>Welcome to Bridge</h1>
-        <p class="hero-subtitle">Connecting Singapore Employers with Skilled Migrant Workers</p>
+        <p class="hero-subtitle">Eliminating the gap between <br>
+          Singaporean Employers and YOU</p>
         <p class="hero-description">
-          Skip the expensive middlemen. Find jobs or hire talent directly through our platform.
+          Build your career in Singapore today.
         </p>
         <div class="hero-buttons">
           <router-link to="/login" class="btn btn-primary">Login</router-link>
           <router-link to="/register" class="btn btn-secondary">Sign Up</router-link>
         </div>
       </div>
-      <div class="hero-image">
+      <div class="hero-bg">
         <div class="carousel-container">
           <div class="carousel-wrapper">
-            <div 
-              class="carousel-slide" 
+            <div
+              class="carousel-slide"
               :class="{ active: currentSlide === index }"
-              v-for="(image, index) in heroImages" 
+              v-for="(image, index) in heroImages"
               :key="index"
             >
               <img :src="image.src" :alt="image.alt" />
             </div>
           </div>
-          
+
           <!-- Carousel Navigation Dots -->
           <div class="carousel-dots">
             <button
@@ -36,11 +37,12 @@
               :class="{ active: currentSlide === index }"
             ></button>
           </div>
-          
+
           <!-- Carousel Arrows -->
           <button @click="previousSlide" class="carousel-arrow carousel-arrow-prev">‹</button>
           <button @click="nextSlide" class="carousel-arrow carousel-arrow-next">›</button>
         </div>
+        <div class="hero-overlay"></div>
       </div>
     </section>
 
@@ -48,10 +50,11 @@
     <HowItWorks />
 
     <!-- Category Chips Section -->
-    <CategoryChips @category-selected="onCategorySelected" />
-
+    <CategoryChips @category-selected="onCategorySelected" class = ""/>
+    <!-- Stats Section - Only show when not logged in -->
+    <StatsSection v-if="!isAuthenticated" class = "tate"/>
     <!-- Call to Action for Browse Jobs -->
-    <section class="cta-browse-jobs">
+    <section class="cta-browse-jobs tate">
       <div class="container">
         <h2>Ready to Find Your Next Job?</h2>
         <p>Browse through hundreds of job opportunities from top employers in Singapore</p>
@@ -59,15 +62,7 @@
       </div>
     </section>
 
-    <!-- Stats Section - Only show when not logged in -->
-    <StatsSection v-if="!isAuthenticated" />
 
-    <!-- CTA Section - Only show when not logged in -->
-    <section v-if="!isAuthenticated" class="cta">
-      <h2>Ready to Get Started?</h2>
-      <p>Join thousands of employers and job seekers on Bridge today</p>
-      <router-link to="/register" class="btn btn-primary btn-large">Create Free Account</router-link>
-    </section>
   </div>
 </template>
 
@@ -165,25 +160,29 @@ export default {
 }
 
 .hero {
+  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 80px 60px;
+  padding: 180px 60px 160px; /* lower the content visually */
   gap: 80px;
-  background: var(--);
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  margin: 0;
+  overflow: hidden;
 }
 
 .hero-content {
   flex: 1;
   max-width: 600px;
+  position: relative;
+  z-index: 1; /* above bg */
+  text-align: center; /* center text horizontally */
+  margin: 0 auto; /* center the block */
 }
 
 .hero h1 {
   font-size: 3.5rem;
-  color: var(--text);
+  color: #fff;
   margin-bottom: 20px;
   font-weight: 700;
   line-height: 1.2;
@@ -191,14 +190,14 @@ export default {
 
 .hero-subtitle {
   font-size: 1.5rem;
-  color: var(--primary);
+  color: #fff;
   margin-bottom: 15px;
   font-weight: 600;
 }
 
 .hero-description {
   font-size: 1.1rem;
-  color: var(--text-muted);
+  color: #fff;
   margin-bottom: 30px;
   line-height: 1.6;
 }
@@ -206,30 +205,38 @@ export default {
 .hero-buttons {
   display: flex;
   gap: 15px;
+  justify-content: center;
 }
 
-.hero-image {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 600px;
+/* Background carousel sits behind content */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1;
 }
 
 /* Carousel Styles */
 .carousel-container {
-  position: relative;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  max-width: 500px;
-  margin: 0 auto;
+  height: 100%;
 }
 
 .carousel-wrapper {
   position: relative;
   width: 100%;
-  height: 400px;
+  height: 100%;
   overflow: hidden;
-  border-radius: 10px;
 }
 
 .carousel-slide {
@@ -250,15 +257,19 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 10px;
+  opacity: 0.9;
 }
 
 /* Carousel Navigation Dots */
 .carousel-dots {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin-top: 16px;
+  z-index: 2;
 }
 
 .dot {
@@ -288,13 +299,13 @@ export default {
   height: 40px;
   border-radius: 50%;
   font-size: 24px;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s;
-  z-index: 10;
+  z-index: 2;
 }
 
 .carousel-arrow:hover {
@@ -379,9 +390,15 @@ export default {
   gap: 25px;
 }
 
+.tate {
+  background: rgb(205, 214, 255);
+  /* background-color: oklch(0.6 0.3 245); */
+  color: black;
+
+}
 
 .cta-browse-jobs {
-  background: var(--bg-light);
+  /* background: rgb(232, 240, 255); */
   padding: 80px 20px;
   text-align: center;
 }
@@ -402,6 +419,17 @@ export default {
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Make hero buttons white without affecting global buttons */
+.hero .hero-buttons .btn {
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.hero .hero-buttons .btn:hover {
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .cta {
@@ -426,7 +454,7 @@ export default {
   .hero {
     flex-direction: column;
     text-align: center;
-    padding: 40px 20px;
+    padding: 80px 20px;
   }
 
   .hero h1 {
@@ -453,6 +481,7 @@ export default {
   .jobs-grid {
     grid-template-columns: 1fr;
   }
+
 }
 </style>
 

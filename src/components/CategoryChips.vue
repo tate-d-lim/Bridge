@@ -3,9 +3,9 @@
       <div class="container">
         <div class="text-center mb-8">
           <h2>Browse by Category</h2>
-          <p class="text-muted">
+          <h4 class="">
             Find jobs that match your skills and interests
-          </p>
+          </h4>
         </div>
   
         <div class="categories-grid">
