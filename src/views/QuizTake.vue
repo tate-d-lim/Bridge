@@ -576,7 +576,7 @@ export default {
             ? loading2 
             : loading1
           console.log('Switched to:', currentLoadingImage.value) // Debug log
-        }, 1000) // Switch every second
+        }, 200) // Switch every second
       } else {
         // Clear interval when loading stops
         if (loadingInterval.value) {
@@ -584,7 +584,7 @@ export default {
           loadingInterval.value = null
         }
       }
-    })
+    }, { immediate: true }) // Add immediate: true to trigger on initial load
 
     // Clean up interval on component unmount
     onUnmounted(() => {
