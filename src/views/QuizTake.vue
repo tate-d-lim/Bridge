@@ -3,7 +3,9 @@
     <div class="quiz-container">
       <div v-if="loading" class="loading-state">
         <div class="loading-content">
-          <div class="loading-spinner"></div>
+          <div class="loading-image">
+            <img :src="currentLoadingImage" alt="Loading animation" />
+          </div>
           <h2>Generating Your Quiz...</h2>
           <p>Please wait while we create your personalized quiz with AI</p>
           <div class="loading-dots">
@@ -140,12 +142,14 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import { db } from '../firebase/config'
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore'
 import { quizApi } from '../services/api'
+import loading1 from '../assets/loading-1.png'
+import loading2 from '../assets/loading-2.png'
 
 export default {
   name: 'QuizTake',
@@ -161,6 +165,8 @@ export default {
     const loading = ref(true)
     const showFeedback = ref(false)
     const isAnswerCorrect = ref(false)
+    const currentLoadingImage = ref(loading1)
+    const loadingInterval = ref(null)
 
     // New: track timeout so we can clear it when navigating
     const feedbackTimeout = ref(null)
@@ -561,6 +567,32 @@ export default {
       }
     })
 
+    // Start image alternation when loading starts
+    watch(loading, (newValue) => {
+      console.log('Loading state changed:', newValue) // Debug log
+      if (newValue) {
+        loadingInterval.value = setInterval(() => {
+          currentLoadingImage.value = currentLoadingImage.value === loading1 
+            ? loading2 
+            : loading1
+          console.log('Switched to:', currentLoadingImage.value) // Debug log
+        }, 1000) // Switch every second
+      } else {
+        // Clear interval when loading stops
+        if (loadingInterval.value) {
+          clearInterval(loadingInterval.value)
+          loadingInterval.value = null
+        }
+      }
+    })
+
+    // Clean up interval on component unmount
+    onUnmounted(() => {
+      if (loadingInterval.value) {
+        clearInterval(loadingInterval.value)
+      }
+    })
+
     return {
       currentQuestion,
       selectedAnswer,
@@ -572,6 +604,7 @@ export default {
       currentQuiz,
       showFeedback,
       isAnswerCorrect,
+      currentLoadingImage,
       selectAnswer,
       nextQuestion,
       previousQuestion,
@@ -751,71 +784,62 @@ export default {
   justify-content: center;
 }
 
-/* Loading Content Styles */
+/* Loading State Styles */
+.loading-state {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .loading-content {
   background: #ffffff;
   padding: 40px;
   border-radius: 16px;
   text-align: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   max-width: 400px;
   width: 90%;
-  border: 2px solid #e5e7eb;
+  /* removed the border */
+  
+  /* Add subtle gradient background */
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  
+  /* Add smooth transition for hover effect */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.loading-content:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+/* Update spinner to be more prominent */
 .loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid var(--border);
-  border-top: 4px solid var(--primary);
+  width: 70px;
+  height: 70px;
+  border: 5px solid #f3f4f6;
+  border-top: 5px solid var(--primary);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
+  animation: spin 1.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  margin: 0 auto 25px;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-content h2 {
-  font-size: 1.8rem;
-  color: #1f2937;
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.loading-content p {
-  color: #6b7280;
-  margin-bottom: 20px;
-  font-size: 1.1rem;
-}
-
+/* Enhance loading dots */
 .loading-dots {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
+  margin-top: 25px;
 }
 
 .loading-dots span {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   background: var(--primary);
   border-radius: 50%;
-  animation: bounce 1.4s ease-in-out infinite both;
-}
-
-.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-.loading-dots span:nth-child(3) { animation-delay: 0s; }
-
-@keyframes bounce {
-  0%, 80%, 100% {
-    transform: scale(0);
-  }
-  40% {
-    transform: scale(1);
-  }
+  opacity: 0.7;
+  animation: bounce 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite both;
 }
 
 /* Enhanced Visual Effects */
@@ -839,6 +863,20 @@ export default {
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
   box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
   animation: correctGlow 1s ease-in-out;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
 }
 
 @keyframes correctPulse {
@@ -915,6 +953,19 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.loading-image {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 25px;
+}
+
+.loading-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.3s ease;
 }
 </style>
 

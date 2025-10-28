@@ -101,16 +101,25 @@ export default {
             description: "Improve your English spelling skills",
             icon: "/icons/file-text.svg",
             duration: "10 min",
-            questions: 15
+            questions: 5
           },
           {
             id: "basic-safety",
             title: "Basic Safety",
             description: "Introduction to workplace safety",
             icon: "/icons/check-circle.svg",
-            duration: "8 min",
-            questions: 12
-          }
+            duration: "10 min",
+            questions: 5
+          },
+
+          {
+            id: "construction-basics",
+            title: "Construction Basics",
+            description: "Learn fundamental construction concepts",
+            icon: "/icons/hammer.svg",
+            duration: "10 min",
+            questions: 5
+          },
         ]
       },
       {
@@ -120,29 +129,33 @@ export default {
         iconBgClass: "amber-icon-bg",
         quizzes: [
           {
-            id: "construction-basics",
-            title: "Construction Basics",
-            description: "Learn fundamental construction concepts",
-            icon: "/icons/hammer.svg",
-            duration: "15 min",
-            questions: 20
+            id: "spelling-basics",
+            title: "Spelling Quiz",
+            description: "Improve your English spelling skills",
+            icon: "/icons/file-text.svg",
+            duration: "10 min",
+            questions: 5
           },
           {
             id: "workplace-safety-inter",
             title: "Workplace Safety",
             description: "Essential safety protocols and procedures",
             icon: "/icons/check-circle.svg",
-            duration: "12 min",
-            questions: 18
+            duration: "10 min",
+            questions: 5
           },
+
           {
             id: "communication",
             title: "Communication Skills",
             description: "Effective workplace communication",
             icon: "/icons/users.svg",
             duration: "10 min",
-            questions: 15
+            questions: 5
           }
+
+
+
         ]
       },
       {
@@ -152,29 +165,31 @@ export default {
         iconBgClass: "red-icon-bg",
         quizzes: [
           {
-            id: "construction-advanced",
-            title: "Advanced Construction",
-            description: "Master complex construction techniques",
-            icon: "/icons/hammer.svg",
-            duration: "20 min",
-            questions: 25
+            id: "spelling-basics",
+            title: "Spelling Quiz",
+            description: "Improve your English spelling skills",
+            icon: "/icons/file-text.svg",
+            duration: "10 min",
+            questions: 5
           },
+
           {
             id: "safety-management",
             title: "Safety Management",
             description: "Advanced safety protocols and leadership",
-            icon: "/icons/sparkles.svg",
-            duration: "18 min",
-            questions: 22
+            icon: "/icons/check-circle.svg",
+            duration: "10 min",
+            questions: 5
           },
+
           {
-            id: "documentation",
-            title: "Documentation & Compliance",
-            description: "Professional documentation standards",
-            icon: "/icons/file-text.svg",
-            duration: "15 min",
-            questions: 20
-          }
+            id: "construction-advanced",
+            title: "Advanced Construction",
+            description: "Master complex construction techniques",
+            icon: "/icons/hammer.svg",
+            duration: "10 min",
+            questions: 5
+          },
         ]
       }
     ])
