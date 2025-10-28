@@ -158,7 +158,7 @@
             </router-link>
           </div>
           
-          <div v-if="loading" class="loading-state">
+          <div v-if="badgesLoading" class="loading-state">
             <p>Loading badges...</p>
           </div>
           
@@ -343,6 +343,7 @@ export default {
     const editing = ref(false)
     const viewedProfile = ref(null)
     const loading = ref(false)
+    const badgesLoading = ref(false)
     const uploadingPhoto = ref(false)
     const savingProfile = ref(false)
     const fileInput = ref(null)
@@ -403,7 +404,21 @@ export default {
 
     const formatDate = (dateString) => {
       if (!dateString) return 'Unknown'
-      const date = new Date(dateString)
+      
+      // Handle Firestore Timestamp objects
+      let date
+      if (dateString.seconds) {
+        date = new Date(dateString.seconds * 1000)
+      } else if (dateString.toDate) {
+        date = dateString.toDate()
+      } else {
+        date = new Date(dateString)
+      }
+      
+      if (isNaN(date.getTime())) {
+        return 'Unknown'
+      }
+      
       return date.toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'short', 
@@ -605,24 +620,86 @@ export default {
       }
     }
 
+    // Fetch badges and stats
+    const fetchBadgesAndStats = async () => {
+      const userId = isViewingOtherProfile.value ? route.params.id : currentUser.value?.uid
+      
+      if (!userId) {
+        console.log('⚠️ Profile: No user ID available')
+        return
+      }
+      
+      if (!userProfile.value) {
+        console.log('⚠️ Profile: User profile not available yet')
+        return
+      }
+      
+      if (userProfile.value.role !== 'jobseeker') {
+        console.log('ℹ️ Profile: Not a jobseeker profile')
+        return
+      }
+      
+      badgesLoading.value = true
+      try {
+        console.log('🔍 Profile: Fetching badges for user:', userId)
+        // Fetch earned badges from badges store
+        const badges = await store.dispatch('badges/fetchEarnedBadges', userId)
+        console.log('✅ Profile: Earned badges count:', badges?.length || 0, badges)
+        
+        // Fetch user stats from badges store
+        const stats = await store.dispatch('badges/initializeUserStats', userId)
+        console.log('✅ Profile: User stats:', stats)
+        console.log('✅ Profile: Badges and stats fetched successfully')
+      } catch (error) {
+        console.error('❌ Profile: Error fetching badges and stats:', error)
+        console.error('Error details:', error.message, error.stack)
+      } finally {
+        badgesLoading.value = false
+      }
+    }
+
     onMounted(async () => {
+      console.log('🏠 Profile: Component mounted')
+      
+      // Wait a bit for profile to be available
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
       // If viewing someone else's profile, fetch their data
       if (isViewingOtherProfile.value) {
+        console.log('👤 Profile: Viewing other profile, fetching...')
         await fetchViewedProfile(route.params.id)
       }
       
-      // Fetch badges and stats for job seekers (current user or viewed profile)
-      if (userProfile.value?.role === 'jobseeker') {
-        const userId = isViewingOtherProfile.value ? route.params.id : currentUser.value?.uid
-        if (userId) {
-          try {
-            // Fetch earned badges from badges store
-            await store.dispatch('badges/fetchEarnedBadges', userId)
-            // Fetch user stats from badges store
-            await store.dispatch('badges/initializeUserStats', userId)
-          } catch (error) {
-            console.error('Error fetching badges and stats:', error)
-          }
+      // Fetch badges and stats for job seekers - try multiple times if needed
+      let attempts = 0
+      console.log('⏳ Profile: Waiting for userProfile to be available...')
+      while (attempts < 10 && (!userProfile.value || !userProfile.value.role)) {
+        await new Promise(resolve => setTimeout(resolve, 200))
+        attempts++
+        console.log(`   Attempt ${attempts}/10, userProfile:`, userProfile.value)
+      }
+      
+      if (userProfile.value) {
+        console.log('✅ Profile: User profile available:', userProfile.value)
+      } else {
+        console.warn('⚠️ Profile: User profile not available after waiting')
+      }
+      
+      // Always try to fetch badges, even if profile check fails
+      await fetchBadgesAndStats()
+
+      // If the above didn't work, try a direct fetch
+      if (currentUser.value) {
+        const directUserId = currentUser.value.uid
+        console.log('🔄 Profile: Attempting direct badge fetch for:', directUserId)
+        try {
+          badgesLoading.value = true
+          await store.dispatch('badges/fetchEarnedBadges', directUserId)
+          await store.dispatch('badges/initializeUserStats', directUserId)
+        } catch (error) {
+          console.error('Direct fetch error:', error)
+        } finally {
+          badgesLoading.value = false
         }
       }
 
@@ -633,10 +710,14 @@ export default {
     })
 
     // Get data from badges store
-    const earnedBadges = computed(() => store.getters['badges/earnedBadges'])
+    const earnedBadges = computed(() => {
+      const badges = store.getters['badges/earnedBadges']
+      console.log('🎖️ Computed earnedBadges:', badges)
+      return badges || []
+    })
     const userStats = computed(() => store.getters['badges/userStats'])
 
-    return {
+      return {
       editing,
       userProfile,
       earnedBadges,
@@ -644,6 +725,7 @@ export default {
       getInitials,
       isViewingOtherProfile,
       loading,
+      badgesLoading,
       formatDate,
       fileInput,
       uploadingPhoto,
@@ -1206,4 +1288,5 @@ export default {
   }
 }
 </style>
+
 

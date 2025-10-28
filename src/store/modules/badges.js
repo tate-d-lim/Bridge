@@ -39,7 +39,8 @@ const BADGE_DEFINITIONS = {
       id: 'gold_performer',
       name: 'Gold Performer',
       description: 'Win 10 quizzes',
-      icon: '🥇',
+      icon: 'trophy',
+      iconType: 'svg',
       tier: 'gold',
       requirement: 10,
       type: 'wins'
@@ -48,7 +49,8 @@ const BADGE_DEFINITIONS = {
       id: 'platinum_performer',
       name: 'Platinum Performer',
       description: 'Win 25 quizzes',
-      icon: '💎',
+      icon: 'gem',
+      iconType: 'svg',
       tier: 'platinum',
       requirement: 25,
       type: 'wins'
@@ -444,22 +446,62 @@ export default {
     // Fetch all user's earned badges
     async fetchEarnedBadges({ commit }, userId) {
       try {
-        const q = query(
-          collection(db, 'earnedBadges'),
-          where('userId', '==', userId),
-          orderBy('earnedAt', 'desc')
-        )
-        const snapshot = await getDocs(q)
-        const badges = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }))
+        console.log('🔍 Fetching earned badges for user:', userId)
         
-        commit('SET_EARNED_BADGES', badges)
-        return badges
+        // Try with orderBy first
+        try {
+          const q = query(
+            collection(db, 'earnedBadges'),
+            where('userId', '==', userId),
+            orderBy('earnedAt', 'desc')
+          )
+          const snapshot = await getDocs(q)
+          console.log('📊 Found', snapshot.size, 'earned badges')
+          const badges = snapshot.docs.map(doc => {
+            const data = doc.data()
+            console.log('   Badge:', data)
+            return {
+              id: doc.id,
+              ...data
+            }
+          })
+          
+          console.log('📜 Earned badges array:', badges)
+          commit('SET_EARNED_BADGES', badges)
+          return badges
+        } catch (orderByError) {
+          console.warn('⚠️ OrderBy query failed, trying without orderBy:', orderByError.message)
+          // Fallback: query without orderBy
+          const q = query(
+            collection(db, 'earnedBadges'),
+            where('userId', '==', userId)
+          )
+          const snapshot = await getDocs(q)
+          console.log('📊 Found', snapshot.size, 'earned badges (no orderBy)')
+          const badges = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }))
+          
+          // Sort manually by earnedAt
+          badges.sort((a, b) => {
+            const dateA = a.earnedAt?.seconds || 0
+            const dateB = b.earnedAt?.seconds || 0
+            return dateB - dateA
+          })
+          
+          console.log('📜 Earned badges (sorted manually):', badges)
+          commit('SET_EARNED_BADGES', badges)
+          return badges
+        }
       } catch (error) {
+        console.error('Error fetching earned badges:', error)
+        console.error('Error code:', error.code)
+        console.error('Error message:', error.message)
         commit('SET_ERROR', error.message)
-        throw error
+        // Return empty array instead of throwing
+        commit('SET_EARNED_BADGES', [])
+        return []
       }
     },
     

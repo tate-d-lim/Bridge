@@ -1,135 +1,166 @@
 <template>
   <div class="achievements-page">
-    <div class="achievements-container">
-      <!-- Simplified Header -->
-      <div class="achievements-header">
-        <h1>Achievements</h1>
-        <p class="subtitle">{{ earnedBadgeCount }} of {{ totalBadgeCount }} badges unlocked</p>
-        
-        <!-- Minimal Progress Bar -->
+    <!-- Header Section -->
+    <div class="achievements-header">
+      <div class="header-content">
+        <div class="header-icon">
+          <img src="/icons/award.svg" alt="Award" />
+        </div>
+        <div class="header-text">
+          <h1>Achievements</h1>
+          <p class="header-subtitle">
+            Track your progress and unlock new badges
+          </p>
+        </div>
+      </div>
+      <div class="progress-section">
+        <div class="progress-header">
+          <span class="progress-label">Overall Progress</span>
+          <span class="progress-count">{{ earnedBadgeCount }} / {{ totalBadgeCount }} unlocked</span>
+        </div>
         <div class="progress-bar">
           <div class="progress-fill" :style="{ width: `${badgeProgress}%` }"></div>
         </div>
-        
-        <!-- Streamlined Stats -->
-        <div class="stats-row">
-          <div class="stat">
-            <span class="stat-value">{{ userStats?.totalPlays || 0 }}</span>
-            <span class="stat-label">Plays</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value">{{ userStats?.totalWins || 0 }}</span>
-            <span class="stat-label">Wins</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value">{{ userStats?.winPercentage || 0 }}%</span>
-            <span class="stat-label">Win Rate</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value">{{ userStats?.currentDayStreak || 0 }}</span>
-            <span class="stat-label">Streak</span>
-          </div>
-        </div>
       </div>
+    </div>
 
-      <!-- Simplified Badge Categories -->
-      <div class="badges-section">
-        <!-- Performance Badges -->
-        <div class="badge-category">
-          <h2 class="category-title">Performance</h2>
-          <div class="badges-grid">
-            <div
-              v-for="badge in allBadges.performance"
-              :key="badge.id"
-              :class="['badge-card', { earned: badge.earned }]"
-            >
-              <div class="badge-icon" :class="`tier-${badge.tier}`">
-                {{ badge.icon }}
-              </div>
-              <div class="badge-content">
-                <h3>{{ badge.name }}</h3>
-                <p class="badge-progress">{{ getCurrentValue(badge) }} / {{ badge.requirement }}</p>
-              </div>
-            </div>
-          </div>
+    <!-- Main Content -->
+    <div class="achievements-container">
+      <!-- Stats Overview -->
+      <StatsOverview
+        :plays="userStats?.totalPlays || 0"
+        :wins="userStats?.totalWins || 0"
+        :winRate="userStats?.winPercentage || 0"
+        :streak="userStats?.currentDayStreak || 0"
+      />
+
+      <!-- Tabs Section -->
+      <div class="tabs-section">
+        <div class="tabs-list" role="tablist">
+          <button
+            v-for="tab in tabs"
+            :key="tab.value"
+            :class="['tab-trigger', { active: activeTab === tab.value }]"
+            @click="activeTab = tab.value"
+          >
+            {{ tab.label }}
+          </button>
         </div>
 
-        <!-- Participation Badges -->
-        <div class="badge-category">
-          <h2 class="category-title">Participation</h2>
-          <div class="badges-grid">
-            <div
-              v-for="badge in allBadges.participation"
-              :key="badge.id"
-              :class="['badge-card', { earned: badge.earned }]"
-            >
-              <div class="badge-icon" :class="`tier-${badge.tier}`">
-                {{ badge.icon }}
-              </div>
-              <div class="badge-content">
-                <h3>{{ badge.name }}</h3>
-                <p class="badge-progress">{{ getCurrentValue(badge) }} / {{ badge.requirement }}</p>
-              </div>
+        <!-- Tab Content -->
+        <div class="tab-content-wrapper">
+          <!-- Performance Tab -->
+          <div v-show="activeTab === 'performance'" class="tab-content">
+            <div class="tab-header">
+              <h2>Performance Achievements</h2>
+              <p class="tab-description">Unlock achievements by winning games</p>
+            </div>
+            <div class="achievements-grid">
+              <AchievementCard
+                v-for="(badge, index) in allBadges.performance"
+                :key="badge.id"
+                :icon="badge.icon"
+                :icon-type="badge.iconType || 'emoji'"
+                :title="badge.name"
+                :description="badge.description"
+                :progress="getCurrentValue(badge)"
+                :requirement="badge.requirement"
+                :unlocked="badge.earned"
+                :tier="badge.tier"
+                :index="index"
+              />
             </div>
           </div>
-        </div>
 
-        <!-- Streak Badges -->
-        <div class="badge-category">
-          <h2 class="category-title">Daily Streaks</h2>
-          <div class="badges-grid">
-            <div
-              v-for="badge in allBadges.streak"
-              :key="badge.id"
-              :class="['badge-card', { earned: badge.earned }]"
-            >
-              <div class="badge-icon" :class="`tier-${badge.tier}`">
-                {{ badge.icon }}
-              </div>
-              <div class="badge-content">
-                <h3>{{ badge.name }}</h3>
-                <p class="badge-progress">{{ getCurrentValue(badge) }} / {{ badge.requirement }}</p>
-              </div>
+          <!-- Participation Tab -->
+          <div v-show="activeTab === 'participation'" class="tab-content">
+            <div class="tab-header">
+              <h2>Participation Achievements</h2>
+              <p class="tab-description">Unlock achievements by playing games</p>
+            </div>
+            <div class="achievements-grid">
+              <AchievementCard
+                v-for="(badge, index) in allBadges.participation"
+                :key="badge.id"
+                :icon="badge.icon"
+                :icon-type="badge.iconType || 'emoji'"
+                :title="badge.name"
+                :description="badge.description"
+                :progress="getCurrentValue(badge)"
+                :requirement="badge.requirement"
+                :unlocked="badge.earned"
+                :tier="badge.tier"
+                :index="index"
+              />
             </div>
           </div>
-        </div>
 
-        <!-- Win Streak Badges -->
-        <div class="badge-category">
-          <h2 class="category-title">Win Streaks</h2>
-          <div class="badges-grid">
-            <div
-              v-for="badge in allBadges.winStreak"
-              :key="badge.id"
-              :class="['badge-card', { earned: badge.earned }]"
-            >
-              <div class="badge-icon" :class="`tier-${badge.tier}`">
-                {{ badge.icon }}
-              </div>
-              <div class="badge-content">
-                <h3>{{ badge.name }}</h3>
-                <p class="badge-progress">{{ getCurrentValue(badge) }} / {{ badge.requirement }}</p>
-              </div>
+          <!-- Daily Streaks Tab -->
+          <div v-show="activeTab === 'daily'" class="tab-content">
+            <div class="tab-header">
+              <h2>Daily Streak Achievements</h2>
+              <p class="tab-description">Unlock achievements by playing daily</p>
+            </div>
+            <div class="achievements-grid">
+              <AchievementCard
+                v-for="(badge, index) in allBadges.streak"
+                :key="badge.id"
+                :icon="badge.icon"
+                :icon-type="badge.iconType || 'emoji'"
+                :title="badge.name"
+                :description="badge.description"
+                :progress="getCurrentValue(badge)"
+                :requirement="badge.requirement"
+                :unlocked="badge.earned"
+                :tier="badge.tier"
+                :index="index"
+              />
             </div>
           </div>
-        </div>
 
-        <!-- Perfect Score Badges -->
-        <div class="badge-category">
-          <h2 class="category-title">Perfect Scores</h2>
-          <div class="badges-grid">
-            <div
-              v-for="badge in allBadges.perfect"
-              :key="badge.id"
-              :class="['badge-card', { earned: badge.earned }]"
-            >
-              <div class="badge-icon" :class="`tier-${badge.tier}`">
-                {{ badge.icon }}
-              </div>
-              <div class="badge-content">
-                <h3>{{ badge.name }}</h3>
-                <p class="badge-progress">{{ getCurrentValue(badge) }} / {{ badge.requirement }}</p>
-              </div>
+          <!-- Win Streaks Tab -->
+          <div v-show="activeTab === 'win'" class="tab-content">
+            <div class="tab-header">
+              <h2>Win Streak Achievements</h2>
+              <p class="tab-description">Unlock achievements by winning consecutively</p>
+            </div>
+            <div class="achievements-grid">
+              <AchievementCard
+                v-for="(badge, index) in allBadges.winStreak"
+                :key="badge.id"
+                :icon="badge.icon"
+                :icon-type="badge.iconType || 'emoji'"
+                :title="badge.name"
+                :description="badge.description"
+                :progress="getCurrentValue(badge)"
+                :requirement="badge.requirement"
+                :unlocked="badge.earned"
+                :tier="badge.tier"
+                :index="index"
+              />
+            </div>
+          </div>
+
+          <!-- Perfect Scores Tab -->
+          <div v-show="activeTab === 'perfect'" class="tab-content">
+            <div class="tab-header">
+              <h2>Perfect Score Achievements</h2>
+              <p class="tab-description">Unlock achievements by getting perfect scores</p>
+            </div>
+            <div class="achievements-grid">
+              <AchievementCard
+                v-for="(badge, index) in allBadges.perfect"
+                :key="badge.id"
+                :icon="badge.icon"
+                :icon-type="badge.iconType || 'emoji'"
+                :title="badge.name"
+                :description="badge.description"
+                :progress="getCurrentValue(badge)"
+                :requirement="badge.requirement"
+                :unlocked="badge.earned"
+                :tier="badge.tier"
+                :index="index"
+              />
             </div>
           </div>
         </div>
@@ -141,11 +172,26 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import StatsOverview from '../components/StatsOverview.vue'
+import AchievementCard from '../components/AchievementCard.vue'
 
 export default {
   name: 'Achievements',
+  components: {
+    StatsOverview,
+    AchievementCard
+  },
   setup() {
     const store = useStore()
+    const activeTab = ref('performance')
+    
+    const tabs = [
+      { label: 'Performance', value: 'performance' },
+      { label: 'Participation', value: 'participation' },
+      { label: 'Daily Streaks', value: 'daily' },
+      { label: 'Win Streaks', value: 'win' },
+      { label: 'Perfect Scores', value: 'perfect' }
+    ]
     
     const allBadges = computed(() => store.getters['badges/allBadges'] || {
       performance: [],
@@ -199,6 +245,8 @@ export default {
     })
     
     return {
+      activeTab,
+      tabs,
       allBadges,
       userStats,
       earnedBadgeCount,
@@ -215,244 +263,248 @@ export default {
 .achievements-page {
   min-height: calc(100vh - 70px);
   background: var(--bg);
-  padding: 60px 20px;
 }
 
-.achievements-container {
+/* Header Section */
+.achievements-header {
+  background: var(--bg-light);
+  border-bottom: 1px solid var(--border);
+  padding: 2rem 1rem;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.header-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.header-icon img {
+  width: 32px;
+  height: 32px;
+  filter: brightness(0) invert(1);
+}
+
+.header-text {
+  flex: 1;
+}
+
+.header-text h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.02em;
+}
+
+.header-subtitle {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Progress Section */
+.progress-section {
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* Simplified Header */
-.achievements-header {
-  text-align: center;
-  margin-bottom: 60px;
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
 }
 
-.achievements-header h1 {
-  font-size: 2.5rem;
-  color: var(--text);
-  margin-bottom: 12px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.subtitle {
+.progress-label {
   color: var(--text-muted);
-  font-size: 1rem;
-  margin-bottom: 30px;
-  font-weight: 400;
 }
 
-/* Minimal Progress Bar */
+.progress-count {
+  color: var(--text);
+  font-weight: 600;
+}
+
 .progress-bar {
-  max-width: 500px;
-  margin: 0 auto 40px;
-  height: 6px;
+  height: 12px;
   background: var(--border);
-  border-radius: 3px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
   background: var(--primary);
+  border-radius: 6px;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Streamlined Stats Row */
-.stats-row {
-  display: flex;
-  justify-content: center;
-  gap: 48px;
-  flex-wrap: wrap;
+/* Main Container */
+.achievements-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
 }
 
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
+/* Tabs Section */
+.tabs-section {
+  margin-top: 3rem;
 }
 
-.stat-value {
-  font-size: 2rem;
-  color: var(--text);
-  font-weight: 600;
-  line-height: 1;
-}
-
-.stat-label {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Simplified Badge Section */
-.badges-section {
-  margin-top: 60px;
-}
-
-.badge-category {
-  margin-bottom: 48px;
-}
-
-.category-title {
-  font-size: 1.25rem;
-  color: var(--text);
-  margin-bottom: 20px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-/* Clean Badge Grid */
-.badges-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  justify-content: center;
-}
-
-/* Minimalist Badge Card */
-.badge-card {
+.tabs-list {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 2rem;
   background: var(--bg-light);
+  padding: 0.5rem;
+  border-radius: 1rem;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 24px 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  width: 280px;
-  max-width: 100%;
 }
 
-.badge-card:not(.earned) {
-  opacity: 0.5;
-}
-
-.badge-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.badge-card.earned {
-  border-color: var(--primary);
-  background: var(--bg-light);
-}
-
-/* Compact Badge Icon */
-.badge-icon {
-  font-size: 2rem;
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  flex-shrink: 0;
-  transition: transform 0.2s ease;
-}
-
-.badge-card:hover .badge-icon {
-  transform: scale(1.05);
-}
-
-.badge-icon.tier-bronze {
-  background: linear-gradient(135deg, #cd7f32 0%, #b8860b 100%);
-}
-
-.badge-icon.tier-silver {
-  background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
-}
-
-.badge-icon.tier-gold {
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-}
-
-.badge-icon.tier-platinum {
-  background: linear-gradient(135deg, #e5e4e2 0%, #b0c4de 100%);
-}
-
-/* Badge Content */
-.badge-content {
-  flex: 1;
-  text-align: left;
-  min-width: 0;
-}
-
-.badge-card h3 {
-  font-size: 1rem;
-  color: var(--text);
-  margin-bottom: 4px;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.badge-progress {
-  font-size: 0.875rem;
+.tab-trigger {
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
   color: var(--text-muted);
-  margin: 0;
-  font-weight: 400;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-trigger:hover {
+  color: var(--text);
+  background: var(--bg);
+}
+
+.tab-trigger.active {
+  background: var(--primary);
+  color: white;
+}
+
+.tab-content-wrapper {
+  min-height: 400px;
+}
+
+.tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.tab-header {
+  margin-bottom: 1.5rem;
+}
+
+.tab-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.tab-description {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Achievements Grid */
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .achievements-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .achievements-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Win Streaks use 3 columns on larger screens */
+  .tab-content:nth-child(4) .achievements-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .achievements-page {
-    padding: 40px 16px;
+    padding: 0;
   }
 
-  .achievements-header h1 {
-    font-size: 2rem;
-  }
-  
-  .stats-row {
-    gap: 32px;
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .stat-value {
-    font-size: 1.75rem;
+  .header-icon {
+    width: 3rem;
+    height: 3rem;
   }
 
-  .badges-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .category-title {
-    font-size: 1.125rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .stats-row {
-    gap: 24px;
-  }
-
-  .stat-value {
+  .header-text h1 {
     font-size: 1.5rem;
   }
 
-  .badge-card {
-    padding: 20px 16px;
-    gap: 12px;
+  .tabs-list {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
   }
 
-  .badge-icon {
-    font-size: 1.75rem;
-    width: 48px;
-    height: 48px;
+  .tab-trigger {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
   }
 
-  .badge-card h3 {
-    font-size: 0.9375rem;
+  .achievements-container {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .header-icon img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .header-text h1 {
+    font-size: 1.25rem;
   }
 }
 </style>
-
