@@ -4,8 +4,7 @@
     <section v-if="!isAuthenticated" class="hero">
       <div class="hero-content">
         <h1>Welcome to Bridge</h1>
-        <p class="hero-subtitle">Eliminating the gap between <br>
-          Singaporean Employers and YOU</p>
+        <p class="hero-subtitle">Matching Job-Seekers with Singaporean Employers</p>
         <p class="hero-description">
           Build your career in Singapore today.
         </p>
