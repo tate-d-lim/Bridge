@@ -2,9 +2,24 @@
   <div class="home">
     <!-- Hero Section - Only show when not logged in -->
     <section v-if="!isAuthenticated" class="hero">
-      <div class="hero-content">
-        <h1>Welcome to Bridge</h1>
-        <p class="hero-subtitle">Matching Job-Seekers with Singaporean Employers</p>
+        <div class="hero-content">
+          <h1>
+            <GradientText
+              :colors="['var(--primary)', '#ffffff', 'oklch(0.7 0.1 245)', '#ffffff', 'var(--primary)']"
+              :animationSpeed="3"
+            >
+              BRIDGE
+            </GradientText>
+          </h1>
+        <p class="hero-subtitle">
+          <TextType 
+            :text="['Matching Job-Seekers with Singaporean Employers', 'Connecting Talent with Opportunities', 'Building Careers in Singapore']"
+            :typingSpeed="75"
+            :pauseDuration="2000"
+            :showCursor="true"
+            cursorCharacter="|"
+          />
+        </p>
         <p class="hero-description">
           Build your career in Singapore today.
         </p>
@@ -71,6 +86,8 @@ import { useStore } from 'vuex'
 import CategoryChips from '../components/CategoryChips.vue'
 import HowItWorks from '../components/HowItWorks.vue'
 import StatsSection from '../components/StatsSection.vue'
+import GradientText from '../components/GradientText.vue'
+import TextType from '../components/TextType.vue'
 import migrantWorkerHappy from '../assets/migrantWorkerHappy.png'
 import migrantWorker1 from '../assets/migrantWorker1.png'
 import migrantWorker2 from '../assets/migrantWorker2.png'
@@ -80,7 +97,9 @@ export default {
   components: {
     CategoryChips,
     HowItWorks,
-    StatsSection
+    StatsSection,
+    TextType,
+    GradientText
   },
   setup() {
     const store = useStore()
@@ -187,6 +206,25 @@ export default {
   line-height: 1.2;
 }
 
+.hero h1{
+  color: #fff;
+  display: inline-block;
+  animation: bridgeSlideIn 700ms ease-out both;
+}
+
+@keyframes bridgeSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-14px);
+    letter-spacing: 0.5px;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    letter-spacing: 0;
+  }
+}
+
 .hero-subtitle {
   font-size: 1.5rem;
   color: #fff;
@@ -219,7 +257,7 @@ export default {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
   z-index: 1;
 }
 
