@@ -7,42 +7,30 @@
 
     <!-- Stats Cards -->
     <div class="stats-grid">
-      <div class="card stat-card">
-        <div class="stat-icon">
-          <img src="../assets/briefcase.svg" alt="Briefcase" />
-        </div>
-        <div class="stat-info">
-          <h3>{{ employerJobs.length }}</h3>
-          <p>Active Jobs</p>
-        </div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-icon">
-          <img src="../assets/task-checklist.svg" alt="Application" />
-        </div>
-        <div class="stat-info">
-          <h3>{{ totalApplications }}</h3>
-          <p>Applications</p>
-        </div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-icon">
-          <img src="../assets/candidates.svg" alt="Candidates" />
-        </div>
-        <div class="stat-info">
-          <h3>0</h3>
-          <p>Candidates</p>
-        </div>
-      </div>
-      <div class="card stat-card">
-        <div class="stat-icon">
-          <img src="../assets/hired.svg" alt="Hired" />
-        </div>
-        <div class="stat-info">
-          <h3>0</h3>
-          <p>Hired</p>
-        </div>
-      </div>
+      <AnimatedStat
+        :icon="briefcaseIcon"
+        :value="employerJobs.length"
+        label="Active Jobs"
+        :delay="0"
+      />
+      <AnimatedStat
+        :icon="taskIcon"
+        :value="totalApplications"
+        label="Applications"
+        :delay="100"
+      />
+      <AnimatedStat
+        :icon="candidatesIcon"
+        :value="uniqueCandidates"
+        label="Candidates"
+        :delay="200"
+      />
+      <AnimatedStat
+        :icon="hiredIcon"
+        :value="hiredCount"
+        label="Hired"
+        :delay="300"
+      />
     </div>
 
     <!-- Recent Jobs -->
@@ -164,9 +152,17 @@
 <script>
 import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import AnimatedStat from '../components/AnimatedStat.vue'
+import briefcaseIcon from '../assets/briefcase.svg'
+import taskIcon from '../assets/task-checklist.svg'
+import candidatesIcon from '../assets/candidates.svg'
+import hiredIcon from '../assets/hired.svg'
 
 export default {
   name: 'EmployerDashboard',
+  components: {
+    AnimatedStat
+  },
   setup() {
     const store = useStore()
     
@@ -181,6 +177,15 @@ export default {
     
     const totalApplications = computed(() => {
       return allApplications.value.length
+    })
+
+    const uniqueCandidates = computed(() => {
+      const uniqueCandidateIds = new Set(allApplications.value.map(app => app.candidateId))
+      return uniqueCandidateIds.size
+    })
+
+    const hiredCount = computed(() => {
+      return allApplications.value.filter(app => app.status === 'accepted').length
     })
 
     const fetchEmployerJobs = async () => {
@@ -290,11 +295,17 @@ export default {
       recentApplications,
       allApplications,
       totalApplications,
+      uniqueCandidates,
+      hiredCount,
       loading,
       loadingApplications,
       editJob,
       updateApplicationStatus,
-      formatDate
+      formatDate,
+      briefcaseIcon,
+      taskIcon,
+      candidatesIcon,
+      hiredIcon
     }
   }
 }
@@ -329,31 +340,7 @@ export default {
   margin-bottom: 40px;
 }
 
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.stat-icon {
-  font-size: 3rem;
-}
-
-.stat-icon img {
-  width: 3rem;
-  height: 3rem;
-  object-fit: contain;
-}
-
-.stat-info h3 {
-  font-size: 2rem;
-  color: var(--text);
-  margin-bottom: 5px;
-}
-
-.stat-info p {
-  color: var(--text-muted);
-}
+/* AnimatedStat component handles its own styling */
 
 .quick-actions {
   margin-bottom: 40px;

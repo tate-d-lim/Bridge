@@ -48,7 +48,6 @@ export default {
   align-items: center;
   justify-content: center;
   font-weight: 500;
-  backdrop-filter: blur(10px);
   transition: box-shadow 0.5s ease-out;
   overflow: hidden;
   cursor: pointer;

@@ -19,7 +19,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 
 export default {
   name: 'AnimatedStat',
@@ -48,26 +48,37 @@ export default {
   setup(props) {
     const count = ref(0)
     const opacity = ref(0)
+    let currentInterval = null
 
-    const animateCount = () => {
-      const duration = 2000
+    const animateCount = (targetValue, isInitial = false) => {
+      // Clear any existing interval
+      if (currentInterval) {
+        clearInterval(currentInterval)
+      }
+
+      const duration = isInitial ? 2000 : 1000 // Shorter duration for updates
       const steps = 60
-      const increment = props.value / steps
-      let current = 0
+      const increment = targetValue / steps
+      let current = count.value // Start from current value for updates
 
-      setTimeout(() => {
-        const counter = setInterval(() => {
+      const startAnimation = () => {
+        currentInterval = setInterval(() => {
           current += increment
-          if (current >= props.value) {
-            count.value = props.value
-            clearInterval(counter)
+          if (current >= targetValue) {
+            count.value = targetValue
+            clearInterval(currentInterval)
+            currentInterval = null
           } else {
             count.value = Math.floor(current)
           }
         }, duration / steps)
+      }
 
-        return () => clearInterval(counter)
-      }, props.delay)
+      if (isInitial) {
+        setTimeout(startAnimation, props.delay)
+      } else {
+        startAnimation()
+      }
     }
 
     const animateOpacity = () => {
@@ -76,8 +87,15 @@ export default {
       }, props.delay)
     }
 
+    // Watch for changes in the value prop
+    watch(() => props.value, (newValue) => {
+      if (opacity.value === 1) { // Only animate if component is already visible
+        animateCount(newValue, false)
+      }
+    })
+
     onMounted(() => {
-      animateCount()
+      animateCount(props.value, true)
       animateOpacity()
     })
 

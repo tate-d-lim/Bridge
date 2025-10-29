@@ -63,10 +63,12 @@
     <!-- How It Works Section -->
     <HowItWorks />
 
-    <!-- Category Chips Section -->
-    <CategoryChips @category-selected="onCategorySelected" class = ""/>
     <!-- Stats Section - Only show when not logged in -->
     <StatsSection v-if="!isAuthenticated" class = "tate"/>
+    
+    <!-- Category Chips Section -->
+    <CategoryChips @category-selected="onCategorySelected" class = ""/>
+
     <!-- Call to Action for Browse Jobs -->
     <section class="cta-browse-jobs tate">
       <div class="container">
@@ -182,11 +184,12 @@ export default {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 180px 60px 160px; /* lower the content visually */
+  padding: 200px 60px 80px; /* move content much lower */
   gap: 80px;
   width: 100%;
   margin: 0;
   overflow: hidden;
+  min-height: 80vh;
 }
 
 .hero-content {
