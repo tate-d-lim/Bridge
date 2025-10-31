@@ -33,7 +33,7 @@
             style="display: none"
           />
           <div class="avatar-actions">
-            <p v-if="uploadError" class="error-message">{{ uploadError }}</p>
+            <p v-if="uploadError" class="inline-error">{{ uploadError }}</p>
             <p v-if="selectedPhoto" class="photo-selected">New photo selected</p>
             <div v-if="!isViewingOtherProfile && editing" class="photo-buttons">
               <button 
@@ -78,7 +78,7 @@
           </div>
         </div>
       </div>
-      <p v-if="saveError" class="error-message error-banner">{{ saveError }}</p>
+      <p v-if="saveError" class="inline-error">{{ saveError }}</p>
 
       <!-- Job Seeker Profile -->
       <div v-if="userProfile?.role === 'jobseeker'" class="profile-content">
@@ -445,9 +445,9 @@ export default {
         return
       }
 
-      // Validate file size (700KB max for Firestore base64 storage)
+      // Validate file size (700KB max)
       if (file.size > 700 * 1024) {
-        uploadError.value = 'Image size must be less than 700KB (Firestore limitation)'
+        uploadError.value = 'Image size must be less than 700KB'
         return
       }
 
@@ -865,6 +865,12 @@ export default {
 
 /* Error Messages */
 .error-message {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin-top: 5px;
+}
+
+.inline-error {
   color: var(--danger);
   font-size: 0.85rem;
   margin-top: 5px;
