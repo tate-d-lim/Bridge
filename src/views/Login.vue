@@ -18,7 +18,7 @@
           </div>
 
           <div class="form-group">
-            <label for="password">Password</label>
+            <label for="password">Password <span v-if="error" class="field-error">{{ error }}</span></label>
             <input
               type="password"
               id="password"
@@ -28,21 +28,13 @@
             />
           </div>
 
-          <div class="form-options">
-            <label class="checkbox">
-              <input type="checkbox" v-model="rememberMe" />
-              <span>Remember me</span>
-            </label>
-            <a href="#" class="forgot-password">Forgot password?</a>
-          </div>
+          
 
           <button type="submit" class="btn btn-primary btn-block" :disabled="loading">
             {{ loading ? 'Signing in...' : 'Sign In' }}
           </button>
 
-          <div v-if="error" class="error-message">
-            {{ error }}
-          </div>
+          
         </form>
 
         <div class="divider">
@@ -70,7 +62,6 @@ export default {
     
     const email = ref('')
     const password = ref('')
-    const rememberMe = ref(false)
     const loading = ref(false)
     const error = ref(null)
 
@@ -93,7 +84,21 @@ export default {
           router.push('/')
         }
       } catch (err) {
-        error.value = err.message || 'Failed to sign in. Please check your credentials.'
+        // Map Firebase Auth error codes to user-friendly messages
+        const code = err?.code || ''
+        if (code === 'auth/wrong-password' || code === 'auth/invalid-credential' || code === 'auth/invalid-password') {
+          error.value = 'Incorrect email or password.'
+        } else if (code === 'auth/user-not-found') {
+          error.value = 'No account found with this email.'
+        } else if (code === 'auth/too-many-requests') {
+          error.value = 'Too many attempts. Please try again later.'
+        } else if (code === 'auth/invalid-email') {
+          error.value = 'Please enter a valid email address.'
+        } else if (code === 'auth/network-request-failed') {
+          error.value = 'Network error. Check your connection and try again.'
+        } else {
+          error.value = 'Failed to sign in. Please check your credentials.'
+        }
       } finally {
         loading.value = false
       }
@@ -102,7 +107,6 @@ export default {
     return {
       email,
       password,
-      rememberMe,
       loading,
       error,
       handleLogin
@@ -113,7 +117,9 @@ export default {
 
 <style scoped>
 /* Login page specific styles - most styles are now in external stylesheet */
-.checkbox span {
+.field-error {
+  color: #e11d48; /* red-600 */
+  font-weight: 500;
   margin-left: 8px;
 }
 </style>
