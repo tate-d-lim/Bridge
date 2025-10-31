@@ -33,7 +33,7 @@
             style="display: none"
           />
           <div class="avatar-actions">
-            <p v-if="uploadError" class="inline-error">{{ uploadError }}</p>
+            <p v-if="editing && uploadError" class="inline-error">{{ uploadError }}</p>
             <p v-if="selectedPhoto" class="photo-selected">New photo selected</p>
             <div v-if="!isViewingOtherProfile && editing" class="photo-buttons">
               <button 
@@ -78,7 +78,7 @@
           </div>
         </div>
       </div>
-      <p v-if="saveError" class="inline-error">{{ saveError }}</p>
+      <p v-if="editing && saveError" class="inline-error">{{ saveError }}</p>
 
       <!-- Job Seeker Profile -->
       <div v-if="userProfile?.role === 'jobseeker'" class="profile-content">
@@ -164,8 +164,10 @@
           
           <div v-else-if="earnedBadges.length === 0" class="empty-badges">
             <p>No badges earned yet</p>
-            <p class="empty-subtitle">Complete quizzes to earn your first badge!</p>
-            <router-link to="/quizzes" class="btn btn-primary">Start Learning</router-link>
+            <template v-if="!isViewingOtherProfile">
+              <p class="empty-subtitle">Complete quizzes to earn your first badge!</p>
+              <router-link to="/quizzes" class="btn btn-primary">Start Learning</router-link>
+            </template>
           </div>
           
           <div v-else class="badges-grid">
@@ -208,8 +210,8 @@
           </div>
         </div>
 
-        <!-- Recent Applications (for job seekers) -->
-        <div class="profile-section">
+        <!-- Recent Applications (for job seekers - only visible when viewing own profile) -->
+        <div v-if="!isViewingOtherProfile" class="profile-section">
           <div class="section-header">
             <h2>Recent Applications</h2>
             <router-link 
@@ -318,6 +320,21 @@
           </div>
         </div>
       </div>
+
+      <!-- Reviews section: Visible to employers viewing candidates OR jobseekers viewing their own profile -->
+      <div v-if="((isViewingOtherProfile && currentUserProfile?.role === 'employer' && viewedProfile?.role === 'jobseeker') || (!isViewingOtherProfile && currentUserProfile?.role === 'jobseeker')) && (isViewingOtherProfile ? viewedProfile?.id : currentUser?.uid)" class="profile-content">
+        <div class="profile-section">
+          <div class="section-header">
+            <h2>Reviews</h2>
+            <span v-if="currentUserProfile?.role === 'employer'" class="employer-only-badge">Employer Only</span>
+          </div>
+          <CandidateReviewList :candidate-id="isViewingOtherProfile ? viewedProfile.id : (currentUser?.uid || '')" />
+          <!-- Form only visible to employers viewing someone else's profile -->
+          <div v-if="isViewingOtherProfile && currentUserProfile?.role === 'employer'" style="margin-top: 24px;">
+            <CandidateReviewForm :candidate-id="viewedProfile.id" />
+          </div>
+        </div>
+      </div>
       </div>
       
       <!-- Error State -->
@@ -334,9 +351,12 @@ import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import { db } from '../firebase/config'
 import { doc, getDoc } from 'firebase/firestore'
+import CandidateReviewForm from '../components/reviews/CandidateReviewForm.vue'
+import CandidateReviewList from '../components/reviews/CandidateReviewList.vue'
 
 export default {
   name: 'Profile',
+  components: { CandidateReviewForm, CandidateReviewList },
   setup() {
     const store = useStore()
     const route = useRoute()
@@ -720,6 +740,9 @@ export default {
       return {
       editing,
       userProfile,
+      currentUserProfile,
+      currentUser,
+      viewedProfile,
       earnedBadges,
       userStats,
       getInitials,
@@ -1043,6 +1066,19 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.employer-only-badge {
+  background: var(--primary);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .section-header h2 {

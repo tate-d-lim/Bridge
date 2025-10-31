@@ -66,6 +66,16 @@
               </span>
             </div>
 
+            <!-- Employer-only rating summary -->
+            <div v-if="isEmployer" class="rating-summary">
+              <div v-if="ratingsMap[candidate.id]?.count > 0" class="rating-badge">
+                <span class="rating-star">★</span>
+                <span class="rating-value">{{ ratingsMap[candidate.id].avg.toFixed(1) }}</span>
+                <span class="rating-count">({{ ratingsMap[candidate.id].count }})</span>
+              </div>
+              <span v-else class="no-rating">No reviews</span>
+            </div>
+
             <div v-if="candidate.badges && candidate.badges.length > 0" class="badges">
               <span class="badge-icon" v-for="i in Math.min(candidate.badges.length, 3)" :key="i">
                 🏆
@@ -91,21 +101,26 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { db } from '../firebase/config'
 import { collection, getDocs, query, where } from 'firebase/firestore'
+import { useStore } from 'vuex'
 
 export default {
   name: 'Candidates',
   setup() {
     const router = useRouter()
+    const store = useStore()
 
     const searchQuery = ref('')
     const selectedSkill = ref('')
     const selectedExperience = ref('')
     const candidates = ref([])
     const loading = ref(false)
+    const ratingsMap = ref({})
+
+    const isEmployer = computed(() => store.getters['auth/isEmployer'])
 
     const fetchCandidates = async () => {
       loading.value = true
@@ -135,8 +150,17 @@ export default {
       }
     }
 
-    onMounted(() => {
-      fetchCandidates()
+    onMounted(async () => {
+      await fetchCandidates()
+      if (isEmployer.value) {
+        // fetch first-page reviews summary per candidate (simple approach)
+        for (const c of candidates.value) {
+          const { items } = await store.dispatch('reviews/fetchReviewsByCandidate', { candidateId: c.id, pageSize: 10 })
+          const count = items.length
+          const avg = count ? items.reduce((s, r) => s + (r.rating || 0), 0) / count : 0
+          ratingsMap.value[c.id] = { count, avg }
+        }
+      }
     })
 
     const getInitials = (name) => {
@@ -160,6 +184,8 @@ export default {
       selectedExperience,
       candidates,
       loading,
+      isEmployer,
+      ratingsMap,
       getInitials,
       contactCandidate
     }
@@ -337,6 +363,41 @@ export default {
 
 .candidate-actions .btn {
   flex: 1;
+}
+
+.rating-summary {
+  margin-bottom: 12px;
+}
+
+.rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.rating-star {
+  font-size: 1rem;
+}
+
+.rating-value {
+  font-weight: 700;
+}
+
+.rating-count {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.no-rating {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
 }
 
 @media (max-width: 768px) {
