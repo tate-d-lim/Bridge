@@ -95,6 +95,9 @@
               <router-link v-if="isJobSeeker" to="/applications" class="dropdown-item" @click="closeMenus">
                 <img src="../assets/briefcase.svg" alt="" class="dropdown-icon" /> Applications
               </router-link>
+              <router-link v-if="isEmployer" to="/employer/applications" class="dropdown-item" @click="closeMenus">
+                <img src="../assets/task-checklist.svg" alt="" class="dropdown-icon" /> Applications
+              </router-link>
               <button @click="handleLogout" class="dropdown-item">
                 <img v-if="isDarkMode" src="../assets/user-logout-dark.png" alt="" class="dropdown-icon" />
                 <img v-else src="../assets/user-logout.svg" alt="" class="dropdown-icon" />
