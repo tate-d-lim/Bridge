@@ -24,13 +24,49 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize Firebase Admin SDK
-const serviceAccount = JSON.parse(
-  readFileSync(join(__dirname, "..", "firebase_private_key.json"), "utf8")
-);
+// Prefer credentials from environment variables to avoid committing service account files
+function getServiceAccountFromEnv() {
+  const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY || "";
+  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+
+  if (privateKey && clientEmail && projectId) {
+    return {
+      type: "service_account",
+      project_id: projectId,
+      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+      private_key: privateKey,
+      client_email: clientEmail,
+      client_id: process.env.FIREBASE_CLIENT_ID,
+      auth_uri: "https://accounts.google.com/o/oauth2/auth",
+      token_uri: "https://oauth2.googleapis.com/token",
+      auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+      client_x509_cert_url: process.env.FIREBASE_CLIENT_CERT_URL,
+      universe_domain: "googleapis.com",
+    };
+  }
+
+  return null;
+}
+
+let serviceAccount = getServiceAccountFromEnv();
+
+if (!serviceAccount) {
+  // Fallback: read from file if present (local dev only). File is ignored by git.
+  try {
+    serviceAccount = JSON.parse(
+      readFileSync(join(__dirname, "..", "firebase_private_key.json"), "utf8")
+    );
+  } catch (err) {
+    console.error("Firebase Admin credentials not found in env and file read failed.");
+    throw err;
+  }
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  projectId: serviceAccount.project_id,
 });
 
 const db = admin.firestore();
