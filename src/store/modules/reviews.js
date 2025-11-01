@@ -2,9 +2,16 @@ import { db } from '../../firebase/config'
 import { 
   collection, 
   addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
   getDocs, 
   query, 
-  orderBy,
+  where, 
+  orderBy, 
+  limit, 
+  serverTimestamp, 
+  startAfter, 
   Timestamp
 } from 'firebase/firestore'
 
@@ -12,12 +19,18 @@ export default {
   namespaced: true,
   
   state: {
+    // From both versions
     reviews: [],
     loading: false,
-    error: null
+    error: null,
+
+    // Candidate-based reviews (from the incoming branch)
+    reviewsByCandidateId: {}, // candidateId -> { items, lastDoc, totalCount, average }
+    myReviewByCandidateId: {} // candidateId -> review or null
   },
   
   mutations: {
+    // General reviews (from your version)
     SET_REVIEWS(state, reviews) {
       state.reviews = reviews
     },
@@ -29,10 +42,39 @@ export default {
     },
     SET_ERROR(state, error) {
       state.error = error
+    },
+
+    // Candidate reviews (from incoming version)
+    SET_CANDIDATE_REVIEWS(state, { candidateId, items, lastDoc }) {
+      state.reviewsByCandidateId[candidateId] = {
+        ...(state.reviewsByCandidateId[candidateId] || {}),
+        items,
+        lastDoc,
+        totalCount: items.length,
+        average: items.length
+          ? Math.round((items.reduce((s, r) => s + (r.rating || 0), 0) / items.length) * 10) / 10
+          : 0
+      }
+    },
+    APPEND_REVIEWS(state, { candidateId, items, lastDoc }) {
+      const current = state.reviewsByCandidateId[candidateId]?.items || []
+      const merged = [...current, ...items]
+      state.reviewsByCandidateId[candidateId] = {
+        items: merged,
+        lastDoc,
+        totalCount: merged.length,
+        average: merged.length
+          ? Math.round((merged.reduce((s, r) => s + (r.rating || 0), 0) / merged.length) * 10) / 10
+          : 0
+      }
+    },
+    SET_MY_REVIEW(state, { candidateId, review }) {
+      state.myReviewByCandidateId[candidateId] = review || null
     }
   },
   
   actions: {
+    // ======= Original review actions =======
     async submitReview({ commit }, reviewData) {
       commit('SET_LOADING', true)
       commit('SET_ERROR', null)
@@ -44,7 +86,6 @@ export default {
           createdAt: Timestamp.now()
         })
         
-        // Create review object with id for local state
         const now = new Date()
         const newReview = {
           id: docRef.id,
@@ -68,16 +109,12 @@ export default {
       commit('SET_LOADING', true)
       commit('SET_ERROR', null)
       try {
-        const q = query(
-          collection(db, 'reviews'),
-          orderBy('date', 'desc')
-        )
+        const q = query(collection(db, 'reviews'), orderBy('date', 'desc'))
         const querySnapshot = await getDocs(q)
         
         const reviews = []
         querySnapshot.forEach((doc) => {
           const data = doc.data()
-          // Handle date: if it's a Firestore Timestamp, convert to ISO string; otherwise use as is
           let dateValue
           if (data.date?.toDate) {
             dateValue = data.date.toDate().toISOString()
@@ -110,60 +147,9 @@ export default {
         commit('SET_LOADING', false)
         throw error
       }
-    }
-  },
-  
-  getters: {
-    allReviews: state => state.reviews,
-    loading: state => state.loading,
-    error: state => state.error
-  }
-}
-
-import { db } from '../../firebase/config'
-import { 
-  collection, addDoc, updateDoc, deleteDoc, doc, 
-  query, where, orderBy, limit, getDocs, serverTimestamp, startAfter
-} from 'firebase/firestore'
-
-export default {
-  namespaced: true,
-
-  state: {
-    reviewsByCandidateId: {}, // candidateId -> { items, lastDoc, totalCount, average }
-    myReviewByCandidateId: {} // candidateId -> review or null
-  },
-
-  mutations: {
-    SET_REVIEWS(state, { candidateId, items, lastDoc }) {
-      state.reviewsByCandidateId[candidateId] = {
-        ...(state.reviewsByCandidateId[candidateId] || {}),
-        items,
-        lastDoc,
-        totalCount: items.length,
-        average: items.length
-          ? Math.round((items.reduce((s, r) => s + (r.rating || 0), 0) / items.length) * 10) / 10
-          : 0
-      }
     },
-    APPEND_REVIEWS(state, { candidateId, items, lastDoc }) {
-      const current = state.reviewsByCandidateId[candidateId]?.items || []
-      const merged = [...current, ...items]
-      state.reviewsByCandidateId[candidateId] = {
-        items: merged,
-        lastDoc,
-        totalCount: merged.length,
-        average: merged.length
-          ? Math.round((merged.reduce((s, r) => s + (r.rating || 0), 0) / merged.length) * 10) / 10
-          : 0
-      }
-    },
-    SET_MY_REVIEW(state, { candidateId, review }) {
-      state.myReviewByCandidateId[candidateId] = review || null
-    }
-  },
 
-  actions: {
+    // ======= Candidate review actions =======
     async fetchReviewsByCandidate({ commit }, { candidateId, pageSize = 10, cursor = null }) {
       const base = query(
         collection(db, 'candidateReviews'),
@@ -181,7 +167,7 @@ export default {
       if (cursor) {
         commit('APPEND_REVIEWS', { candidateId, items, lastDoc })
       } else {
-        commit('SET_REVIEWS', { candidateId, items, lastDoc })
+        commit('SET_CANDIDATE_REVIEWS', { candidateId, items, lastDoc })
       }
 
       return { items, lastDoc }
@@ -222,9 +208,7 @@ export default {
         createdAt: serverTimestamp()
       }
       
-      if (jobId) {
-        reviewData.jobId = jobId
-      }
+      if (jobId) reviewData.jobId = jobId
       
       const docRef = await addDoc(collection(db, 'candidateReviews'), reviewData)
       await dispatch('fetchReviewByEmployer', candidateId)
@@ -248,8 +232,13 @@ export default {
       await dispatch('fetchReviewsByCandidate', { candidateId, pageSize: 10 })
     }
   },
-
+  
   getters: {
+    allReviews: state => state.reviews,
+    loading: state => state.loading,
+    error: state => state.error,
+
+    // Candidate review getters
     reviewsByCandidate: (state) => (candidateId) => state.reviewsByCandidateId[candidateId]?.items || [],
     reviewsPageCursor: (state) => (candidateId) => state.reviewsByCandidateId[candidateId]?.lastDoc || null,
     averageRating: (state) => (candidateId) => state.reviewsByCandidateId[candidateId]?.average || 0,
@@ -257,5 +246,3 @@ export default {
     myReviewForCandidate: (state) => (candidateId) => state.myReviewByCandidateId[candidateId] || null
   }
 }
-
-
