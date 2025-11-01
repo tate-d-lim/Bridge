@@ -18,7 +18,7 @@
           </div>
 
           <div class="form-group">
-            <label for="password">Password <span v-if="error" class="field-error">{{ error }}</span></label>
+            <label for="password">Password</label>
             <input
               type="password"
               id="password"
@@ -26,6 +26,7 @@
               placeholder="Enter your password"
               required
             />
+            <div v-if="error" class="field-error field-error-below">{{ error }}</div>
           </div>
 
           
@@ -121,6 +122,11 @@ export default {
   color: #e11d48; /* red-600 */
   font-weight: 500;
   margin-left: 8px;
+}
+.field-error-below {
+  display: block;
+  margin-left: 0;
+  margin-top: 6px;
 }
 </style>
 
