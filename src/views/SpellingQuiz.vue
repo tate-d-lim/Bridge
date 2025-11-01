@@ -17,7 +17,6 @@
 
       <div v-else-if="!quizCompleted && currentWordData" class="spelling-game">
         <div class="word-display">
-          <!-- Show hint instead of the word -->
           <div class="hint-section">
             <div v-if="currentWordData.image" class="hint-image">
               <img :src="currentWordData.image" :alt="currentWordData.hint" />
@@ -26,23 +25,21 @@
               <h2>{{ currentWordData.hint }}</h2>
             </div>
           </div>
-          
         </div>
 
         <div class="game-area">
-          <!-- Drop zones for letters -->
           <div class="drop-zones">
-            <div
-              v-for="(slot, index) in letterSlots"
-              :key="`slot-${index}`"
-              :class="['drop-zone', { filled: slot.letter }]"
-              :data-slot="index"
-            >
+          <div
+            v-for="(slot, index) in letterSlots"
+            :key="`slot-${index}`"
+            :class="['drop-zone', { filled: slot.letter }]"
+            :data-slot="index"
+            @click="handleSlotClick(index)"
+          >
               <span v-if="slot.letter" class="letter">{{ slot.letter }}</span>
             </div>
           </div>
 
-          <!-- Draggable letters -->
           <div class="letter-pool">
             <div
               v-for="(letter, index) in availableLetters"
@@ -102,7 +99,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { useToast } from '../composables/useToast'
 
@@ -118,346 +115,241 @@ export default {
     const quizCompleted = ref(false)
     const score = ref(0)
     const correctAnswers = ref(0)
-
     const words = ref([])
     const loading = ref(false)
 
     const currentWordData = computed(() => words.value[currentWord.value] || null)
     const progress = computed(() => words.value.length > 0 ? ((currentWord.value + 1) / words.value.length) * 100 : 0)
-    const isWordComplete = computed(() => letterSlots.value.every(slot => slot.letter))
+    const isWordComplete = computed(() => letterSlots.value.length > 0 && letterSlots.value.every(slot => slot.letter))
 
-    const initializeWord = () => {
-      console.log('Initializing word:', currentWordData.value)
+    // generate random extra letters
+    const createExtraLetters = (exclude = [], count = 3) => {
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+      const pool = alphabet.filter(l => !exclude.includes(l))
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[pool[i], pool[j]] = [pool[j], pool[i]]
+      }
+      return pool.slice(0, Math.min(count, pool.length))
+    }
+
+    const initializeWord = async () => {
       const word = currentWordData.value
       if (!word) return
-      
+
       letterSlots.value = word.letters.map(() => ({ letter: null, letterId: null }))
-      
-      // Create available letters with some extra letters for confusion
-      const extraLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-      
-      // Get unique letters from the word to avoid duplicates
       const uniqueWordLetters = [...new Set(word.letters)]
-      const shuffled = [...word.letters, ...extraLetters.filter(l => !uniqueWordLetters.includes(l)).slice(0, 3)]
-        .sort(() => Math.random() - 0.5)
-      
+      const extras = createExtraLetters(uniqueWordLetters, 3)
+      const shuffled = [...word.letters, ...extras].sort(() => Math.random() - 0.5)
       availableLetters.value = shuffled.map(char => ({ char, used: false }))
-      console.log('Available letters:', availableLetters.value)
+
+      await nextTick()
+      setupInteract()
+      resetPoolPositions()
     }
 
-    const reorganizeLetters = () => {
-      // Reset all letter positions to their grid positions
-      // This ensures letters stay neatly aligned in the grid
+    const resetPoolPositions = () => {
       setTimeout(() => {
-        document.querySelectorAll('.draggable-letter').forEach((el, index) => {
-          // Only reset transform if letter is not currently in a slot
+        document.querySelectorAll('.draggable-letter').forEach(el => {
           const letterId = el.getAttribute('data-letter-id')
           const isInSlot = letterSlots.value.some(slot => slot.letterId === letterId)
-          
           if (!isInSlot) {
-            // Remove transform to let CSS Grid handle positioning
+            el.style.transition = 'transform 0.2s ease'
             el.style.transform = ''
-            el.style.transition = 'all 0.3s ease'
             el.setAttribute('data-x', '0')
             el.setAttribute('data-y', '0')
-            
-            // Remove transition after animation
-            setTimeout(() => {
-              el.style.transition = ''
-            }, 300)
+            setTimeout(() => (el.style.transition = ''), 200)
           }
         })
-      }, 100)
+      }, 50)
     }
 
-    const handleLetterClick = (event) => {
-      const letter = event.target.getAttribute('data-letter')
-      console.log('Letter clicked:', letter)
-      console.log('Letter used status:', event.target.classList.contains('used'))
-    }
-
+    // smooth follow cursor
     const dragMoveListener = (event) => {
       const target = event.target
       const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx
       const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy
-
-      // Remove transition during dragging for smooth movement
-      target.style.transition = ''
       target.style.transform = `translate(${x}px, ${y}px)`
       target.setAttribute('data-x', x)
       target.setAttribute('data-y', y)
-
-      // Auto-snap detection - check overlap with drop zones
-      const dropZones = document.querySelectorAll('.drop-zone')
-      const dragRect = target.getBoundingClientRect()
-      
-      // Clear all visual feedback first
-      dropZones.forEach(dropZone => {
-        dropZone.classList.remove('drop-target')
-      })
-      target.classList.remove('can-drop')
-      
-      dropZones.forEach((dropZone, index) => {
-        const dropRect = dropZone.getBoundingClientRect()
-        
-        // Calculate overlap percentage
-        const overlapLeft = Math.max(dragRect.left, dropRect.left)
-        const overlapRight = Math.min(dragRect.right, dropRect.right)
-        const overlapTop = Math.max(dragRect.top, dropRect.top)
-        const overlapBottom = Math.min(dragRect.bottom, dropRect.bottom)
-        
-        const overlapWidth = Math.max(0, overlapRight - overlapLeft)
-        const overlapHeight = Math.max(0, overlapBottom - overlapTop)
-        const overlapArea = overlapWidth * overlapHeight
-        
-        const dragArea = dragRect.width * dragRect.height
-        const dropArea = dropRect.width * dropRect.height
-        const minArea = Math.min(dragArea, dropArea)
-        
-        const overlapPercentage = minArea > 0 ? (overlapArea / minArea) * 100 : 0
-        
-        // Add visual feedback when getting close (50% overlap)
-        if (overlapPercentage > 50) {
-          dropZone.classList.add('drop-target')
-          target.classList.add('can-drop')
-        }
-        
-        // Auto-snap when 85% or more overlap
-        if (overlapPercentage >= 85) {
-          const slotIndex = parseInt(dropZone.getAttribute('data-slot'))
-          const letterId = target.getAttribute('data-letter-id')
-          const letterIndex = parseInt(target.getAttribute('data-index'))
-          
-          // Only auto-snap if the slot is empty or has the same letter ID
-          if (!letterSlots.value[slotIndex].letterId || letterSlots.value[slotIndex].letterId === letterId) {
-            // Calculate snap position to center
-            const offsetX = dropRect.left - dragRect.left + (dropRect.width - dragRect.width) / 2
-            const offsetY = dropRect.top - dragRect.top + (dropRect.height - dragRect.height) / 2
-            
-            // Snap with smooth animation
-            target.style.transition = 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-            target.style.transform = `translate(${offsetX}px, ${offsetY}px)`
-            target.setAttribute('data-x', offsetX)
-            target.setAttribute('data-y', offsetY)
-            
-            // Update the slot with letter ID
-            letterSlots.value[slotIndex].letter = target.getAttribute('data-letter')
-            letterSlots.value[slotIndex].letterId = letterId
-            target.classList.add('used')
-            
-            // Update available letters
-            if (letterIndex >= 0 && letterIndex < availableLetters.value.length) {
-              availableLetters.value[letterIndex].used = true
-            }
-            
-            // Reorganize letters to maintain nice order
-            reorganizeLetters()
-            
-            // Remove transition after snapping
-            setTimeout(() => {
-              target.style.transition = ''
-            }, 200)
-          }
-        }
-      })
     }
 
     const setupInteract = () => {
-      console.log('Setting up interact.js...')
-      console.log('Interact available:', typeof window.interact)
-      
-      // Clear any existing interactions first
-      window.interact('.draggable-letter').unset()
-      window.interact('.drop-zone').unset()
-      
-      // Make letters draggable - exactly like the original
+      if (!window.interact) return
+      try {
+        window.interact('.draggable-letter').unset()
+        window.interact('.drop-zone').unset()
+      } catch (e) {}
+
+      // make letters draggable
       window.interact('.draggable-letter')
         .draggable({
           autoScroll: true,
-          listeners: { 
-            move: dragMoveListener,
-            start: function(event) {
-              const letterId = event.target.getAttribute('data-letter-id')
-              const letterIndex = parseInt(event.target.getAttribute('data-index'))
-              console.log('Starting to drag letter:', letterId, 'at index:', letterIndex)
-              
-              // Add dragging class for z-index
-              event.target.classList.add('is-dragging')
-              
-              // Remove from any existing slot when starting to drag
-              letterSlots.value.forEach((slot, index) => {
-                if (slot.letterId === letterId) {
-                  console.log('Removing letter from slot:', index)
-                  slot.letter = null
-                  slot.letterId = null
-                }
-              })
-              
-              // Make letter available again - use the letter index directly
-              if (letterIndex >= 0 && letterIndex < availableLetters.value.length) {
-                availableLetters.value[letterIndex].used = false
-                console.log('Made letter available again:', letterId, 'at index:', letterIndex)
-              } else {
-                console.log('Invalid letter index:', letterIndex, 'available letters length:', availableLetters.value.length)
+          listeners: { move: dragMoveListener },
+          inertia: true,
+          startAxis: 'xy',
+          lockAxis: 'xy',
+          modifiers: [],
+          start(event) {
+            const letterId = event.target.getAttribute('data-letter-id')
+            const letterIndex = parseInt(event.target.getAttribute('data-index'), 10)
+            event.target.classList.add('is-dragging')
+
+            // remove from any existing slot
+            letterSlots.value.forEach(slot => {
+              if (slot.letterId === letterId) {
+                slot.letter = null
+                slot.letterId = null
               }
-              
-              // Remove used class to make it draggable again
+            })
+
+            if (!isNaN(letterIndex) && availableLetters.value[letterIndex]) {
+              availableLetters.value[letterIndex].used = false
               event.target.classList.remove('used')
-              
-              // Clear any existing transform - let CSS Grid handle initial position
-              // interact.js will handle transform during dragging
+            }
+
+            event.target.setAttribute('data-x', '0')
+            event.target.setAttribute('data-y', '0')
+            event.target.style.transform = ''
+          },
+          end(event) {
+            event.target.classList.remove('is-dragging')
+            const letterId = event.target.getAttribute('data-letter-id')
+            const isInSlot = letterSlots.value.some(slot => slot.letterId === letterId)
+            if (!isInSlot) {
+              event.target.style.transition = 'transform 0.2s ease'
+              event.target.style.transform = ''
               event.target.setAttribute('data-x', '0')
               event.target.setAttribute('data-y', '0')
-              event.target.style.transform = ''
-              
-              console.log('Letter reset to original position')
-            },
-            end: function(event) {
-              // Remove dragging class
-              event.target.classList.remove('is-dragging')
-              
-              const letterId = event.target.getAttribute('data-letter-id')
-              const isInSlot = letterSlots.value.some(slot => slot.letterId === letterId)
-              
-              if (!isInSlot) {
-                console.log('Letter not in slot, resetting to grid position')
-                // Remove transform completely to let CSS Grid handle positioning
-                event.target.style.transition = 'transform 0.3s ease'
-                event.target.style.transform = ''
-                event.target.setAttribute('data-x', '0')
-                event.target.setAttribute('data-y', '0')
-                
-                // Remove transition after animation
-                setTimeout(() => {
-                  event.target.style.transition = ''
-                }, 300)
-              }
+              setTimeout(() => (event.target.style.transition = ''), 200)
             }
           }
         })
 
-      // Make drop zones droppable - exactly like the original
+      // define droppable slots
       window.interact('.drop-zone').dropzone({
         accept: '.draggable-letter',
-        overlap: 0.3, // Much more aggressive - only need 30% overlap
-        
-        ondropactivate: function (event) {
-          event.target.classList.add('drop-active')
-        },
-        ondragenter: function (event) {
-          const draggableElement = event.relatedTarget
-          const dropzoneElement = event.target
-          dropzoneElement.classList.add('drop-target')
-          draggableElement.classList.add('can-drop')
-        },
-        ondragleave: function (event) {
-          event.target.classList.remove('drop-target')
-          event.relatedTarget.classList.remove('can-drop')
-        },
-        ondrop: function (event) {
-          const draggedElement = event.relatedTarget
+        overlap: 0.3,
+        ondrop(event) {
+          const dragged = event.relatedTarget
           const dropZone = event.target
-          const slotIndex = parseInt(dropZone.getAttribute('data-slot'))
-          const letterId = draggedElement.getAttribute('data-letter-id')
-          const letterIndex = parseInt(draggedElement.getAttribute('data-index'))
+          const slotIndex = parseInt(dropZone.getAttribute('data-slot'), 10)
+          const letterId = dragged.getAttribute('data-letter-id')
+          const letterChar = dragged.getAttribute('data-letter')
+          const letterIndex = parseInt(dragged.getAttribute('data-index'), 10)
 
-          console.log('Dropped letter:', letterId, 'in slot:', slotIndex)
-
-          // Remove letter from previous slot if it was placed
-          letterSlots.value.forEach((slot, index) => {
-            if (slot.letterId === letterId && index !== slotIndex) {
-              slot.letter = null
-              slot.letterId = null
+          // if slot already filled → release old one
+          const existing = letterSlots.value[slotIndex]
+          if (existing && existing.letterId && existing.letterId !== letterId) {
+            const prevLetterId = existing.letterId
+            const prev = document.querySelector(`[data-letter-id="${prevLetterId}"]`)
+            if (prev) {
+              prev.classList.remove('used')
+              prev.style.transition = 'transform 0.2s ease'
+              prev.style.transform = ''
+              setTimeout(() => (prev.style.transition = ''), 200)
             }
-          })
+            const prevLetter = availableLetters.value.find(l => `${l.char}-${letterIndex}` === prevLetterId)
+            if (prevLetter) prevLetter.used = false
+          }
 
-          // Place letter in new slot
-          letterSlots.value[slotIndex].letter = draggedElement.getAttribute('data-letter')
+          // place new letter in slot
+          letterSlots.value[slotIndex].letter = letterChar
           letterSlots.value[slotIndex].letterId = letterId
-          draggedElement.classList.add('used')
-          
-          // Snap to center of drop zone with smooth animation
+          if (!isNaN(letterIndex)) availableLetters.value[letterIndex].used = true
+
+          // center it
           const dropRect = dropZone.getBoundingClientRect()
-          const dragRect = draggedElement.getBoundingClientRect()
+          const dragRect = dragged.getBoundingClientRect()
           const offsetX = dropRect.left - dragRect.left + (dropRect.width - dragRect.width) / 2
           const offsetY = dropRect.top - dragRect.top + (dropRect.height - dragRect.height) / 2
-          
-          // Add smooth transition for snapping
-          draggedElement.style.transition = 'transform 0.3s ease'
-          draggedElement.style.transform = `translate(${offsetX}px, ${offsetY}px)`
-          draggedElement.setAttribute('data-x', offsetX)
-          draggedElement.setAttribute('data-y', offsetY)
-          
-          // Remove transition after snapping to allow future dragging
-          setTimeout(() => {
-            draggedElement.style.transition = ''
-          }, 300)
-
-          // Update available letters
-          if (letterIndex >= 0 && letterIndex < availableLetters.value.length) {
-            availableLetters.value[letterIndex].used = true
-          }
-          
-          // Reorganize letters to maintain nice order
-          reorganizeLetters()
-        },
-        ondropdeactivate: function (event) {
-          event.target.classList.remove('drop-active')
-          event.target.classList.remove('drop-target')
+          dragged.style.transition = 'transform 0.25s ease'
+          dragged.style.transform = `translate(${offsetX}px, ${offsetY}px)`
+          dragged.setAttribute('data-x', offsetX)
+          dragged.setAttribute('data-y', offsetY)
+          setTimeout(() => (dragged.style.transition = ''), 250)
+          resetPoolPositions()
         }
       })
     }
 
+    // tap pool letter → fill first empty slot
+    const handleLetterClick = (event) => {
+      const el = event.currentTarget
+      const letter = el.getAttribute('data-letter')
+      const index = parseInt(el.getAttribute('data-index'), 10)
+      if (!letter || isNaN(index) || availableLetters.value[index].used) return
+
+      const firstEmpty = letterSlots.value.findIndex(slot => !slot.letter)
+      if (firstEmpty === -1) return
+
+      letterSlots.value[firstEmpty].letter = letter
+      letterSlots.value[firstEmpty].letterId = el.getAttribute('data-letter-id')
+      availableLetters.value[index].used = true
+      el.classList.add('used')
+
+      const dropZone = document.querySelector(`.drop-zone[data-slot="${firstEmpty}"]`)
+      if (dropZone) {
+        const dropRect = dropZone.getBoundingClientRect()
+        const dragRect = el.getBoundingClientRect()
+        const offsetX = dropRect.left - dragRect.left + (dropRect.width - dragRect.width) / 2
+        const offsetY = dropRect.top - dragRect.top + (dropRect.height - dragRect.height) / 2
+        el.style.transition = 'transform 0.25s ease'
+        el.style.transform = `translate(${offsetX}px, ${offsetY}px)`
+        el.setAttribute('data-x', offsetX)
+        el.setAttribute('data-y', offsetY)
+        setTimeout(() => (el.style.transition = ''), 250)
+      }
+    }
+
+    // tap slot → remove letter and restore to pool
+    const handleSlotClick = (index) => {
+      const slot = letterSlots.value[index]
+      if (!slot.letterId) return
+
+      const el = document.querySelector(`[data-letter-id="${slot.letterId}"]`)
+      if (el) {
+        el.classList.remove('used')
+        el.style.transition = 'transform 0.2s ease'
+        el.style.transform = ''
+        el.setAttribute('data-x', '0')
+        el.setAttribute('data-y', '0')
+        setTimeout(() => (el.style.transition = ''), 200)
+      }
+
+      const match = availableLetters.value.find(l => `${l.char}-${availableLetters.value.indexOf(l)}` === slot.letterId)
+      if (match) match.used = false
+
+      slot.letter = null
+      slot.letterId = null
+    }
+
     const checkAnswer = () => {
       if (!currentWordData.value) return
-      
-      const userAnswer = letterSlots.value.map(slot => slot.letter).join('')
+      const userAnswer = letterSlots.value.map(slot => slot.letter || '').join('')
       const correctAnswer = currentWordData.value.word
-
       if (userAnswer === correctAnswer) {
         correctAnswers.value++
         showToast('Correct!', 'success')
       } else {
         showToast(`Incorrect. The correct spelling is: ${correctAnswer}`, 'error')
       }
-
       if (currentWord.value < words.value.length - 1) {
         currentWord.value++
         initializeWord()
-        setupInteract()
       } else {
         score.value = Math.round((correctAnswers.value / words.value.length) * 100)
         quizCompleted.value = true
-
-        // Submit to backend
         submitQuizResult()
       }
     }
 
-    const resetCurrentWord = () => {
+    const resetCurrentWord = async () => {
       if (!currentWordData.value) return
-      
-      // Clear all letter slots
       letterSlots.value = letterSlots.value.map(() => ({ letter: null, letterId: null }))
-      
-      // Reset all letters to unused
-      availableLetters.value = availableLetters.value.map(letter => ({ ...letter, used: false }))
-      
-          // Reset letter positions - remove transform to let CSS Grid handle positioning
-      document.querySelectorAll('.draggable-letter').forEach(el => {
-        el.classList.remove('used')
-        el.style.transform = ''
-        el.style.transition = 'all 0.3s ease'
-        el.setAttribute('data-x', '0')
-        el.setAttribute('data-y', '0')
-        
-        // Remove transition after animation
-        setTimeout(() => {
-          el.style.transition = ''
-        }, 300)
-      })
-      
-      // Re-setup interactions
+      availableLetters.value = availableLetters.value.map(l => ({ ...l, used: false }))
+      await nextTick()
+      resetPoolPositions()
       setupInteract()
     }
 
@@ -465,9 +357,6 @@ export default {
       try {
         const user = store.getters['auth/currentUser']
         const isPerfect = score.value === 100
-        
-        console.log('Submitting spelling quiz:', { score: score.value, isPerfect })
-        
         await store.dispatch('quizzes/submitQuizResult', {
           userId: user.uid,
           quizId: 'spelling-quiz',
@@ -475,11 +364,7 @@ export default {
           answers: [],
           isPerfect
         })
-        
-        console.log('Spelling quiz submitted!')
-      } catch (error) {
-        console.error('Error submitting quiz:', error)
-      }
+      } catch (e) { console.error('Error submitting quiz:', e) }
     }
 
     const retakeQuiz = () => {
@@ -488,66 +373,28 @@ export default {
       quizCompleted.value = false
       score.value = 0
       initializeWord()
-      setupInteract()
     }
 
     const fetchSpellingWords = async () => {
       loading.value = true
-      console.log('Fetching spelling words...')
-      
-      // For now, use sample words to test the drag and drop functionality
       words.value = [
-        {
-          word: 'SAFETY',
-          hint: 'Protection from danger',
-          letters: ['S', 'A', 'F', 'E', 'T', 'Y'],
-          image: null // Will be set when you upload images
-        },
-        {
-          word: 'TOOLS',
-          hint: 'Equipment used for work',
-          letters: ['T', 'O', 'O', 'L', 'S'],
-          image: null
-        },
-        {
-          word: 'HELMET',
-          hint: 'Protective headgear worn on construction sites',
-          letters: ['H', 'E', 'L', 'M', 'E', 'T'],
-          image: null
-        },
-        {
-          word: 'HAMMER',
-          hint: 'Tool for hitting nails',
-          letters: ['H', 'A', 'M', 'M', 'E', 'R'],
-          image: null
-        }
+        { word: 'SAFETY', hint: 'Protection from danger', letters: ['S','A','F','E','T','Y'], image: null },
+        { word: 'TOOLS', hint: 'Equipment used for work', letters: ['T','O','O','L','S'], image: null },
+        { word: 'HELMET', hint: 'Protective headgear worn on construction sites', letters: ['H','E','L','M','E','T'], image: null },
+        { word: 'HAMMER', hint: 'Tool for hitting nails', letters: ['H','A','M','M','E','R'], image: null }
       ]
-      
-      console.log('Using sample words:', words.value)
-      
-      // Wait for DOM to update before initializing
-      setTimeout(() => {
-        initializeWord()
-        setupInteract()
-      }, 100)
-      
+      await nextTick()
+      initializeWord()
       loading.value = false
     }
 
-    onMounted(() => {
-      fetchSpellingWords()
-    })
-
-    // Re-setup interact when letters change
-    watch(availableLetters, () => {
-      setTimeout(() => {
-        setupInteract()
-      }, 100)
-    }, { deep: true })
-
+    onMounted(fetchSpellingWords)
     onUnmounted(() => {
       if (window.interact) {
-        window.interact.stop()
+        try {
+          window.interact('.draggable-letter').unset()
+          window.interact('.drop-zone').unset()
+        } catch {}
       }
     })
 
@@ -564,11 +411,14 @@ export default {
       isWordComplete,
       checkAnswer,
       resetCurrentWord,
-      retakeQuiz
+      retakeQuiz,
+      handleLetterClick,
+      handleSlotClick
     }
   }
 }
 </script>
+
 
 <style scoped>
 .spelling-quiz-page {
@@ -721,7 +571,7 @@ export default {
 
 .letter-pool {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
   gap: 10px;
   justify-items: center;
   align-items: center;
@@ -740,26 +590,25 @@ export default {
 .draggable-letter {
   width: 50px;
   height: 50px;
-  background: var(--primary);
-  color: white;
-  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--primary);
+  color: white;
+  border-radius: 10px;
   font-size: 1.2rem;
   font-weight: bold;
   cursor: move;
-  transition: background 0.2s ease, opacity 0.2s ease;
   user-select: none;
   touch-action: none;
+  transition: all 0.2s ease;
   position: relative;
-  z-index: 1;
-  will-change: transform;
 }
 
 .draggable-letter.is-dragging {
-  z-index: 1000;
-  transition: none;
+  position: absolute !important;
+  z-index: 999;
+  pointer-events: none;
 }
 
 .draggable-letter:hover:not(.used) {
@@ -768,11 +617,12 @@ export default {
 }
 
 .draggable-letter.used {
-  opacity: 0.6;
-  cursor: move;
+  opacity: 0.5;
   background: #e9ecef;
   color: #6c757d;
   border: 2px solid #dee2e6;
+  transform: none !important; /* prevent offset transforms */
+  z-index: 0;
 }
 
 .draggable-letter.can-drop {
