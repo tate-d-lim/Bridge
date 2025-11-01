@@ -257,13 +257,16 @@ export default {
     async updateApplicationStatus({ commit }, { applicationId, status }) {
       commit('SET_LOADING', true)
       try {
+        console.log('Updating application status:', { applicationId, status })
         await updateDoc(doc(db, 'applications', applicationId), {
           status,
           updatedAt: new Date().toISOString()
         })
         
+        console.log('Application status updated successfully')
         commit('SET_LOADING', false)
       } catch (error) {
+        console.error('Error updating application status:', error)
         commit('SET_ERROR', error.message)
         commit('SET_LOADING', false)
         throw error

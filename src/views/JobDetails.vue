@@ -42,7 +42,7 @@
           </div>
           <div class="detail-content">
             <p class="detail-label">Location</p>
-            <p class="detail-value">{{ job.location }}</p>
+            <p class="detail-value">{{ capitalizeLocation(job.location) }}</p>
           </div>
         </div>
 
@@ -188,6 +188,7 @@
 import { ref, computed, onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
+import { useToast } from '../composables/useToast'
 import briefcaseIcon from '../assets/briefcase.svg'
 import locationIcon from '../assets/location.svg'
 import salaryIcon from '../assets/salary.svg'
@@ -201,6 +202,7 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const store = useStore()
+    const { showToast } = useToast()
     
     const job = ref(null)
     const loading = ref(true)
@@ -233,6 +235,11 @@ export default {
     const capitalize = (str) => {
       if (!str) return ''
       return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+    }
+
+    const capitalizeLocation = (str) => {
+      if (!str) return ''
+      return str.charAt(0).toUpperCase() + str.slice(1)
     }
 
     const formatDate = (timestamp) => {
@@ -284,12 +291,14 @@ export default {
           resume: application.resume
         })
         
-        alert('Application submitted successfully!')
+        showToast('Application submitted successfully!', 'success')
         showApplicationForm.value = false
-        router.push('/applications')
+        setTimeout(() => {
+          router.push('/applications')
+        }, 500)
       } catch (error) {
         console.error('Error submitting application:', error)
-        alert('Failed to submit application. Please try again.')
+        showToast('Failed to submit application. Please try again.', 'error')
       }
     }
 
@@ -316,6 +325,7 @@ export default {
       clockIcon,
       getCompanyInitials,
       capitalize,
+      capitalizeLocation,
       formatDate,
       applyForJob,
       saveJob,

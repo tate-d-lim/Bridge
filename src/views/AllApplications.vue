@@ -1,158 +1,184 @@
 <template>
   <div class="all-applications-page">
-    <div class="applications-container">
-      <div class="page-header">
-        <h1>All Applications</h1>
-        <p>Manage applications for all your job postings</p>
-      </div>
-
-      <!-- Filter and Search -->
-      <div class="filters-section">
-        <div class="filter-tabs">
-          <button
-            :class="['tab', { active: activeFilter === 'all' }]"
-            @click="activeFilter = 'all'"
-          >
-            All Applications
-          </button>
-          <button
-            :class="['tab', { active: activeFilter === 'pending' }]"
-            @click="activeFilter = 'pending'"
-          >
-            Pending
-          </button>
-          <button
-            :class="['tab', { active: activeFilter === 'accepted' }]"
-            @click="activeFilter = 'accepted'"
-          >
-            Accepted
-          </button>
-          <button
-            :class="['tab', { active: activeFilter === 'rejected' }]"
-            @click="activeFilter = 'rejected'"
-          >
-            Rejected
-          </button>
-        </div>
-        
-        <div class="search-section">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search by candidate name, job title, or company..."
-            class="search-input"
-          />
-          <button @click="refreshApplications" class="btn btn-secondary" :disabled="loading">
-            {{ loading ? 'Refreshing...' : 'Refresh' }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Applications List -->
-      <div v-if="loading" class="loading-state">
-        <p>Loading applications...</p>
-      </div>
-
-      <div v-else-if="filteredApplications.length === 0" class="empty-state">
-        <p>No applications found.</p>
-        <p class="empty-subtitle">Applications will appear here when candidates apply to your jobs.</p>
-        <router-link to="/employer/post-job" class="btn btn-primary">Post a Job</router-link>
-      </div>
-
-      <div v-else class="applications-list">
-        <div
-          v-for="application in filteredApplications"
-          :key="application.id"
-          class="card application-card"
-        >
-          <div class="application-header">
-            <div class="application-main">
-              <h3>{{ application.jobTitle }}</h3>
-              <p class="candidate-info">Applied by: {{ application.candidateName }}</p>
-              <p class="application-date">Applied {{ formatDate(application.createdAt) }}</p>
-            </div>
-            <div class="application-meta">
-              <span :class="['status-badge', application.status]">
-                {{ application.status.charAt(0).toUpperCase() + application.status.slice(1) }}
-              </span>
-              <div class="meta-details">
-                <div class="meta-item">
-                  <img src="../assets/location.svg" alt="Location" class="meta-icon" />
-                  <span>{{ application.location }}</span>
-                </div>
-                <div class="meta-item">
-                  <img src="../assets/salary.svg" alt="Salary" class="meta-icon" />
-                  <span>${{ application.salary }}</span>
+    <section class="applications-section">
+      <div class="container">
+        <div class="applications-layout">
+          <!-- Main Content -->
+          <div class="applications-main-content">
+            <!-- Header with Search -->
+            <div class="applications-header-section">
+              <div class="applications-header-left">
+                <h2>All Applications</h2>
+                <p class="applications-count">{{ filteredApplications.length }} {{ filteredApplications.length === 1 ? 'application' : 'applications' }} available</p>
+              </div>
+              <div class="header-middle">
+                <div class="search-bar-wrapper">
+                  <img src="/icons/search.svg" alt="Search" class="search-icon" />
+                  <input
+                    v-model="searchQuery"
+                    type="text"
+                    placeholder="Search by candidate name or job title..."
+                    class="search-input"
+                    @input="applyFilters"
+                  />
                 </div>
               </div>
             </div>
-          </div>
-          
-          <!-- Application Preview -->
-          <div class="application-preview">
-            <div class="preview-section">
-              <h4>Cover Letter</h4>
-              <p class="preview-text">{{ application.coverLetter.substring(0, 150) }}{{ application.coverLetter.length > 150 ? '...' : '' }}</p>
-            </div>
-            
-            <div class="preview-section">
-              <h4>Resume</h4>
-              <p class="preview-text">{{ application.resume.substring(0, 100) }}{{ application.resume.length > 100 ? '...' : '' }}</p>
-            </div>
-          </div>
 
-          <!-- Application Actions -->
-          <div class="application-actions">
-            <router-link :to="`/applications/${application.id}`" class="btn btn-primary">
-              View Full Application
-            </router-link>
-            <router-link :to="`/jobs/${application.jobId}`" class="btn btn-secondary">
-              View Job
-            </router-link>
-            <div v-if="application.status === 'pending'" class="status-actions">
-              <button @click="updateApplicationStatus(application.id, 'accepted')" class="btn btn-success">
-                Accept
+            <!-- Filter Tabs -->
+            <div class="filter-tabs-wrapper">
+              <button
+                :class="['filter-tab', { active: activeFilter === 'all' }]"
+                @click="activeFilter = 'all'"
+              >
+                All
               </button>
-              <button @click="updateApplicationStatus(application.id, 'rejected')" class="btn btn-danger">
-                Reject
+              <button
+                :class="['filter-tab', { active: activeFilter === 'pending' }]"
+                @click="activeFilter = 'pending'"
+              >
+                Pending
+              </button>
+              <button
+                :class="['filter-tab', { active: activeFilter === 'accepted' }]"
+                @click="activeFilter = 'accepted'"
+              >
+                Accepted
+              </button>
+              <button
+                :class="['filter-tab', { active: activeFilter === 'rejected' }]"
+                @click="activeFilter = 'rejected'"
+              >
+                Rejected
+              </button>
+              <button @click="refreshApplications" class="btn-refresh" :disabled="loading">
+                {{ loading ? 'Refreshing...' : 'Refresh' }}
+              </button>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="loading" class="applications-grid">
+              <div v-for="n in 6" :key="n" class="application-skeleton">
+                <div class="skeleton-header">
+                  <div class="skeleton-line skeleton-title"></div>
+                  <div class="skeleton-line skeleton-subtitle"></div>
+                </div>
+                <div class="skeleton-content">
+                  <div class="skeleton-line skeleton-text"></div>
+                  <div class="skeleton-line skeleton-text"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- No Results -->
+            <div v-else-if="filteredApplications.length === 0" class="no-results">
+              <p>No applications found.</p>
+              <p class="empty-subtitle">Applications will appear here when candidates apply to your jobs.</p>
+              <router-link to="/employer/post-job" class="btn btn-primary">Post a Job</router-link>
+            </div>
+
+            <!-- Applications Grid -->
+            <div v-else class="applications-grid">
+              <div
+                v-for="application in paginatedApplications"
+                :key="application.id"
+                class="application-card"
+              >
+                <div class="application-card-wrapper">
+                  <div class="application-card-header">
+                    <div class="application-title-section">
+                      <h3 class="application-title">{{ application.jobTitle }}</h3>
+                      <p class="candidate-name">{{ application.candidateName }}</p>
+                    </div>
+                    <span :class="['status-badge', application.status]">
+                      {{ application.status.charAt(0).toUpperCase() + application.status.slice(1) }}
+                    </span>
+                  </div>
+
+                  <div class="application-details">
+                    <div class="detail-item">
+                      <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      </svg>
+                      <span>{{ capitalizeLocation(application.location) }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      <span>${{ application.salary }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      <span>Applied {{ formatDate(application.createdAt) }}</span>
+                    </div>
+                  </div>
+
+                  <div class="application-preview">
+                    <p class="application-text">
+                      {{ application.coverLetter.substring(0, 120) }}{{ application.coverLetter.length > 120 ? '...' : '' }}
+                    </p>
+                  </div>
+
+                  <div class="application-footer">
+                    <div class="application-actions">
+                      <router-link :to="`/applications/${application.id}`" class="view-details-btn">
+                        View Details
+                      </router-link>
+                      <div v-if="application.status === 'pending'" class="status-actions">
+                        <button @click="updateApplicationStatus(application.id, 'accepted')" class="btn-action btn-accept">
+                          Accept
+                        </button>
+                        <button @click="updateApplicationStatus(application.id, 'rejected')" class="btn-action btn-reject">
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="totalPages > 1" class="pagination">
+              <button 
+                @click="currentPage = Math.max(1, currentPage - 1)"
+                :disabled="currentPage === 1"
+                class="btn btn-secondary"
+              >
+                Previous
+              </button>
+              <span class="page-info">
+                Page {{ currentPage }} of {{ totalPages }}
+              </span>
+              <button 
+                @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                :disabled="currentPage === totalPages"
+                class="btn btn-secondary"
+              >
+                Next
               </button>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Pagination -->
-      <div v-if="totalPages > 1" class="pagination">
-        <button 
-          @click="currentPage = Math.max(1, currentPage - 1)"
-          :disabled="currentPage === 1"
-          class="btn btn-secondary"
-        >
-          Previous
-        </button>
-        <span class="page-info">
-          Page {{ currentPage }} of {{ totalPages }}
-        </span>
-        <button 
-          @click="currentPage = Math.min(totalPages, currentPage + 1)"
-          :disabled="currentPage === totalPages"
-          class="btn btn-secondary"
-        >
-          Next
-        </button>
-      </div>
-    </div>
+    </section>
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
+import { useToast } from '../composables/useToast'
 
 export default {
   name: 'AllApplications',
   setup() {
     const store = useStore()
+    const { showToast } = useToast()
     
     const applications = ref([])
     const loading = ref(false)
@@ -233,16 +259,26 @@ export default {
           status
         })
         
-        // Update the local state
-        const application = applications.value.find(app => app.id === applicationId)
-        if (application) {
-          application.status = status
+        // Update the local state reactively
+        const index = applications.value.findIndex(app => app.id === applicationId)
+        if (index !== -1) {
+          // Create a new object to ensure reactivity
+          applications.value[index] = {
+            ...applications.value[index],
+            status: status
+          }
         }
         
-        alert(`Application ${status} successfully!`)
+        showToast(`Application ${status} successfully!`, 'success')
+        
+        // Refresh the applications list to ensure consistency
+        // Small delay to let Firestore sync
+        setTimeout(() => {
+          fetchAllApplications()
+        }, 500)
       } catch (error) {
         console.error('Error updating application status:', error)
-        alert('Failed to update application status. Please try again.')
+        showToast(`Failed to update application status: ${error.message || 'Please try again.'}`, 'error')
       }
     }
 
@@ -250,13 +286,28 @@ export default {
       await fetchAllApplications()
     }
 
+    const applyFilters = async () => {
+      // Filtering is handled by computed properties
+      // This method is just a placeholder for consistency with BrowseJobs
+    }
+
     const formatDate = (dateString) => {
+      if (!dateString) return 'Recently'
       const date = new Date(dateString)
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      })
+      const now = new Date()
+      const diffTime = Math.abs(now - date)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays === 0) return 'Today'
+      if (diffDays === 1) return 'Yesterday'
+      if (diffDays < 7) return `${diffDays} days ago`
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+      return date.toLocaleDateString()
+    }
+
+    const capitalizeLocation = (str) => {
+      if (!str) return ''
+      return str.charAt(0).toUpperCase() + str.slice(1)
     }
 
     // Reset to first page when filter changes
@@ -283,7 +334,9 @@ export default {
       totalPages,
       updateApplicationStatus,
       refreshApplications,
-      formatDate
+      applyFilters,
+      formatDate,
+      capitalizeLocation
     }
   }
 }
@@ -291,315 +344,459 @@ export default {
 
 <style scoped>
 .all-applications-page {
-  min-height: calc(100vh - 70px);
-  background: var(--bg-light);
-  padding: 40px 20px;
+  min-height: 100vh;
+  background: var(--bg);
 }
 
-.applications-container {
-  max-width: 1200px;
+.applications-section {
+  padding: 60px 0;
+}
+
+.container {
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0 20px;
 }
 
-.page-header {
-  margin-bottom: 30px;
+.applications-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  align-items: start;
 }
 
-.page-header h1 {
-  font-size: 2.5rem;
-  color: var(--text);
-  margin-bottom: 10px;
+.applications-main-content {
+  width: 100%;
+  min-width: 0;
 }
 
-.page-header p {
-  font-size: 1.1rem;
-  color: var(--text-muted);
-}
-
-.filters-section {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
-}
-
-.filter-tabs {
+/* Header Section */
+.applications-header-section {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 32px;
   flex-wrap: wrap;
 }
 
-.tab {
-  flex: 1;
-  min-width: 120px;
-  padding: 12px 20px;
-  border: none;
-  background: transparent;
+.applications-header-left h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px 0;
+}
+
+.applications-count {
+  font-size: 0.875rem;
   color: var(--text-muted);
-  font-size: 1rem;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.3s;
+  margin: 0;
 }
 
-.tab:hover {
-  background: var(--bg-light);
-}
-
-.tab.active {
-  background: var(--primary);
-  color: white;
-}
-
-.search-section {
+.header-middle {
+  flex: 1;
   display: flex;
-  gap: 15px;
+  justify-content: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.search-bar-wrapper {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  background: var(--bg-light);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 10px 16px;
+  width: 100%;
+  max-width: 500px;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.search-bar-wrapper:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.search-icon {
+  width: 18px;
+  height: 18px;
+  opacity: 0.6;
+  flex-shrink: 0;
 }
 
 .search-input {
   flex: 1;
-  padding: 12px 15px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
   font-size: 1rem;
-  background: white;
+  background: transparent;
+  color: var(--text);
+  outline: none;
 }
 
-.search-input:focus {
-  outline: none;
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Filter Tabs */
+.filter-tabs-wrapper {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-tab {
+  padding: 10px 20px;
+  border: 1px solid var(--border);
+  background: var(--bg-light);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.filter-tab:hover {
+  border-color: var(--primary);
+  color: var(--text);
+}
+
+.filter-tab.active {
+  background: var(--primary);
+  color: white;
   border-color: var(--primary);
 }
 
-.loading-state {
-  text-align: center;
-  padding: 60px 20px;
-  font-size: 1.1rem;
-  color: var(--text-muted);
-}
-
-.empty-state {
-  background: white;
-  padding: 60px 20px;
-  border-radius: 12px;
-  text-align: center;
-  border: 1px solid var(--border);
-}
-
-.empty-state p {
-  color: var(--text-muted);
-  margin-bottom: 10px;
-  font-size: 1.1rem;
-}
-
-.empty-subtitle {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: 20px;
-}
-
-.applications-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.application-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 25px;
-  transition: all 0.3s;
-}
-
-.application-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.application-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  margin-bottom: 20px;
-}
-
-.application-main h3 {
-  font-size: 1.5rem;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.candidate-info {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  margin-bottom: 5px;
-}
-
-.application-date {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.application-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-}
-
-.status-badge {
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
-.status-badge.pending {
-  background: var(--warning);
-  color: var(--text);
-}
-
-.status-badge.accepted {
-  background: var(--success);
-  color: white;
-}
-
-.status-badge.rejected {
-  background: var(--danger);
-  color: white;
-}
-
-.meta-details {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  align-items: flex-end;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.meta-icon {
-  width: 14px;
-  height: 14px;
-  opacity: 0.7;
-}
-
-.application-preview {
-  margin: 20px 0;
-  padding: 20px;
-  background: var(--bg-light);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-}
-
-.preview-section {
-  margin-bottom: 15px;
-}
-
-.preview-section:last-child {
-  margin-bottom: 0;
-}
-
-.preview-section h4 {
-  font-size: 1rem;
-  color: var(--text);
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.preview-text {
-  color: var(--text-muted);
-  line-height: 1.5;
-  font-size: 0.9rem;
-}
-
-.application-actions {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.status-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.btn {
+.btn-refresh {
+  margin-left: auto;
   padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-block;
-  transition: all 0.3s;
-  border: none;
+  border: 1px solid var(--border);
+  background: var(--bg-light);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  font-size: 0.9rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn-primary {
+.btn-refresh:hover:not(:disabled) {
+  border-color: var(--primary);
   background: var(--primary);
   color: white;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: oklch(0.3 0.1 245);
-  transform: translateY(-2px);
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.btn-secondary {
+/* Applications Grid */
+.applications-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+/* Application Card */
+.application-card {
+  display: flex;
+  height: 100%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.application-card:hover {
+  transform: translateY(-4px);
+}
+
+.application-card-wrapper {
+  background: var(--bg-light);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.application-card:hover .application-card-wrapper {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Card Header */
+.application-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.application-title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.application-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-name {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Status Badge */
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-badge.pending {
+  background: oklch(0.9 0.02 100);
+  color: var(--warning);
+}
+
+.status-badge.accepted {
+  background: oklch(0.9 0.02 160);
+  color: var(--success);
+}
+
+.status-badge.rejected {
+  background: oklch(0.9 0.02 30);
+  color: var(--danger);
+}
+
+/* Application Details */
+.application-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.icon-xs {
+  width: 14px;
+  height: 14px;
+}
+
+/* Application Preview */
+.application-preview {
+  margin-bottom: 12px;
+  flex: 1;
+}
+
+.application-text {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Application Footer */
+.application-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin-top: auto;
+}
+
+.application-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.view-details-btn {
   background: var(--bg-light);
   color: var(--text);
-  border: 2px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background: var(--bg);
+.application-card:hover .view-details-btn {
+  background: var(--primary);
+  color: white;
   border-color: var(--primary);
+  transform: scale(1.05);
 }
 
-.btn-success {
+.dark-mode .view-details-btn {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.status-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-action {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.btn-accept {
+  background: transparent;
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.btn-accept:hover {
   background: var(--success);
   color: white;
 }
 
-.btn-success:hover:not(:disabled) {
-  background: oklch(0.4 0.1 145);
-  transform: translateY(-2px);
+.btn-reject {
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
 }
 
-.btn-danger {
+.btn-reject:hover {
   background: var(--danger);
   color: white;
 }
 
-.btn-danger:hover:not(:disabled) {
-  background: oklch(0.4 0.1 15);
-  transform: translateY(-2px);
+/* Loading State */
+.applications-grid .loading-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 1.1rem;
 }
 
+/* Skeleton Loading */
+.application-skeleton {
+  background: var(--bg-light);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.skeleton-header {
+  margin-bottom: 12px;
+}
+
+.skeleton-line {
+  background: linear-gradient(90deg, var(--bg-light) 25%, var(--bg) 50%, var(--bg-light) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  height: 12px;
+  margin-bottom: 8px;
+}
+
+.skeleton-title {
+  width: 70%;
+  height: 20px;
+}
+
+.skeleton-subtitle {
+  width: 50%;
+  height: 16px;
+}
+
+.skeleton-text {
+  width: 100%;
+  height: 12px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-content {
+  margin-top: 12px;
+}
+
+/* No Results */
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  background: var(--bg-light);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.empty-subtitle {
+  font-size: 0.95rem;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 20px;
   margin-top: 40px;
-  padding: 20px;
+  padding: 20px 0;
 }
 
 .page-info {
@@ -607,39 +804,58 @@ export default {
   font-weight: 500;
 }
 
+/* Responsive Design */
+@media (min-width: 1280px) {
+  .applications-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .applications-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-  .filter-tabs {
+  .applications-header-section {
     flex-direction: column;
+    align-items: flex-start;
   }
-  
-  .tab {
-    min-width: auto;
+
+  .header-middle {
+    width: 100%;
   }
-  
-  .search-section {
+
+  .search-bar-wrapper {
+    max-width: 100%;
+  }
+
+  .filter-tabs-wrapper {
     flex-direction: column;
     align-items: stretch;
   }
-  
-  .application-header {
-    flex-direction: column;
-    gap: 15px;
+
+  .filter-tab,
+  .btn-refresh {
+    width: 100%;
   }
-  
-  .application-meta {
-    align-items: flex-start;
+
+  .btn-refresh {
+    margin-left: 0;
   }
-  
-  .meta-details {
-    align-items: flex-start;
+
+  .applications-grid {
+    grid-template-columns: 1fr;
   }
-  
+
   .application-actions {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .status-actions {
+    width: 100%;
     justify-content: center;
   }
 }

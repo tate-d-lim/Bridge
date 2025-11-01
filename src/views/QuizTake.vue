@@ -36,7 +36,7 @@
         <!-- Quiz In Progress -->
         <template v-if="!quizCompleted">
           <div class="quiz-header">
-            <h1>{{ currentQuiz?.skill || 'Quiz' }} - {{ currentQuiz?.difficulty || 'Quiz' }}</h1>
+            <h1>{{ formatQuizTitle(currentQuiz?.skill) || 'Quiz' }} - {{ capitalizeFirst(currentQuiz?.difficulty) || 'Quiz' }}</h1>
             <div class="quiz-progress">
               <span>Question {{ currentQuestion + 1 }} of {{ questions.length }}</span>
               <div class="progress-bar">
@@ -574,6 +574,22 @@ export default {
       }
     })
 
+    // Format quiz title: "basic-safety" -> "Basic Safety"
+    const formatQuizTitle = (title) => {
+      if (!title) return ''
+      // Split by hyphens and capitalize first letter of each word
+      return title
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+    }
+
+    // Capitalize first letter: "beginner" -> "Beginner"
+    const capitalizeFirst = (str) => {
+      if (!str) return ''
+      return str.charAt(0).toUpperCase() + str.slice(1)
+    }
+
     return {
       currentQuestion,
       selectedAnswer,
@@ -592,7 +608,9 @@ export default {
       submitQuiz,
       retakeQuiz,
       testStore,
-      reloadQuiz
+      reloadQuiz,
+      formatQuizTitle,
+      capitalizeFirst
     }
   }
 }

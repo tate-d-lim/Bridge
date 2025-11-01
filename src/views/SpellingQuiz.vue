@@ -104,11 +104,13 @@
 <script>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useStore } from 'vuex'
+import { useToast } from '../composables/useToast'
 
 export default {
   name: 'SpellingQuiz',
   setup() {
     const store = useStore()
+    const { showToast } = useToast()
 
     const currentWord = ref(0)
     const letterSlots = ref([])
@@ -144,9 +146,28 @@ export default {
     }
 
     const reorganizeLetters = () => {
-      // Don't reorganize automatically - let letters stay in their original positions
-      // This prevents the messy layout
-      console.log('Letters reorganized')
+      // Reset all letter positions to their grid positions
+      // This ensures letters stay neatly aligned in the grid
+      setTimeout(() => {
+        document.querySelectorAll('.draggable-letter').forEach((el, index) => {
+          // Only reset transform if letter is not currently in a slot
+          const letterId = el.getAttribute('data-letter-id')
+          const isInSlot = letterSlots.value.some(slot => slot.letterId === letterId)
+          
+          if (!isInSlot) {
+            // Remove transform to let CSS Grid handle positioning
+            el.style.transform = ''
+            el.style.transition = 'all 0.3s ease'
+            el.setAttribute('data-x', '0')
+            el.setAttribute('data-y', '0')
+            
+            // Remove transition after animation
+            setTimeout(() => {
+              el.style.transition = ''
+            }, 300)
+          }
+        })
+      }, 100)
     }
 
     const handleLetterClick = (event) => {
@@ -260,6 +281,9 @@ export default {
               const letterIndex = parseInt(event.target.getAttribute('data-index'))
               console.log('Starting to drag letter:', letterId, 'at index:', letterIndex)
               
+              // Add dragging class for z-index
+              event.target.classList.add('is-dragging')
+              
               // Remove from any existing slot when starting to drag
               letterSlots.value.forEach((slot, index) => {
                 if (slot.letterId === letterId) {
@@ -280,22 +304,33 @@ export default {
               // Remove used class to make it draggable again
               event.target.classList.remove('used')
               
-              // Reset position to original grid position
-              event.target.style.transform = 'translate(0px, 0px)'
+              // Clear any existing transform - let CSS Grid handle initial position
+              // interact.js will handle transform during dragging
               event.target.setAttribute('data-x', '0')
               event.target.setAttribute('data-y', '0')
+              event.target.style.transform = ''
+              
               console.log('Letter reset to original position')
             },
             end: function(event) {
+              // Remove dragging class
+              event.target.classList.remove('is-dragging')
+              
               const letterId = event.target.getAttribute('data-letter-id')
               const isInSlot = letterSlots.value.some(slot => slot.letterId === letterId)
               
               if (!isInSlot) {
-                console.log('Letter not in slot, resetting to original position')
-                // Reset to original grid position
-                event.target.style.transform = 'translate(0px, 0px)'
+                console.log('Letter not in slot, resetting to grid position')
+                // Remove transform completely to let CSS Grid handle positioning
+                event.target.style.transition = 'transform 0.3s ease'
+                event.target.style.transform = ''
                 event.target.setAttribute('data-x', '0')
                 event.target.setAttribute('data-y', '0')
+                
+                // Remove transition after animation
+                setTimeout(() => {
+                  event.target.style.transition = ''
+                }, 300)
               }
             }
           }
@@ -381,9 +416,9 @@ export default {
 
       if (userAnswer === correctAnswer) {
         correctAnswers.value++
-        alert('Correct! 🎉')
+        showToast('Correct!', 'success')
       } else {
-        alert(`Incorrect. The correct spelling is: ${correctAnswer}`)
+        showToast(`Incorrect. The correct spelling is: ${correctAnswer}`, 'error')
       }
 
       if (currentWord.value < words.value.length - 1) {
@@ -408,12 +443,18 @@ export default {
       // Reset all letters to unused
       availableLetters.value = availableLetters.value.map(letter => ({ ...letter, used: false }))
       
-      // Reset letter positions
+          // Reset letter positions - remove transform to let CSS Grid handle positioning
       document.querySelectorAll('.draggable-letter').forEach(el => {
         el.classList.remove('used')
-        el.style.transform = 'translate(0px, 0px)'
+        el.style.transform = ''
+        el.style.transition = 'all 0.3s ease'
         el.setAttribute('data-x', '0')
         el.setAttribute('data-y', '0')
+        
+        // Remove transition after animation
+        setTimeout(() => {
+          el.style.transition = ''
+        }, 300)
       })
       
       // Re-setup interactions
@@ -546,7 +587,8 @@ export default {
   padding: 30px;
   border-radius: 12px 12px 0 0;
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: none;
   margin-bottom: 0;
 }
 
@@ -581,7 +623,7 @@ export default {
   border-radius: 0 0 12px 12px;
   text-align: center;
   color: var(--text-muted);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-top: none;
 }
 
@@ -590,8 +632,7 @@ export default {
   padding: 40px;
   border-radius: 0 0 12px 12px;
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
-  border-top: none;
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .word-display {
@@ -680,15 +721,20 @@ export default {
 
 .letter-pool {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
   gap: 10px;
   justify-items: center;
+  align-items: center;
   max-width: 400px;
   margin: 20px auto;
   padding: 20px;
   background: #f8f9fa;
   border-radius: 10px;
   position: relative;
+}
+
+.dark-mode .letter-pool {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .draggable-letter {
@@ -703,12 +749,17 @@ export default {
   font-size: 1.2rem;
   font-weight: bold;
   cursor: move;
-  transition: transform 0.3s ease, background 0.2s ease;
+  transition: background 0.2s ease, opacity 0.2s ease;
   user-select: none;
   touch-action: none;
   position: relative;
-  z-index: 1000;
+  z-index: 1;
   will-change: transform;
+}
+
+.draggable-letter.is-dragging {
+  z-index: 1000;
+  transition: none;
 }
 
 .draggable-letter:hover:not(.used) {
@@ -741,7 +792,7 @@ export default {
   padding: 40px;
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .results-card {

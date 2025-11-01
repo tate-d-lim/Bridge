@@ -1,183 +1,216 @@
 <template>
   <div class="dashboard">
-    <div class="dashboard-header">
-      <h1>Welcome, {{ userProfile?.name }}!</h1>
-      <p>Manage your job postings and applications</p>
-    </div>
+    <div class="dashboard-container">
+      <!-- Header -->
+      <div class="dashboard-header">
+        <h1>Welcome back, Employer!</h1>
+        <p class="header-subtitle">
+          Manage your job postings and connect with skilled migrant workers
+        </p>
+      </div>
 
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <AnimatedStat
-        :icon="briefcaseIcon"
-        :value="employerJobs.length"
-        label="Active Jobs"
-        :delay="0"
-      />
-      <AnimatedStat
-        :icon="taskIcon"
-        :value="totalApplications"
-        label="Applications"
-        :delay="100"
-      />
-      <AnimatedStat
-        :icon="candidatesIcon"
-        :value="uniqueCandidates"
-        label="Candidates"
-        :delay="200"
-      />
-      <AnimatedStat
-        :icon="hiredIcon"
-        :value="hiredCount"
-        label="Hired"
-        :delay="300"
-      />
-    </div>
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <StatCard
+          label="Active Jobs"
+          :value="activeJobsCount"
+          icon-bg="bg-blue-50"
+        >
+          <template #icon>
+            <img src="../assets/briefcase.svg" alt="Active Jobs" style="width: 20px; height: 20px;" />
+          </template>
+        </StatCard>
+        
+        <StatCard
+          label="Total Applications"
+          :value="totalApplications"
+          icon-bg="bg-green-50"
+        >
+          <template #icon>
+            <img src="../assets/task-checklist.svg" alt="Applications" style="width: 20px; height: 20px;" />
+          </template>
+        </StatCard>
+        
+        <StatCard
+          label="Candidates Hired"
+          :value="hiredCount"
+          icon-bg="bg-purple-50"
+        >
+          <template #icon>
+            <img src="../assets/hired.svg" alt="Hired" style="width: 20px; height: 20px;" />
+          </template>
+        </StatCard>
+      </div>
 
-    <!-- Recent Jobs -->
-    <div class="recent-section">
-      <div class="section-header">
-        <h2>Your Job Postings</h2>
-        <router-link to="/employer/post-job" class="btn btn-primary">Post New Job</router-link>
-      </div>
-      
-      <div v-if="loading" class="loading-state">
-        <p>Loading your jobs...</p>
-      </div>
-      
-      <div v-else-if="employerJobs.length === 0" class="empty-state">
-        <p>You haven't posted any jobs yet.</p>
-        <router-link to="/employer/post-job" class="btn btn-primary">Post Your First Job</router-link>
-      </div>
-      
-      <div v-else class="jobs-list">
-        <div v-for="job in employerJobs" :key="job.id" class="card job-item">
-          <div class="job-content">
-            <h3>{{ job.title }}</h3>
-            <p class="job-company">{{ job.company }}</p>
-            <p class="job-location">📍 {{ job.location }}</p>
-            <p class="job-category">🏷️ {{ job.category }}</p>
-            <p class="job-description">{{ job.description.substring(0, 150) }}...</p>
-            <div class="job-meta">
-              <span class="job-salary">💰 ${{ job.salary }}/month</span>
-              <span class="job-status" :class="job.status">{{ job.status }}</span>
-            </div>
-          </div>
-          <div class="job-actions">
-            <router-link :to="`/jobs/${job.id}`" class="btn btn-secondary">View</router-link>
-            <button @click="editJob(job.id)" class="btn btn-primary">Edit</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Applications -->
-    <div class="recent-section">
-      <div class="section-header">
-        <h2>Recent Applications</h2>
-        <div class="header-actions">
-          <button @click="fetchRecentApplications" class="btn btn-secondary" :disabled="loadingApplications">
-            {{ loadingApplications ? 'Refreshing...' : 'Refresh' }}
-          </button>
-          <router-link to="/employer/applications" class="btn btn-primary">View All Applications</router-link>
-        </div>
-      </div>
-      
-      <div v-if="loadingApplications" class="loading-state">
-        <p>Loading applications...</p>
-      </div>
-      
-      <div v-else-if="recentApplications.length === 0" class="empty-state">
-        <p>No applications yet.</p>
-        <p class="empty-subtitle">Applications will appear here when candidates apply to your jobs.</p>
-      </div>
-      
-      <div v-else class="applications-list">
-        <div v-for="application in recentApplications" :key="application.id" class="card application-card">
-          <div class="application-header">
-            <div>
-              <h3>{{ application.jobTitle }}</h3>
-              <p class="candidate-info">Applied by: {{ application.candidateName || 'Unknown Candidate' }}</p>
-              <p class="application-date">Applied {{ formatDate(application.createdAt) }}</p>
-            </div>
-            <span :class="['status-badge', application.status]">
-              {{ application.status.charAt(0).toUpperCase() + application.status.slice(1) }}
-            </span>
-          </div>
-          
-          <div class="application-details">
-            <div class="detail-item">
-              <img src="../assets/location.svg" alt="Location" class="detail-icon" />
-              <span>{{ application.location }}</span>
-            </div>
-            <div class="detail-item">
-              <img src="../assets/salary.svg" alt="Salary" class="detail-icon" />
-              <span>${{ application.salary }}</span>
-            </div>
-          </div>
-
-          <!-- Application Information -->
-          <div class="application-info">
-            <div class="info-section">
-              <h4>Cover Letter</h4>
-              <p class="cover-letter">{{ application.coverLetter }}</p>
-            </div>
-            
-            <div class="info-section">
-              <h4>Resume</h4>
-              <p class="resume-info">{{ application.resume }}</p>
-            </div>
-          </div>
-
-          <div class="application-actions">
-            <router-link :to="`/applications/${application.id}`" class="btn btn-secondary">
-              View Application
+      <!-- Main Content Grid -->
+      <div class="main-content-grid">
+        <!-- Left Column - Job Postings -->
+        <div class="job-postings-column">
+          <div class="section-header">
+            <h2>Your Job Postings</h2>
+            <router-link to="/employer/post-job" class="btn btn-primary">
+              <svg style="width: 16px; height: 16px; margin-right: 8px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+              </svg>
+              Post New Job
             </router-link>
-            <button @click="updateApplicationStatus(application.id, 'accepted')" 
-                    v-if="application.status === 'pending'" 
-                    class="btn btn-success">
-              Accept
-            </button>
-            <button @click="updateApplicationStatus(application.id, 'rejected')" 
-                    v-if="application.status === 'pending'" 
-                    class="btn btn-danger">
-              Reject
-            </button>
+          </div>
+
+          <div v-if="loading" class="loading-state">
+            <p>Loading your jobs...</p>
+          </div>
+
+          <div v-else-if="employerJobs.length === 0" class="empty-state">
+            <p>You haven't posted any jobs yet.</p>
+            <router-link to="/employer/post-job" class="btn btn-primary">Post Your First Job</router-link>
+          </div>
+
+          <Tabs
+            v-else
+            v-model="activeTab"
+            :tabs="jobTabs"
+            class="job-tabs"
+          >
+            <div class="tabs-content-wrapper">
+              <div v-if="activeTab === 'all'" class="tab-pane">
+                <div class="jobs-list">
+                  <JobPostingCard
+                    v-for="job in filteredJobs"
+                    :key="job.id"
+                    :job="job"
+                    @edit="editJob"
+                    @delete="deleteJob"
+                  />
+                </div>
+              </div>
+              
+              <div v-if="activeTab === 'active'" class="tab-pane">
+                <div class="jobs-list">
+                  <JobPostingCard
+                    v-for="job in activeJobs"
+                    :key="job.id"
+                    :job="job"
+                    @edit="editJob"
+                    @delete="deleteJob"
+                  />
+                </div>
+              </div>
+              
+              <div v-if="activeTab === 'draft'" class="tab-pane">
+                <div v-if="draftJobs.length === 0" class="empty-tab">
+                  <p>No draft jobs</p>
+                </div>
+                <div v-else class="jobs-list">
+                  <JobPostingCard
+                    v-for="job in draftJobs"
+                    :key="job.id"
+                    :job="job"
+                    @edit="editJob"
+                    @delete="deleteJob"
+                  />
+                </div>
+              </div>
+              
+              <div v-if="activeTab === 'expired'" class="tab-pane">
+                <div v-if="expiredJobs.length === 0" class="empty-tab">
+                  <p>No expired jobs</p>
+                </div>
+                <div v-else class="jobs-list">
+                  <JobPostingCard
+                    v-for="job in expiredJobs"
+                    :key="job.id"
+                    :job="job"
+                    @edit="editJob"
+                    @delete="deleteJob"
+                  />
+                </div>
+              </div>
+            </div>
+          </Tabs>
+        </div>
+
+        <!-- Right Column - Recent Applications -->
+        <div class="sidebar-column">
+          <!-- Recent Applications -->
+          <div class="sidebar-section">
+            <h2>Recent Applications</h2>
+            <div v-if="loadingApplications" class="loading-state-small">
+              <p>Loading applications...</p>
+            </div>
+            <div v-else-if="recentApplications.length === 0" class="empty-state-small">
+              <p>No applications yet.</p>
+              <p class="empty-subtitle">Applications will appear here when candidates apply to your jobs.</p>
+            </div>
+            <div v-else class="card applications-card">
+              <div class="applications-list">
+                <ApplicationItem
+                  v-for="application in recentApplications"
+                  :key="application.id"
+                  :application="application"
+                />
+              </div>
+              <router-link to="/employer/applications" class="btn btn-outline full-width">
+                View All Applications
+              </router-link>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Dialog for Delete -->
+    <ConfirmationDialog
+      :show="showDeleteDialog"
+      title="Delete Job"
+      message="Are you sure you want to delete this job? This action cannot be undone."
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      @confirm="handleDeleteConfirm"
+      @cancel="handleDeleteCancel"
+      @update:show="showDeleteDialog = $event"
+    />
   </div>
 </template>
 
 <script>
 import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import AnimatedStat from '../components/AnimatedStat.vue'
-import briefcaseIcon from '../assets/briefcase.svg'
-import taskIcon from '../assets/task-checklist.svg'
-import candidatesIcon from '../assets/candidates.svg'
-import hiredIcon from '../assets/hired.svg'
+import { useRouter } from 'vue-router'
+import { useToast } from '../composables/useToast'
+import StatCard from '../components/StatCard.vue'
+import JobPostingCard from '../components/JobPostingCard.vue'
+import ApplicationItem from '../components/ApplicationItem.vue'
+import Tabs from '../components/Tabs.vue'
+import ConfirmationDialog from '../components/ConfirmationDialog.vue'
 
 export default {
   name: 'EmployerDashboard',
   components: {
-    AnimatedStat
+    StatCard,
+    JobPostingCard,
+    ApplicationItem,
+    Tabs,
+    ConfirmationDialog
   },
   setup() {
     const store = useStore()
+    const router = useRouter()
+    const { showToast } = useToast()
     
     const employerJobs = ref([])
     const recentApplications = ref([])
     const allApplications = ref([])
     const loading = ref(false)
     const loadingApplications = ref(false)
+    const activeTab = ref('all')
+    const showDeleteDialog = ref(false)
+    const jobToDelete = ref(null)
 
     const userProfile = computed(() => store.getters['auth/userProfile'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
     
-    const totalApplications = computed(() => {
-      return allApplications.value.length
-    })
+    // Stats calculations
+    const totalApplications = computed(() => allApplications.value.length)
 
     const uniqueCandidates = computed(() => {
       const uniqueCandidateIds = new Set(allApplications.value.map(app => app.candidateId))
@@ -186,6 +219,40 @@ export default {
 
     const hiredCount = computed(() => {
       return allApplications.value.filter(app => app.status === 'accepted').length
+    })
+
+    const activeJobsCount = computed(() => {
+      return employerJobs.value.filter(job => job.status === 'active').length
+    })
+
+    // Job filtering
+    const filteredJobs = computed(() => employerJobs.value)
+
+    const activeJobs = computed(() => {
+      return employerJobs.value.filter(job => job.status === 'active')
+    })
+
+    const draftJobs = computed(() => {
+      return employerJobs.value.filter(job => job.status === 'draft')
+    })
+
+    const expiredJobs = computed(() => {
+      return employerJobs.value.filter(job => job.status === 'expired')
+    })
+
+    // Tabs configuration
+    const jobTabs = computed(() => [
+      { value: 'all', label: `All Jobs (${employerJobs.value.length})` },
+      { value: 'active', label: `Active (${activeJobs.value.length})` },
+      { value: 'draft', label: `Draft (${draftJobs.value.length})` },
+      { value: 'expired', label: `Expired (${expiredJobs.value.length})` }
+    ])
+
+    // Stats changes (placeholder - you can calculate these based on historical data)
+    const statsChange = ref({
+      activeJobs: 0, // Calculate from historical data
+      totalApplications: 0,
+      candidatesHired: 0
     })
 
     const fetchEmployerJobs = async () => {
@@ -244,38 +311,40 @@ export default {
       }
     }
 
-    const updateApplicationStatus = async (applicationId, status) => {
-      try {
-        await store.dispatch('applications/updateApplicationStatus', {
-          applicationId,
-          status
-        })
-        
-        // Update the local state
-        const application = recentApplications.value.find(app => app.id === applicationId)
-        if (application) {
-          application.status = status
-        }
-        
-        alert(`Application ${status} successfully!`)
-      } catch (error) {
-        console.error('Error updating application status:', error)
-        alert('Failed to update application status. Please try again.')
-      }
-    }
-
-    const formatDate = (dateString) => {
-      const date = new Date(dateString)
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+    const editJob = (jobId) => {
+      router.push({ 
+        path: '/employer/post-job', 
+        query: { jobId } 
       })
     }
 
-    const editJob = (jobId) => {
-      // For now, show an alert that edit functionality is coming soon
-      alert('Edit job functionality is coming soon! For now, you can view the job details.')
+    const deleteJob = (jobId) => {
+      jobToDelete.value = jobId
+      showDeleteDialog.value = true
+    }
+
+    const handleDeleteConfirm = async () => {
+      if (!jobToDelete.value) return
+      
+      try {
+        await store.dispatch('jobs/deleteJob', jobToDelete.value)
+        showToast('Job deleted successfully', 'success')
+        // Refresh the jobs list
+        await fetchEmployerJobs()
+        // Also refresh applications since deleting a job affects applications
+        await fetchRecentApplications()
+      } catch (error) {
+        console.error('Error deleting job:', error)
+        showToast('Failed to delete job. Please try again.', 'error')
+      } finally {
+        jobToDelete.value = null
+        showDeleteDialog.value = false
+      }
+    }
+
+    const handleDeleteCancel = () => {
+      jobToDelete.value = null
+      showDeleteDialog.value = false
     }
 
     onMounted(async () => {
@@ -297,15 +366,21 @@ export default {
       totalApplications,
       uniqueCandidates,
       hiredCount,
+      activeJobsCount,
       loading,
       loadingApplications,
+      activeTab,
+      jobTabs,
+      filteredJobs,
+      activeJobs,
+      draftJobs,
+      expiredJobs,
+      statsChange,
       editJob,
-      updateApplicationStatus,
-      formatDate,
-      briefcaseIcon,
-      taskIcon,
-      candidatesIcon,
-      hiredIcon
+      deleteJob,
+      showDeleteDialog,
+      handleDeleteConfirm,
+      handleDeleteCancel
     }
   }
 }
@@ -313,256 +388,209 @@ export default {
 
 <style scoped>
 .dashboard {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 20px;
+  min-height: 100vh;
+  background: var(--bg-dark);
+  padding: 32px 0;
 }
 
+.dashboard-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Header */
 .dashboard-header {
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .dashboard-header h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--text);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-.dashboard-header p {
-  font-size: 1.1rem;
+.header-subtitle {
+  font-size: 1rem;
   color: var(--text-muted);
+  margin: 0;
 }
 
+/* Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
 }
 
-/* AnimatedStat component handles its own styling */
-
-.quick-actions {
-  margin-bottom: 40px;
+@media (min-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.quick-actions h2 {
-  font-size: 2rem;
-  color: var(--text);
-  margin-bottom: 20px;
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
-.actions-grid {
+/* Main Content Grid */
+.main-content-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 24px;
 }
 
-.action-card {
-  text-align: center;
-  text-decoration: none;
+@media (min-width: 1024px) {
+  .main-content-grid {
+    grid-template-columns: 2fr 1fr;
+  }
 }
 
-.action-icon {
-  font-size: 3rem;
-  display: block;
-  margin-bottom: 15px;
+/* Job Postings Column */
+.job-postings-column {
+  min-width: 0;
 }
 
-.action-card h3 {
-  font-size: 1.3rem;
-  color: var(--text);
-  margin-bottom: 10px;
-}
-
-.action-card p {
-  color: var(--text-muted);
-}
-
-/* Recent Applications Styles */
 .section-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .section-header h2 {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: var(--text);
+  margin: 0;
+}
+
+/* Tabs */
+.job-tabs {
+  width: 100%;
+}
+
+.tabs-content-wrapper {
+  margin-top: 0;
+}
+
+.tab-pane {
+  width: 100%;
+}
+
+.jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.empty-tab {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 48px 20px;
+  background: var(--bg);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dark-mode .empty-tab {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.empty-tab p {
+  margin: 0;
+}
+
+/* Sidebar Column */
+.sidebar-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sidebar-section {
+  width: 100%;
+}
+
+.sidebar-section h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.applications-card {
+  padding: 16px;
 }
 
 .applications-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
+  margin-bottom: 16px;
 }
 
-.application-card {
-  /* Card styling handled by global .card class */
+.full-width {
+  width: 100%;
+  display: block;
+  text-align: center;
 }
 
-.application-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  margin-bottom: 20px;
-}
-
-.application-header h3 {
-  font-size: 1.5rem;
-  color: var(--text);
-  margin-bottom: 5px;
-}
-
-.candidate-info {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  margin-bottom: 3px;
-}
-
-.application-date {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.status-badge {
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.status-badge.pending {
-  background: var(--warning);
-  color: var(--text);
-}
-
-.status-badge.accepted {
-  background: var(--success);
-  color: white;
-}
-
-.status-badge.rejected {
-  background: var(--danger);
-  color: white;
-}
-
-.application-details {
-  display: flex;
-  gap: 30px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.detail-item {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.detail-icon {
-  width: 16px;
-  height: 16px;
-  opacity: 0.7;
-}
-
-.application-info {
-  margin: 20px 0;
-  padding: 20px;
-  background: var(--bg-light);
-  border-radius: 8px;
+.btn-outline {
+  background: transparent;
   border: 1px solid var(--border);
-}
-
-.info-section {
-  margin-bottom: 20px;
-}
-
-.info-section:last-child {
-  margin-bottom: 0;
-}
-
-.info-section h4 {
-  font-size: 1rem;
-  color: var(--text);
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.cover-letter {
-  color: var(--text-muted);
-  line-height: 1.6;
-  font-size: 0.95rem;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.resume-info {
-  color: var(--text-muted);
-  line-height: 1.6;
-  font-size: 0.95rem;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.application-actions {
-  display: flex;
-  gap: 15px;
-}
-
-.btn-success {
-  background: var(--success);
-  color: white;
-}
-
-.btn-success:hover {
-  background: oklch(0.4 0.1 145);
-}
-
-.btn-danger {
-  background: var(--danger);
-  color: white;
-}
-
-.btn-danger:hover {
-  background: oklch(0.4 0.1 15);
-}
-
-.empty-subtitle {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-top: 5px;
-}
-
-.recent-section {
-  margin-bottom: 40px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.recent-section h2 {
-  font-size: 2rem;
   color: var(--text);
 }
 
-.empty-state {
+.btn-outline:hover {
   background: var(--bg-light);
+}
+
+/* Loading and Empty States */
+.loading-state {
+  background: var(--bg);
   padding: 60px 20px;
   border-radius: 12px;
   text-align: center;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dark-mode .loading-state {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.loading-state p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.loading-state-small {
+  padding: 20px;
+  text-align: center;
+}
+
+.loading-state-small p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.empty-state {
+  background: var(--bg);
+  padding: 60px 20px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dark-mode .empty-state {
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .empty-state p {
@@ -570,118 +598,43 @@ export default {
   margin-bottom: 20px;
 }
 
-.loading-state {
-  background: var(--bg-light);
-  padding: 60px 20px;
-  border-radius: 12px;
+.empty-state-small {
+  padding: 20px;
   text-align: center;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
 }
 
-.loading-state p {
+.empty-state-small p {
   color: var(--text-muted);
+  font-size: 0.875rem;
+  margin: 0;
 }
 
-.jobs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.job-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-}
-
-.job-content {
-  flex: 1;
-}
-
-.job-content h3 {
-  font-size: 1.5rem;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-
-.job-company {
-  color: var(--primary);
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.job-location,
-.job-category {
+.empty-subtitle {
+  margin-top: 8px;
+  font-size: 0.75rem;
   color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-bottom: 5px;
-}
-
-.job-description {
-  color: var(--text);
-  line-height: 1.5;
-  margin: 10px 0;
-}
-
-.job-meta {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.job-salary {
-  color: var(--success);
-  font-weight: 600;
-}
-
-.job-status {
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.job-status.active {
-  background: var(--success);
-  color: white;
-}
-
-.job-status.inactive {
-  background: var(--text-muted);
-  color: white;
-}
-
-.job-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 120px;
-}
-
-.job-actions .btn {
-  padding: 8px 16px;
-  font-size: 0.9rem;
-  text-align: center;
 }
 
 @media (max-width: 768px) {
-  .job-item {
+  .dashboard {
+    padding: 20px 0;
+  }
+  
+  .dashboard-container {
+    padding: 0 16px;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .section-header {
     flex-direction: column;
-    gap: 15px;
+    align-items: flex-start;
   }
   
-  .job-actions {
-    flex-direction: row;
-    min-width: auto;
-  }
-  
-  .job-actions .btn {
-    flex: 1;
+  .section-header h2 {
+    font-size: 1.25rem;
   }
 }
 </style>
-

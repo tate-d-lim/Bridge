@@ -83,7 +83,7 @@ export default {
 <style scoped>
 .achievement-card {
   background: var(--bg-light);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 1rem;
   padding: 1.5rem;
   transition: all 0.3s ease;
@@ -98,7 +98,7 @@ export default {
 .achievement-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-  border-color: var(--primary);
+  border-color: rgba(0, 0, 0, 0.12);
 }
 
 .card-content {

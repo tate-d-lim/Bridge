@@ -515,6 +515,13 @@ export default {
         const earnedSnapshot = await getDocs(earnedQuery)
         const earnedBadgeIds = earnedSnapshot.docs.map(doc => doc.data().badgeId)
         
+        // Also populate earnedBadges for progress tracking
+        const earnedBadges = earnedSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        commit('SET_EARNED_BADGES', earnedBadges)
+        
         const allBadges = {
           performance: BADGE_DEFINITIONS.performance.map(badge => ({
             ...badge,

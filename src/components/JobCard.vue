@@ -26,7 +26,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
-          <span>{{ job.location }}</span>
+          <span>{{ capitalizeLocation(job.location) }}</span>
         </div>
         <div class="detail-item">
           <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -131,6 +131,11 @@ export default {
       return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
     }
 
+    const capitalizeLocation = (str) => {
+      if (!str) return ''
+      return str.charAt(0).toUpperCase() + str.slice(1)
+    }
+
     return {
       isBookmarked,
       tags,
@@ -138,7 +143,8 @@ export default {
       handleViewDetails,
       truncateDescription,
       formatDate,
-      capitalize
+      capitalize,
+      capitalizeLocation
     }
   }
 }
@@ -309,19 +315,26 @@ export default {
 .view-details-btn {
   background: var(--bg-light);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .job-card:hover .view-details-btn {
   background: var(--primary);
-  color: var(--bg-light);
+  color: white;
+  border-color: var(--primary);
   transform: scale(1.05);
+}
+
+.dark-mode .view-details-btn {
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 @media (max-width: 768px) {

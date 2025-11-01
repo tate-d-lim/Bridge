@@ -92,7 +92,7 @@ export default {
 
 .stat-card {
   background: var(--bg-light);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 1rem;
   padding: 1.5rem;
   display: flex;
@@ -106,7 +106,7 @@ export default {
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-  border-color: var(--primary);
+  border-color: rgba(0, 0, 0, 0.12);
 }
 
 .stat-icon {

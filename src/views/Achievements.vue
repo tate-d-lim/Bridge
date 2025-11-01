@@ -268,7 +268,7 @@ export default {
 /* Header Section */
 .achievements-header {
   background: var(--bg-light);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   padding: 2rem 1rem;
 }
 
@@ -276,7 +276,7 @@ export default {
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -290,6 +290,7 @@ export default {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 0.25rem;
 }
 
 .header-icon img {
@@ -300,6 +301,7 @@ export default {
 
 .header-text {
   flex: 1;
+  margin-top: 0.25rem;
 }
 
 .header-text h1 {
@@ -307,7 +309,9 @@ export default {
   font-weight: 700;
   color: var(--text);
   margin-bottom: 0.25rem;
+  margin-top: 0;
   letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .header-subtitle {
@@ -372,7 +376,7 @@ export default {
   background: var(--bg-light);
   padding: 0.5rem;
   border-radius: 1rem;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .tab-trigger {

@@ -237,11 +237,7 @@ export default {
 }
 
 /* Responsive design */
-@media (min-width: 1024px) {
-  .connection-line {
-    display: block;
-  }
-  
+@media (min-width: 1024px) {  
   .steps-grid {
     grid-template-columns: repeat(4, 1fr);
   }

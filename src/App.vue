@@ -5,6 +5,7 @@
       <router-view />
     </main>
     <BadgeNotification />
+    <Toast />
     <footer class="app-footer">
       <div class="footer-content">
         <div class="footer-section footer-brand">
@@ -64,13 +65,15 @@ import { computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import NavBar from './components/NavBar.vue'
 import BadgeNotification from './components/BadgeNotification.vue'
+import Toast from './components/Toast.vue'
 import bridgeLogo from './assets/bridgeLogo.png'
 
 export default {
   name: 'App',
   components: {
     NavBar,
-    BadgeNotification
+    BadgeNotification,
+    Toast
   },
   setup() {
     const store = useStore()

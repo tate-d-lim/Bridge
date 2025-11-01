@@ -6,6 +6,7 @@ import chatAbly from './modules/chatAbly'
 import quizzes from './modules/quizzes'
 import applications from './modules/applications'
 import badges from './modules/badges'
+import reviews from './modules/reviews'
 
 export default createStore({
   modules: {
@@ -15,7 +16,8 @@ export default createStore({
     chatAbly,
     quizzes,
     applications,
-    badges
+    badges,
+    reviews
   }
 })
 

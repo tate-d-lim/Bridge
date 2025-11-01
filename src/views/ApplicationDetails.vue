@@ -105,6 +105,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
+import { useToast } from '../composables/useToast'
 
 export default {
   name: 'ApplicationDetails',
@@ -112,6 +113,7 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const store = useStore()
+    const { showToast } = useToast()
     
     const application = ref(null)
     const loading = ref(true)
@@ -161,11 +163,16 @@ export default {
           status
         })
         
-        application.value.status = status
-        alert(`Application ${status} successfully!`)
+        // Update the local state reactively
+        application.value = {
+          ...application.value,
+          status: status
+        }
+        
+        showToast(`Application ${status} successfully!`, 'success')
       } catch (error) {
         console.error('Error updating application status:', error)
-        alert('Failed to update application status. Please try again.')
+        showToast(`Failed to update application status: ${error.message || 'Please try again.'}`, 'error')
       }
     }
 

@@ -1,8 +1,8 @@
 <template>
   <div class="post-job-page">
     <div class="post-job-container">
-      <h1>Post a New Job</h1>
-      <p class="subtitle">Fill in the details to create your job listing</p>
+      <h1>{{ isEditMode ? 'Edit Job' : 'Post a New Job' }}</h1>
+      <p class="subtitle">{{ isEditMode ? 'Update the details of your job listing' : 'Fill in the details to create your job listing' }}</p>
 
       <form @submit.prevent="handleSubmit" class="card job-form">
         <div class="form-section">
@@ -112,7 +112,7 @@
             Cancel
           </button>
           <button type="submit" class="btn btn-primary" :disabled="loading">
-            {{ loading ? 'Posting...' : 'Post Job' }}
+            {{ loading ? (isEditMode ? 'Updating...' : 'Posting...') : (isEditMode ? 'Update Job' : 'Post Job') }}
           </button>
         </div>
 
@@ -125,20 +125,25 @@
 </template>
 
 <script>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+import { useToast } from '../composables/useToast'
 
 export default {
   name: 'PostJob',
   setup() {
     const store = useStore()
     const router = useRouter()
+    const route = useRoute()
+    const { showToast } = useToast()
     
     const loading = ref(false)
     const error = ref(null)
     const requirementsText = ref('')
     const benefitsText = ref('')
+    const isEditMode = ref(false)
+    const jobId = ref(null)
 
     const userProfile = computed(() => store.getters['auth/userProfile'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
@@ -154,6 +159,47 @@ export default {
       employerId: currentUser.value?.uid || ''
     })
 
+    const loadJobData = async () => {
+      const jobIdParam = route.query.jobId
+      if (jobIdParam) {
+        isEditMode.value = true
+        jobId.value = jobIdParam
+        loading.value = true
+        
+        try {
+          const job = await store.dispatch('jobs/fetchJobById', jobIdParam)
+          
+          if (job) {
+            // Populate form with existing job data
+            formData.title = job.title || ''
+            formData.category = job.category || ''
+            formData.type = job.type || ''
+            formData.location = job.location || ''
+            formData.salary = job.salary || ''
+            formData.description = job.description || ''
+            
+            // Populate requirements and benefits
+            if (job.requirements && Array.isArray(job.requirements)) {
+              requirementsText.value = job.requirements.join('\n')
+            } else if (job.requirements) {
+              requirementsText.value = job.requirements
+            }
+            
+            if (job.benefits && Array.isArray(job.benefits)) {
+              benefitsText.value = job.benefits.join('\n')
+            } else if (job.benefits) {
+              benefitsText.value = job.benefits
+            }
+          }
+        } catch (err) {
+          error.value = err.message || 'Failed to load job data. Please try again.'
+          showToast('Failed to load job data', 'error')
+        } finally {
+          loading.value = false
+        }
+      }
+    }
+
     const handleSubmit = async () => {
       loading.value = true
       error.value = null
@@ -165,16 +211,27 @@ export default {
           benefits: benefitsText.value.split('\n').filter(b => b.trim())
         }
 
-        await store.dispatch('jobs/createJob', jobData)
+        if (isEditMode.value && jobId.value) {
+          await store.dispatch('jobs/updateJob', { jobId: jobId.value, jobData })
+          showToast('Job updated successfully!', 'success')
+        } else {
+          await store.dispatch('jobs/createJob', jobData)
+          showToast('Job posted successfully!', 'success')
+        }
         
-        alert('Job posted successfully!')
-        router.push('/employer/dashboard')
+        setTimeout(() => {
+          router.push('/employer/dashboard')
+        }, 500)
       } catch (err) {
-        error.value = err.message || 'Failed to post job. Please try again.'
+        error.value = err.message || (isEditMode.value ? 'Failed to update job. Please try again.' : 'Failed to post job. Please try again.')
       } finally {
         loading.value = false
       }
     }
+
+    onMounted(() => {
+      loadJobData()
+    })
 
     return {
       formData,
@@ -182,6 +239,7 @@ export default {
       benefitsText,
       loading,
       error,
+      isEditMode,
       handleSubmit
     }
   }
