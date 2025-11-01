@@ -245,7 +245,7 @@
   .category-label {
     font-weight: 600;
     font-size: 1rem;
-    color: var(--text);
+    color:rgb(43, 47, 47);
     margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;

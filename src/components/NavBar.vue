@@ -2,8 +2,8 @@
   <nav class="navbar">
     <div class="nav-container">
       <router-link :to="getHomeRoute" class="nav-brand">
-        <!-- <img v-if="isDarkMode" src="../assets/bridgeLogoYellow.png" alt="Bridge" class="nav-logo" /> -->
-        <img src="../assets/bridgeLogo.png" alt="Bridge" class="nav-logo" />
+        <img v-if="isDarkMode" src="../assets/logo-black.png" alt="Bridge" class="nav-logo" />
+        <img v-else src="../assets/bridgeLogo.png" alt="Bridge" class="nav-logo" />
       </router-link>
 
       <button class="nav-toggle" @click="toggleMenu" :class="{ active: menuOpen }">

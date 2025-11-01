@@ -9,15 +9,6 @@
           <h3 class="job-title">{{ job.title }}</h3>
           <p class="company-name">{{ job.company }}</p>
         </div>
-        <button 
-          @click.stop="handleBookmark" 
-          class="bookmark-btn"
-          :class="{ active: isBookmarked }"
-        >
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-          </svg>
-        </button>
       </div>
 
       <div class="job-details">
@@ -213,29 +204,6 @@ export default {
   font-size: 0.875rem;
   color: var(--text-muted);
   margin: 0;
-}
-
-/* Bookmark Button */
-.bookmark-btn {
-  background: none;
-  border: none;
-  padding: 4px;
-  cursor: pointer;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
-.bookmark-btn:hover {
-  background: var(--bg-light);
-}
-
-.bookmark-btn.active {
-  color: var(--primary);
-  transform: scale(1.1);
 }
 
 .icon {

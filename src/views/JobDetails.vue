@@ -116,27 +116,6 @@
 
       <div class="separator"></div>
 
-      <!-- Company Info -->
-      <div class="section">
-        <div class="section-header">
-          <img src="/public/icons/building.svg" alt="Company" class="section-icon" />
-          <h3>About {{ job.company }}</h3>
-        </div>
-        <p class="section-text">
-          A leading employer in Singapore committed to providing quality jobs and excellent working conditions for all employees.
-        </p>
-        <div class="company-contact">
-        <div class="contact-item">
-          <img :src="envelopeIcon" alt="Email" />
-          <span>contact@{{ job.company.toLowerCase().replace(/\s+/g, '') }}.com</span>
-        </div>
-        <div class="contact-item">
-          <img :src="phoneIcon" alt="Phone" />
-          <span>+65 6XXX XXXX</span>
-        </div>
-        </div>
-      </div>
-
       <!-- Action Buttons -->
       <div class="actions" v-if="isJobSeeker">
         <button @click="applyForJob" class="btn btn-primary">
