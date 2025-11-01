@@ -69,7 +69,8 @@ export const quizApi = {
   generateQuiz: (data) => api.post('/api/quizzes/generate', data),
   getQuizzes: () => api.get('/api/quizzes'),
   getQuizById: (id) => api.get(`/api/quizzes/${id}`),
-  submitQuizResult: (data) => api.post('/api/quizzes/results', data)
+  submitQuizResult: (data) => api.post('/api/quizzes/results', data),
+  generateConstructionSpellingWord: (data) => api.post('/api/construction-spelling/generate', data)
 }
 
 export const jobApi = {

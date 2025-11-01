@@ -12,7 +12,18 @@
       </div>
 
       <div v-if="loading" class="loading-state">
-        <p>Generating spelling words...</p>
+        <div class="loading-content">
+          <div class="loading-image">
+            <img :src="currentLoadingImage" alt="Loading animation" />
+          </div>
+          <h2>Generating Your Quiz...</h2>
+          <p>Please wait while we create your personalized spelling quiz with AI</p>
+          <div class="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
       </div>
 
       <div v-else-if="!quizCompleted && currentWordData" class="spelling-game">
@@ -99,14 +110,19 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useToast } from '../composables/useToast'
+import { useRoute } from 'vue-router'
+import { quizApi } from '../services/api'
+import loading1 from '../assets/loading-1.png'
+import loading2 from '../assets/loading-2.png'
 
 export default {
   name: 'SpellingQuiz',
   setup() {
     const store = useStore()
+    const route = useRoute()
     const { showToast } = useToast()
 
     const currentWord = ref(0)
@@ -116,7 +132,9 @@ export default {
     const score = ref(0)
     const correctAnswers = ref(0)
     const words = ref([])
-    const loading = ref(false)
+    const loading = ref(true)
+    const currentLoadingImage = ref(loading1)
+    const loadingInterval = ref(null)
 
     const currentWordData = computed(() => words.value[currentWord.value] || null)
     const progress = computed(() => words.value.length > 0 ? ((currentWord.value + 1) / words.value.length) * 100 : 0)
@@ -139,7 +157,12 @@ export default {
 
       letterSlots.value = word.letters.map(() => ({ letter: null, letterId: null }))
       const uniqueWordLetters = [...new Set(word.letters)]
-      const extras = createExtraLetters(uniqueWordLetters, 3)
+      
+      // Use API distractors if available, otherwise generate random ones
+      const extras = word.distractors && word.distractors.length > 0 
+        ? word.distractors 
+        : createExtraLetters(uniqueWordLetters, 3)
+      
       const shuffled = [...word.letters, ...extras].sort(() => Math.random() - 0.5)
       availableLetters.value = shuffled.map(char => ({ char, used: false }))
 
@@ -377,19 +400,69 @@ export default {
 
     const fetchSpellingWords = async () => {
       loading.value = true
-      words.value = [
-        { word: 'SAFETY', hint: 'Protection from danger', letters: ['S','A','F','E','T','Y'], image: null },
-        { word: 'TOOLS', hint: 'Equipment used for work', letters: ['T','O','O','L','S'], image: null },
-        { word: 'HELMET', hint: 'Protective headgear worn on construction sites', letters: ['H','E','L','M','E','T'], image: null },
-        { word: 'HAMMER', hint: 'Tool for hitting nails', letters: ['H','A','M','M','E','R'], image: null }
-      ]
-      await nextTick()
-      initializeWord()
-      loading.value = false
+      
+      try {
+        // Get difficulty from query parameter, default to 'Beginner' if not provided
+        const difficulty = route.query.difficulty || 'Beginner'
+        
+        // Generate 5 words
+        const generatedWords = []
+        for (let i = 0; i < 5; i++) {
+          const response = await quizApi.generateConstructionSpellingWord({ difficulty })
+          if (response.data.success && response.data.word) {
+            const word = response.data.word
+            // Combine word letters with distractors for the letter pool
+            generatedWords.push({
+              word: word.word,
+              hint: word.hint,
+              letters: word.letters,
+              distractors: word.distractors || [],
+              image: null
+            })
+          }
+        }
+        
+        words.value = generatedWords
+        await nextTick()
+        initializeWord()
+      } catch (error) {
+        console.error('Error fetching spelling words:', error)
+        showToast('Failed to generate quiz. Please try again.', 'error')
+        // Fallback to hardcoded words if API fails
+        words.value = [
+          { word: 'SAFETY', hint: 'Protection from danger', letters: ['S','A','F','E','T','Y'], distractors: [], image: null },
+          { word: 'TOOLS', hint: 'Equipment used for work', letters: ['T','O','O','L','S'], distractors: [], image: null },
+          { word: 'HELMET', hint: 'Protective headgear worn on construction sites', letters: ['H','E','L','M','E','T'], distractors: [], image: null },
+          { word: 'HAMMER', hint: 'Tool for hitting nails', letters: ['H','A','M','M','E','R'], distractors: [], image: null }
+        ]
+        await nextTick()
+        initializeWord()
+      } finally {
+        loading.value = false
+      }
     }
+
+    // Start image alternation when loading starts
+    watch(loading, (newValue) => {
+      if (newValue) {
+        loadingInterval.value = setInterval(() => {
+          currentLoadingImage.value = currentLoadingImage.value === loading1 
+            ? loading2 
+            : loading1
+        }, 200)
+      } else {
+        if (loadingInterval.value) {
+          clearInterval(loadingInterval.value)
+          loadingInterval.value = null
+        }
+      }
+    }, { immediate: true })
 
     onMounted(fetchSpellingWords)
     onUnmounted(() => {
+      if (loadingInterval.value) {
+        clearInterval(loadingInterval.value)
+      }
       if (window.interact) {
         try {
           window.interact('.draggable-letter').unset()
@@ -409,6 +482,7 @@ export default {
       currentWordData,
       progress,
       isWordComplete,
+      currentLoadingImage,
       checkAnswer,
       resetCurrentWord,
       retakeQuiz,
@@ -468,13 +542,82 @@ export default {
 }
 
 .loading-state {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--bg);
   padding: 60px 20px;
   border-radius: 0 0 12px 12px;
-  text-align: center;
-  color: var(--text-muted);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-top: none;
+}
+
+.loading-content {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  max-width: 400px;
+  width: 90%;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.loading-content:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+.loading-image {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 25px;
+}
+
+.loading-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.3s ease;
+}
+
+.loading-content h2 {
+  font-size: 1.5rem;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.loading-content p {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.loading-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.loading-dots span {
+  width: 10px;
+  height: 10px;
+  background: var(--primary);
+  border-radius: 50%;
+  opacity: 0.7;
+  animation: bounce 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite both;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
 }
 
 .spelling-game {

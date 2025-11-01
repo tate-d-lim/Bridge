@@ -197,7 +197,10 @@ export default {
     const startQuiz = async (category, difficulty) => {
       // Handle spelling quiz routing
       if (category === 'Spelling Quiz') {
-        router.push('/spelling-quiz')
+        router.push({ 
+          path: '/spelling-quiz', 
+          query: { difficulty: difficulty } 
+        })
         return
       }
       

@@ -136,6 +136,55 @@ Make the words practical and relevant for job seekers in Singapore. The letters 
   return JSON.parse(jsonMatch[0]);
 }
 
+async function generateConstructionSpellingWord(difficulty) {
+  // Define word length based on difficulty
+  let wordLengthRange;
+  if (difficulty === 'beginner' || difficulty === 'Beginner') {
+    wordLengthRange = "4-5 letters";
+  } else if (difficulty === 'intermediate' || difficulty === 'Intermediate') {
+    wordLengthRange = "6-8 letters";
+  } else {
+    wordLengthRange = "9 letters and above";
+  }
+
+  const prompt = `Generate ONE construction-themed spelling word for a ${difficulty} level spelling quiz. The word must be exactly ${wordLengthRange} long.
+
+Format the response as a JSON object with this EXACT structure:
+{
+  "word": "WORD",
+  "hint": "A helpful hint describing what this construction term means",
+  "letters": ["W", "O", "R", "D"],
+  "distractors": ["X", "Y", "Z", "A"]
+}
+
+Requirements:
+- The word must be a construction-related term (e.g., tools, materials, techniques, safety equipment, building parts)
+- The word length must match ${wordLengthRange}
+- The letters array must contain ALL letters of the word as separate uppercase strings
+- The distractors array must contain exactly 4 different uppercase letters that are NOT in the word
+- The hint should be practical and helpful for someone learning construction terminology
+- Make it suitable for construction workers in Singapore
+- DO NOT RETURN REPEATED WORDS
+
+Respond with ONLY valid JSON, no additional text.`;
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+  });
+
+  const text = response.text;
+
+  // Try to extract JSON from the response
+  let jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    console.error("Gemini raw response:", text);
+    throw new Error("Failed to parse construction spelling word from AI response");
+  }
+
+  return JSON.parse(jsonMatch[0]);
+}
+
 app.get("/health", (req, res) => {
   res.json({ status: "ok", message: "Backend server is running" });
 });
@@ -203,6 +252,30 @@ app.post("/api/spelling-quiz/generate", async (req, res) => {
     console.error("Error generating spelling quiz:", error);
     res.status(500).json({
       error: "Failed to generate spelling quiz",
+      message: error.message,
+    });
+  }
+});
+
+// Generate Construction-themed Spelling Word
+app.post("/api/construction-spelling/generate", async (req, res) => {
+  try {
+    const { difficulty } = req.body;
+
+    if (!difficulty) {
+      return res.status(400).json({ error: "Difficulty is required" });
+    }
+
+    const word = await generateConstructionSpellingWord(difficulty);
+
+    res.json({
+      success: true,
+      word,
+    });
+  } catch (error) {
+    console.error("Error generating construction spelling word:", error);
+    res.status(500).json({
+      error: "Failed to generate construction spelling word",
       message: error.message,
     });
   }
