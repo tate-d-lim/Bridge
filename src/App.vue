@@ -60,7 +60,7 @@
 </template>
 
 <script>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
 import NavBar from './components/NavBar.vue'
 import BadgeNotification from './components/BadgeNotification.vue'
@@ -83,6 +83,31 @@ export default {
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
     const isEmployer = computed(() => store.getters['auth/isEmployer'])
     const isJobSeeker = computed(() => store.getters['auth/isJobSeeker'])
+
+    // Watch for authentication changes to initialize chat
+    watch(isAuthenticated, async (authenticated) => {
+      if (authenticated) {
+        const user = store.getters['auth/user']
+        if (user) {
+          try {
+            // Initialize chat connection and load rooms when user logs in
+            // This ensures unread badge works on all pages
+            await store.dispatch('chatAbly/initializeConnection', { clientId: user.uid })
+            await store.dispatch('chatAbly/loadChatRooms', { userId: user.uid })
+            await store.dispatch('chatAbly/listenToChatRoomUpdates', { userId: user.uid })
+          } catch (error) {
+            console.error('Error initializing chat in App.vue:', error)
+          }
+        }
+      } else {
+        // Close chat connection when user logs out
+        try {
+          store.dispatch('chatAbly/closeConnection')
+        } catch (error) {
+          console.error('Error closing chat connection in App.vue:', error)
+        }
+      }
+    }, { immediate: true })
 
     return {
       bridgeLogo,

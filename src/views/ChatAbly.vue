@@ -22,7 +22,14 @@
             @click="selectRoom(room)"
           >
             <div class="room-avatar">
-              {{ getRoomInitials(room) }}
+              <img 
+                v-if="getRoomPictureSync(room)" 
+                :src="getRoomPictureSync(room)" 
+                :alt="getRoomDisplayName(room)"
+                class="avatar-image"
+                @error="(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }"
+              />
+              <span v-show="!getRoomPictureSync(room)">{{ getRoomInitials(room) }}</span>
               <div v-if="isRoomActive(room)" class="online-indicator"></div>
             </div>
             <div class="room-info">
@@ -72,7 +79,14 @@
           <div class="chat-header">
             <div class="chat-header-info">
               <div class="chat-avatar">
-                {{ getRoomInitials(getCurrentRoom()) }}
+                <img 
+                  v-if="getCurrentRoom() && getRoomPictureSync(getCurrentRoom())" 
+                  :src="getRoomPictureSync(getCurrentRoom())" 
+                  :alt="getRoomDisplayName(getCurrentRoom())"
+                  class="avatar-image"
+                  @error="(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }"
+                />
+                <span v-show="!getCurrentRoom() || !getRoomPictureSync(getCurrentRoom())">{{ getRoomInitials(getCurrentRoom()) }}</span>
                 <div v-if="isRoomActive(getCurrentRoom())" class="online-indicator"></div>
               </div>
               <div class="chat-details">
@@ -310,7 +324,7 @@
 <script>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useStore } from 'vuex'
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore'
+import { collection, query, where, getDocs, orderBy, limit, getDoc, doc } from 'firebase/firestore'
 import { db } from '../firebase/config'
 
 export default {
@@ -362,6 +376,189 @@ export default {
     const getRoomInitials = (room) => {
       if (!room) return '?'
       return getInitials(getRoomDisplayName(room))
+    }
+    
+    // Cache for user profile pictures
+    const userPictureCache = new Map()
+    
+    // Get user profile picture URL
+    const getUserPicture = async (userId, room = null) => {
+      if (!userId) {
+        console.log('[头像检查] userId为空')
+        return null
+      }
+      
+      // Check cache first
+      if (userPictureCache.has(userId)) {
+        const cached = userPictureCache.get(userId)
+        console.log('[头像检查] 从缓存获取:', userId, cached)
+        return cached
+      }
+      
+      // If current user, return from userProfile
+      if (userId === currentUser.value?.uid) {
+        const pictureUrl = userProfile.value?.photoURL || userProfile.value?.profilePicture || userProfile.value?.profile_picture
+        console.log('[头像检查] 当前用户头像:', userId, pictureUrl)
+        if (pictureUrl) {
+          userPictureCache.set(userId, pictureUrl)
+          return pictureUrl
+        }
+        return null
+      }
+      
+      // Check if room has participant profile pictures
+      if (room && room.participantPictures && Array.isArray(room.participantPictures)) {
+        const participantIndex = room.participants?.indexOf(userId)
+        if (participantIndex !== -1 && room.participantPictures[participantIndex]) {
+          const pictureUrl = room.participantPictures[participantIndex]
+          console.log('[头像检查] 从room获取:', userId, pictureUrl)
+          userPictureCache.set(userId, pictureUrl)
+          return pictureUrl
+        }
+      }
+      
+      // Fetch from Firestore if not cached
+      try {
+        console.log('[头像检查] 从Firestore获取:', userId)
+        const userDoc = await getDoc(doc(db, 'users', userId))
+        if (userDoc.exists()) {
+          const userData = userDoc.data()
+          console.log('[头像检查] 用户数据:', userId, {
+            hasPhotoURL: !!userData.photoURL,
+            hasProfilePicture: !!userData.profilePicture,
+            hasProfile_picture: !!userData.profile_picture,
+            photoURL: userData.photoURL ? 'base64 image (length: ' + userData.photoURL.length + ')' : undefined,
+            profilePicture: userData.profilePicture,
+            profile_picture: userData.profile_picture,
+            allKeys: Object.keys(userData)
+          })
+          
+          // Check photoURL first (used by uploadProfilePicture), then fallback to profilePicture/profile_picture
+          const pictureUrl = userData.photoURL || userData.profilePicture || userData.profile_picture || null
+          
+          // Validate URL format
+          if (pictureUrl) {
+            // Check if it's a base64 image (data:image/...)
+            if (typeof pictureUrl === 'string' && pictureUrl.startsWith('data:image/')) {
+              console.log('[头像检查] Base64图片:', userId, '长度:', pictureUrl.length)
+              userPictureCache.set(userId, pictureUrl)
+              return pictureUrl
+            }
+            // Check if it's a valid URL (starts with http:// or https://)
+            else if (typeof pictureUrl === 'string' && (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://'))) {
+              console.log('[头像检查] 有效URL:', userId, pictureUrl)
+              userPictureCache.set(userId, pictureUrl)
+              return pictureUrl
+            } else if (typeof pictureUrl === 'string' && pictureUrl.trim().length > 0) {
+              // If it's a storage path, we might need to construct a download URL
+              // For now, just return it and let the @error handler deal with invalid URLs
+              console.log('[头像检查] 可能是存储路径:', userId, pictureUrl)
+              userPictureCache.set(userId, pictureUrl)
+              return pictureUrl
+            }
+          } else {
+            console.log('[头像检查] 用户没有头像:', userId)
+          }
+        } else {
+          console.log('[头像检查] 用户文档不存在:', userId)
+        }
+      } catch (error) {
+        console.error('[头像检查] 错误获取用户头像:', userId, error)
+      }
+      
+      return null
+    }
+    
+    // Get room participant picture (for room display)
+    const getRoomPicture = async (room) => {
+      if (!room || !room.participants) {
+        console.log('[头像检查] Room或participants为空:', room?.id)
+        return null
+      }
+      
+      // For direct messages, get the other participant's picture
+      if (room.participants.length === 2) {
+        const otherParticipantId = room.participants.find(p => p !== currentUser.value?.uid)
+        console.log('[头像检查] 查找其他参与者:', room.id, {
+          currentUserId: currentUser.value?.uid,
+          otherParticipantId,
+          participants: room.participants
+        })
+        if (otherParticipantId) {
+          const picture = await getUserPicture(otherParticipantId, room)
+          console.log('[头像检查] Room头像结果:', room.id, picture)
+          return picture
+        }
+      }
+      
+      // For group chats, return null (use initials)
+      console.log('[头像检查] 群聊或无其他参与者:', room.id)
+      return null
+    }
+    
+    // Reactive refs for storing profile pictures
+    const roomPictures = ref(new Map())
+    
+    // Load pictures for all rooms
+    const loadRoomPictures = async () => {
+      if (!chatRooms.value || chatRooms.value.length === 0) {
+        console.log('[头像检查] 没有聊天房间')
+        return
+      }
+      
+      console.log('[头像检查] 开始加载房间头像，房间数量:', chatRooms.value.length)
+      const newPictures = new Map(roomPictures.value)
+      let hasChanges = false
+      
+      // Load pictures for all rooms in parallel for better performance
+      const picturePromises = chatRooms.value.map(async (room) => {
+        if (!newPictures.has(room.id)) {
+          try {
+            const picture = await getRoomPicture(room)
+            if (picture) {
+              newPictures.set(room.id, picture)
+              hasChanges = true
+              console.log('[头像检查] 成功加载房间头像:', room.id, picture)
+            } else {
+              console.log('[头像检查] 房间没有头像:', room.id)
+            }
+          } catch (error) {
+            console.error('[头像检查] 加载房间头像错误:', room.id, error)
+          }
+        } else {
+          console.log('[头像检查] 房间头像已缓存:', room.id, newPictures.get(room.id))
+        }
+      })
+      
+      await Promise.all(picturePromises)
+      
+      // Only update if there are new pictures to trigger reactivity
+      if (hasChanges) {
+        console.log('[头像检查] 更新头像Map，新头像数量:', newPictures.size)
+        roomPictures.value = newPictures
+      } else {
+        console.log('[头像检查] 没有新头像需要更新')
+      }
+    }
+    
+    // Watch chatRooms to load pictures when rooms change
+    // Use nextTick to ensure this doesn't block message rendering
+    watch(chatRooms, () => {
+      nextTick(() => {
+        loadRoomPictures()
+      })
+    }, { immediate: true })
+    
+    // Get picture for a specific room (synchronous access to cached data)
+    const getRoomPictureSync = (room) => {
+      if (!room) {
+        return null
+      }
+      const picture = roomPictures.value.get(room.id) || null
+      if (!picture) {
+        console.log('[头像检查] getRoomPictureSync: 房间没有头像缓存', room.id, 'Map大小:', roomPictures.value.size)
+      }
+      return picture
     }
     
     const getRoomDisplayName = (room) => {
@@ -768,47 +965,29 @@ export default {
     
     // Lifecycle
     onMounted(async () => {
-      console.log('ChatAbly mounted, currentUser:', currentUser.value)
-      console.log('Auth store state:', store.state.auth)
-      
       if (currentUser.value) {
         try {
-          console.log('Initializing Ably connection with clientId:', currentUser.value.uid)
           await store.dispatch('chatAbly/initializeConnection', {
             clientId: currentUser.value.uid
           })
-          console.log('Ably connection initialized successfully')
           
           // Load existing chat rooms from Firebase
           await store.dispatch('chatAbly/loadChatRooms', {
             userId: currentUser.value.uid
           })
-          console.log('Chat rooms loaded from Firebase')
           
           // Set up real-time listener for chat room updates
           chatRoomUnsubscribe.value = await store.dispatch('chatAbly/listenToChatRoomUpdates', {
             userId: currentUser.value.uid
           })
-          console.log('Real-time chat room listener set up')
-          
-          // Force update connection status after a short delay
-          setTimeout(() => {
-            console.log('Forcing connection status update...')
-            const currentStatus = store.getters['chatAbly/connectionStatus']
-            const isConnected = store.getters['chatAbly/isConnected']
-            console.log('Current status from store:', { currentStatus, isConnected })
-          }, 1000)
         } catch (error) {
           console.error('Error initializing Ably:', error)
         }
       } else {
-        console.warn('No current user found, cannot initialize Ably')
         // Try to get user from auth store
         const authUser = store.getters['auth/currentUser']
-        console.log('Auth user from getter:', authUser)
         if (authUser) {
           try {
-            console.log('Found auth user, initializing Ably with:', authUser.uid)
             await store.dispatch('chatAbly/initializeConnection', {
               clientId: authUser.uid
             })
@@ -828,7 +1007,6 @@ export default {
       // Cleanup chat room listener
       if (chatRoomUnsubscribe.value) {
         chatRoomUnsubscribe.value()
-        console.log('Chat room listener cleaned up')
       }
       
       if (activeRoom.value) {
@@ -846,18 +1024,12 @@ export default {
     }, { deep: true }) // 深度监听消息数组变化
     
     // Watch connection status changes
-    watch(() => store.getters['chatAbly/isConnected'], (newValue, oldValue) => {
-      // Only log when connection status actually changes
-      if (newValue !== oldValue) {
-        console.log('Connection status changed from', oldValue, 'to', newValue)
-      }
+    watch(() => store.getters['chatAbly/isConnected'], () => {
+      // Connection status changed - UI will update automatically
     })
     
-    watch(() => store.getters['chatAbly/connectionStatus'], (newValue, oldValue) => {
-      // Only log when connection status actually changes
-      if (newValue !== oldValue) {
-        console.log('Connection status string changed from', oldValue, 'to', newValue)
-      }
+    watch(() => store.getters['chatAbly/connectionStatus'], () => {
+      // Connection status changed - UI will update automatically
     })
     
     // Watch for active room changes to scroll to bottom
@@ -874,8 +1046,17 @@ export default {
     
     // Computed property to filter out empty messages with memoization
     const filteredMessages = computed(() => {
-      const messages = getMessages(activeRoom.value)
-      if (!messages || messages.length === 0) return []
+      const roomName = activeRoom.value
+      
+      if (!roomName) {
+        return []
+      }
+      
+      const messages = getMessages(roomName)
+      
+      if (!messages || messages.length === 0) {
+        return []
+      }
       
       // Use a more efficient filter
       return messages.filter(msg => {
@@ -906,6 +1087,9 @@ export default {
       getRoomDisplayName,
       getUsernameFromId,
       getCachedUsername,
+      getUserPicture,
+      getRoomPicture,
+      getRoomPictureSync,
       formatTime,
       formatMessageTime,
       scrollToBottom,
@@ -1091,6 +1275,22 @@ export default {
   font-size: 1.1rem;
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.room-avatar .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.room-avatar > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .chat-room-item:hover .room-avatar {
@@ -1364,6 +1564,22 @@ export default {
   font-size: 1.2rem;
   box-shadow: var(--shadow-sm);
   transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.chat-avatar .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.chat-avatar > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .chat-avatar:hover {

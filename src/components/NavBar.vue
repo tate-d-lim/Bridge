@@ -67,8 +67,11 @@
 
           <!-- Messages Icon -->
           <router-link to="/chat" class="nav-link chat-icon" @click="closeMenu">
-            <img v-if="isDarkMode" src="../assets/darkModeMessages.png" alt="Messages" class="envelope-icon" />
-            <img v-else src="../assets/messages-light.svg" alt="Messages" class="envelope-icon" />
+            <div class="chat-icon-wrapper">
+              <img v-if="isDarkMode" src="../assets/darkModeMessages.png" alt="Messages" class="envelope-icon" />
+              <img v-else src="../assets/messages-light.svg" alt="Messages" class="envelope-icon" />
+              <span v-if="totalUnreadCount > 0" class="unread-badge-nav">{{ totalUnreadCount > 99 ? '99+' : totalUnreadCount }}</span>
+            </div>
           </router-link>
 
           <!-- User Menu -->
@@ -154,6 +157,45 @@ export default {
         .slice(0, 2)
     })
 
+    // Calculate total unread message count
+    // Access unreadCounts directly from state to ensure reactivity
+    const totalUnreadCount = computed(() => {
+      if (!isAuthenticated.value) return 0
+      
+      // Get all chat rooms from store
+      const chatRooms = store.getters['chatAbly/chatRooms'] || []
+      
+      // Get unreadCounts Map from state (accessing the Map itself ensures reactivity)
+      const unreadCounts = store.state.chatAbly.unreadCounts
+      if (!unreadCounts || !(unreadCounts instanceof Map)) {
+        return 0
+      }
+      
+      // Sum up unread counts for all rooms
+      // Accessing Map.size and iterating ensures Vue tracks changes
+      let total = 0
+      for (const room of chatRooms) {
+        // Access the Map value - Vue will track this access
+        const count = unreadCounts.get(room.id) || 0
+        total += count
+      }
+      
+      // Also check for temporary unread counts stored with roomName (for rooms being created)
+      // Iterate through all entries in the Map to ensure Vue tracks all changes
+      for (const [key, value] of unreadCounts.entries()) {
+        // If key is a roomName (starts with 'chat_') and not already counted, add it
+        if (typeof key === 'string' && key.startsWith('chat_') && !chatRooms.some(r => r.id === key || r.roomName === key)) {
+          total += value || 0
+        }
+      }
+      
+      // Force Vue to track the Map by accessing its size property
+      // This ensures reactivity when Map is replaced with a new instance
+      const mapSize = unreadCounts.size
+      
+      return total
+    })
+
     const getHomeRoute = computed(() => {
       if (isAuthenticated.value) {
         if (isEmployer.value) {
@@ -222,6 +264,7 @@ export default {
       userProfile,
       userInitials,
       getHomeRoute,
+      totalUnreadCount,
       toggleMenu,
       closeMenu,
       toggleUserDropdown,
@@ -333,6 +376,13 @@ export default {
 .chat-icon {
   display: flex;
   align-items: center;
+  position: relative;
+}
+
+.chat-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .envelope-icon {
@@ -344,6 +394,36 @@ export default {
 
 .chat-icon:hover .envelope-icon {
   transform: scale(1.1);
+}
+
+.unread-badge-nav {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 0 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--bg);
+  z-index: 10;
+  animation: pulse-badge-nav 2s infinite;
+}
+
+.dark-mode .unread-badge-nav {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes pulse-badge-nav {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .dark-mode-toggle {
