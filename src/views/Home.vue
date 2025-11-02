@@ -1,9 +1,10 @@
 <template>
   <div class="home">
     <!-- Hero Section - Only show when not logged in -->
-    <section v-if="!isAuthenticated" class="hero">
-        <div class="hero-content">
-          <h1>
+    <section v-if="!isAuthenticated" class="hero-section">
+      <div class="hero-content">
+        <div class="hero-text">
+          <h1 class="hero-title">
             <GradientText
               :colors="['var(--primary)', '#ffffff', 'oklch(0.7 0.1 245)', '#ffffff', 'var(--primary)']"
               :animationSpeed="3"
@@ -11,23 +12,30 @@
               BRIDGE
             </GradientText>
           </h1>
-        <p class="hero-subtitle">
-          <TextType 
-            :text="['Matching Job-Seekers with Singaporean Employers', 'Connecting Talent with Opportunities', 'Building Careers in Singapore']"
-            :typingSpeed="75"
-            :pauseDuration="2000"
-            :showCursor="true"
-            cursorCharacter="|"
-          />
-        </p>
-        <p class="hero-description">
-          Build your career in Singapore today.
-        </p>
-        <div class="hero-buttons">
-          <router-link to="/login" class="btn btn-primary">Login</router-link>
-          <router-link to="/register" class="btn btn-secondary">Sign Up</router-link>
+          <p class="hero-subtitle">
+            <TextType 
+              :text="['Matching Job-Seekers with Singaporean Employers', 'Connecting Talent with Opportunities', 'Building Careers in Singapore']"
+              :typingSpeed="75"
+              :pauseDuration="2000"
+              :showCursor="true"
+              cursorCharacter="|"
+            />
+          </p>
+          <p class="hero-description">
+            Your pathway to success in Singapore. Connect with top employers and build your career today.
+          </p>
+          <div class="hero-actions">
+            <router-link to="/register" class="btn btn-primary btn-hero">
+              Get Started
+            </router-link>
+            <router-link to="/login" class="btn btn-secondary btn-hero">
+              Sign In
+            </router-link>
+          </div>
         </div>
       </div>
+      
+      <!-- Carousel Background -->
       <div class="hero-bg">
         <div class="carousel-container">
           <div class="carousel-wrapper">
@@ -49,36 +57,77 @@
               @click="currentSlide = index"
               class="dot"
               :class="{ active: currentSlide === index }"
+              :aria-label="`Go to slide ${index + 1}`"
             ></button>
           </div>
 
           <!-- Carousel Arrows -->
-          <button @click="previousSlide" class="carousel-arrow carousel-arrow-prev">‹</button>
-          <button @click="nextSlide" class="carousel-arrow carousel-arrow-next">›</button>
+          <button 
+            @click="previousSlide" 
+            class="carousel-arrow carousel-arrow-prev"
+            aria-label="Previous slide"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button 
+            @click="nextSlide" 
+            class="carousel-arrow carousel-arrow-next"
+            aria-label="Next slide"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
         <div class="hero-overlay"></div>
       </div>
     </section>
 
     <!-- How It Works Section -->
-    <HowItWorks />
+    <section class="how-it-works-section">
+      <HowItWorks />
+    </section>
 
     <!-- Stats Section - Only show when not logged in -->
-    <StatsSection v-if="!isAuthenticated" class = "tate"/>
+    <section v-if="!isAuthenticated" class="stats-section">
+      <StatsSection />
+    </section>
     
     <!-- Category Chips Section -->
-    <CategoryChips @category-selected="onCategorySelected" class = ""/>
-
-    <!-- Call to Action for Browse Jobs -->
-    <section class="cta-browse-jobs tate">
-      <div class="container">
-        <h2>Ready to Find Your Next Job?</h2>
-        <p>Browse through hundreds of job opportunities from top employers in Singapore</p>
-        <router-link to="/browse-jobs" class="btn btn-primary btn-large">Browse All Jobs</router-link>
+    <section class="categories-section">
+      <div class="section-container">
+        <div class="section-header">
+          <h2 class="section-title">Explore Opportunities</h2>
+          <p class="section-description">
+            Browse jobs by category and find the perfect match for your skills
+          </p>
+        </div>
+        <CategoryChips @category-selected="onCategorySelected" />
       </div>
     </section>
 
-
+    <!-- Call to Action Section -->
+    <section class="cta-section">
+      <div class="section-container">
+        <div class="cta-content">
+          <div class="cta-icon">
+            <img src="../assets/briefcase.svg" alt="Briefcase" class="cta-icon-img" />
+          </div>
+          <h2 class="cta-title">Ready to Find Your Next Job?</h2>
+          <p class="cta-description">
+            Browse through hundreds of job opportunities from top employers in Singapore
+          </p>
+          <router-link to="/browse-jobs" class="btn btn-primary btn-cta">
+            Browse All Jobs
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </router-link>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -90,9 +139,7 @@ import HowItWorks from '../components/HowItWorks.vue'
 import StatsSection from '../components/StatsSection.vue'
 import GradientText from '../components/GradientText.vue'
 import TextType from '../components/TextType.vue'
-import migrantWorkerHappy from '../assets/migrantWorkerHappy.png'
-import migrantWorker1 from '../assets/migrantWorker1.png'
-import migrantWorker2 from '../assets/migrantWorker2.png'
+import { getCarouselImagesFromConfig } from '../config/carousel.js'
 
 export default {
   name: 'Home',
@@ -106,17 +153,14 @@ export default {
   setup() {
     const store = useStore()
     const loading = computed(() => store.getters['jobs/loading'])
-    
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
     
     const currentSlide = ref(0)
     let autoSlideInterval = null
 
-    const heroImages = [
-      { src: migrantWorkerHappy, alt: 'Happy Migrant Workers' },
-      { src: migrantWorker1, alt: 'Migrant Workers' },
-      { src: migrantWorker2, alt: 'Professional Workers' }
-    ]
+    // Automatically load ALL images from src/assets/carousel/ folder
+    // Just add images to that folder and they'll appear automatically!
+    const heroImages = getCarouselImagesFromConfig()
 
     const nextSlide = () => {
       currentSlide.value = (currentSlide.value + 1) % heroImages.length
@@ -129,7 +173,7 @@ export default {
     const startAutoSlide = () => {
       autoSlideInterval = setInterval(() => {
         nextSlide()
-      }, 5000) // Change slide every 5 seconds
+      }, 5000)
     }
 
     const stopAutoSlide = () => {
@@ -139,7 +183,6 @@ export default {
     }
 
     const onCategorySelected = (category) => {
-      // Redirect to browse jobs page with selected category
       window.location.href = `/browse-jobs?category=${category.id}`
     }
 
@@ -174,81 +217,103 @@ export default {
 </script>
 
 <style scoped>
-/* Home page specific styles - most styles are now in external stylesheet */
 .home {
   width: 100%;
+  overflow-x: hidden;
 }
 
-.hero {
+/* Hero Section */
+.hero-section {
   position: relative;
+  min-height: 90vh;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  padding: 200px 60px 80px; /* move content much lower */
-  gap: 80px;
-  width: 100%;
-  margin: 0;
   overflow: hidden;
-  min-height: 80vh;
+  padding: 120px 20px 80px;
 }
 
 .hero-content {
-  flex: 1;
-  max-width: 600px;
   position: relative;
-  z-index: 1; /* above bg */
-  text-align: center; /* center text horizontally */
-  margin: 0 auto; /* center the block */
+  z-index: 2;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
 }
 
-.hero h1 {
-  font-size: 3.5rem;
+.hero-text {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-size: clamp(3rem, 8vw, 5rem);
   color: #fff;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   font-weight: 700;
-  line-height: 1.2;
-}
-
-.hero h1{
-  color: #fff;
-  display: inline-block;
-  animation: bridgeSlideIn 700ms ease-out both;
-}
-
-@keyframes bridgeSlideIn {
-  0% {
-    opacity: 0;
-    transform: translateX(-14px);
-    letter-spacing: 0.5px;
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0);
-    letter-spacing: 0;
-  }
+  line-height: 1.1;
+  animation: fadeInUp 0.8s ease-out;
 }
 
 .hero-subtitle {
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
   color: #fff;
-  margin-bottom: 15px;
+  margin-bottom: 16px;
   font-weight: 600;
+  min-height: 60px;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
 }
 
 .hero-description {
-  font-size: 1.1rem;
-  color: #fff;
-  margin-bottom: 30px;
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 40px;
   line-height: 1.6;
+  animation: fadeInUp 0.8s ease-out 0.4s both;
 }
 
-.hero-buttons {
+.hero-actions {
   display: flex;
-  gap: 15px;
+  gap: 16px;
   justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.8s ease-out 0.6s both;
 }
 
-/* Background carousel sits behind content */
+.btn-hero {
+  padding: 14px 32px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+
+.btn-primary.btn-hero {
+  background: #fff;
+  color: var(--text);
+  border: 2px solid #fff;
+}
+
+.btn-primary.btn-hero:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary.btn-hero {
+  background: transparent;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+.btn-secondary.btn-hero:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Hero Background */
 .hero-bg {
   position: absolute;
   inset: 0;
@@ -260,7 +325,7 @@ export default {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.4) 100%);
   z-index: 1;
 }
 
@@ -286,7 +351,7 @@ export default {
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  transition: opacity 0.8s ease-in-out;
 }
 
 .carousel-slide.active {
@@ -297,19 +362,22 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.9;
 }
 
 /* Carousel Navigation Dots */
 .carousel-dots {
   position: absolute;
-  bottom: 24px;
+  bottom: 32px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  gap: 8px;
-  z-index: 2;
+  gap: 10px;
+  z-index: 3;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
 }
 
 .dot {
@@ -317,13 +385,18 @@ export default {
   height: 10px;
   border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.4);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.dot:hover {
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .dot.active {
-  background: var(--primary);
+  background: #fff;
   width: 24px;
   border-radius: 5px;
 }
@@ -333,195 +406,249 @@ export default {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0);
-  border: none;
-  width: 40px;
-  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  font-size: 24px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s;
-  z-index: 2;
+  transition: all 0.3s ease;
+  z-index: 3;
+  padding: 0;
 }
 
 .carousel-arrow:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-50%) scale(1.1);
 }
 
 .carousel-arrow-prev {
-  left: 10px;
+  left: 24px;
 }
 
 .carousel-arrow-next {
-  right: 10px;
+  right: 24px;
 }
 
-.browse-jobs {
-  padding: 80px 20px;
+/* Section Styles */
+.section-container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 20px;
 }
 
-.jobs-header {
+.section-header {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 48px;
 }
 
-.jobs-header h2 {
-  font-size: 2.5rem;
-  color: var(--text);
-  margin-bottom: 15px;
-}
-
-.jobs-header p {
-  font-size: 1.1rem;
-  color: var(--text-muted);
-}
-
-.filters-container {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
-  background: var(--bg);
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-}
-
-.search-input,
-.filter-select {
-  flex: 1;
-  min-width: 200px;
-  padding: 12px 15px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 1rem;
-  background: var(--bg);
-  color: var(--text);
-}
-
-.search-input:focus,
-.filter-select:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.jobs-container {
-  min-height: 300px;
-}
-
-.loading,
-.no-results {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-muted);
-  font-size: 1.1rem;
-}
-
-.jobs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 25px;
-}
-
-.tate {
-  background: rgb(205, 214, 255);
-  /* background-color: oklch(0.6 0.3 245); */
-  color: black;
-
-}
-
-.cta-browse-jobs {
-  /* background: rgb(232, 240, 255); */
-  padding: 80px 20px;
-  text-align: center;
-}
-
-.cta-browse-jobs h2 {
-  font-size: 2.5rem;
+.section-title {
+  font-size: clamp(2rem, 4vw, 2.75rem);
   font-weight: 700;
   color: var(--text);
   margin-bottom: 16px;
   line-height: 1.2;
 }
 
-.cta-browse-jobs p {
-  font-size: 1.1rem;
+.section-description {
+  font-size: clamp(1rem, 2vw, 1.125rem);
   color: var(--text-muted);
-  margin-bottom: 30px;
-  line-height: 1.6;
   max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
+  line-height: 1.6;
 }
 
-/* Make hero buttons white without affecting global buttons */
-.hero .hero-buttons .btn {
-  background: #ffffff;
-  color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+/* How It Works Section */
+.how-it-works-section {
+  padding: 80px 0;
+  background: var(--bg);
 }
 
-.hero .hero-buttons .btn:hover {
-  background: rgba(255, 255, 255, 0.9);
+/* Stats Section */
+.stats-section {
+  padding: 80px 0;
+  background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.05) 0%, var(--bg) 100%);
 }
 
-.cta {
-  background: linear-gradient(135deg, var(--primary), oklch(0.3 0.1 245));
-  color: var(--bg-light);
-  padding: 80px 20px;
+/* Categories Section */
+.categories-section {
+  padding: 80px 0;
+  background: var(--bg-light);
+}
+
+/* CTA Section */
+.cta-section {
+  padding: 100px 0;
+  background: linear-gradient(135deg, var(--primary) 0%, oklch(0.4 0.15 245) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.cta-content {
+  position: relative;
+  z-index: 1;
   text-align: center;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
-.cta h2 {
-  font-size: 2.5rem;
-  margin-bottom: 20px;
+.cta-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.cta p {
-  font-size: 1.2rem;
-  margin-bottom: 30px;
-  opacity: 0.9;
+.cta-icon-img {
+  width: 40px;
+  height: 40px;
+  filter: brightness(0) invert(1);
 }
 
+.cta-title {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.cta-description {
+  font-size: clamp(1rem, 2vw, 1.125rem);
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.btn-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 40px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  background: #fff;
+  color: var(--primary);
+  border: 2px solid #fff;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.btn-cta:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.btn-icon {
+  transition: transform 0.3s ease;
+}
+
+.btn-cta:hover .btn-icon {
+  transform: translateX(4px);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-  .hero {
+  .hero-section {
+    min-height: 70vh;
+    padding: 100px 20px 60px;
+  }
+
+  .hero-actions {
     flex-direction: column;
-    text-align: center;
-    padding: 80px 20px;
+    align-items: center;
   }
 
-  .hero h1 {
-    font-size: 2.5rem;
-  }
-
-  .hero-buttons {
-    justify-content: center;
-  }
-
-  .stats {
-    flex-direction: column;
-  }
-
-  .filters-container {
-    flex-direction: column;
-  }
-
-  .search-input,
-  .filter-select {
+  .btn-hero {
     width: 100%;
+    max-width: 280px;
   }
 
-  .jobs-grid {
-    grid-template-columns: 1fr;
+  .carousel-arrow {
+    width: 40px;
+    height: 40px;
   }
 
+  .carousel-arrow-prev {
+    left: 12px;
+  }
+
+  .carousel-arrow-next {
+    right: 12px;
+  }
+
+  .carousel-dots {
+    bottom: 20px;
+    padding: 6px 12px;
+  }
+
+  .how-it-works-section,
+  .stats-section,
+  .categories-section {
+    padding: 60px 0;
+  }
+
+  .cta-section {
+    padding: 60px 0;
+  }
+
+  .section-header {
+    margin-bottom: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 80px 16px 40px;
+  }
+
+  .carousel-dots {
+    gap: 8px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dot.active {
+    width: 20px;
+  }
 }
 </style>
-
