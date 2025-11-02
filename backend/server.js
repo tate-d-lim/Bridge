@@ -223,33 +223,40 @@ app.post("/api/quizzes/generate", async (req, res) => {
   }
 });
 
-// Generate Spelling Quiz using Gemini AI
+// Generate Spelling Quiz using Gemini AI (can generate or accept pre-generated words)
 app.post("/api/spelling-quiz/generate", async (req, res) => {
   try {
-    const { skill, difficulty, numberOfWords = 5 } = req.body;
+    const { skill, difficulty, numberOfWords = 5, words } = req.body;
 
     if (!skill || !difficulty) {
       return res.status(400).json({ error: "Skill and difficulty are required" });
     }
 
-    console.log('[spelling-quiz] generate request:', { skill, difficulty, numberOfWords });
+    console.log('[spelling-quiz] generate request:', { skill, difficulty, numberOfWords, hasWords: !!words });
 
-    const words = await generateSpellingWords(numberOfWords, difficulty, skill);
+    let quizWords = words;
+    
+    // If words are not provided, generate them using AI
+    if (!quizWords || !Array.isArray(quizWords) || quizWords.length === 0) {
+      quizWords = await generateSpellingWords(numberOfWords, difficulty, skill);
 
-    // DEBUG: ensure we got an array
-    if (!Array.isArray(words)) {
-      console.error('[spelling-quiz] generated words is not an array:', words);
-      return res.status(500).json({ error: 'AI returned unexpected format for spelling words' });
+      // DEBUG: ensure we got an array
+      if (!Array.isArray(quizWords)) {
+        console.error('[spelling-quiz] generated words is not an array:', quizWords);
+        return res.status(500).json({ error: 'AI returned unexpected format for spelling words' });
+      }
+      console.log('[spelling-quiz] generated words:', quizWords);
+    } else {
+      console.log('[spelling-quiz] using provided words:', quizWords.length);
     }
-    console.log('[spelling-quiz] generated words:', words);
 
     // Save spelling quiz to Firestore
     const quizRef = await db.collection("spellingQuizzes").add({
       skill,
       difficulty,
-      words,
+      words: quizWords,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      numberOfWords: words.length,
+      numberOfWords: quizWords.length,
     });
 
     console.log('[spelling-quiz] saved quiz id:', quizRef.id);
@@ -257,7 +264,7 @@ app.post("/api/spelling-quiz/generate", async (req, res) => {
     res.json({
       success: true,
       quizId: quizRef.id,
-      quiz: { id: quizRef.id, skill, difficulty, words },
+      quiz: { id: quizRef.id, skill, difficulty, words: quizWords },
     });
   } catch (error) {
     console.error("Error generating spelling quiz:", error);
@@ -268,6 +275,59 @@ app.post("/api/spelling-quiz/generate", async (req, res) => {
   }
 });
 
+// Generate Construction Spelling Word (one word at a time)
+app.post("/api/construction-spelling/generate", async (req, res) => {
+  try {
+    const { difficulty = 'Beginner' } = req.body;
+
+    console.log('[construction-spelling] generate request:', { difficulty });
+
+    const word = await generateConstructionSpellingWord(difficulty);
+
+    // DEBUG: ensure we got a valid word object
+    if (!word || !word.word || !word.letters) {
+      console.error('[construction-spelling] generated word is invalid:', word);
+      return res.status(500).json({ error: 'AI returned unexpected format for spelling word' });
+    }
+    console.log('[construction-spelling] generated word:', word);
+
+    res.json({
+      success: true,
+      word: word
+    });
+  } catch (error) {
+    console.error("Error generating construction spelling word:", error);
+    res.status(500).json({
+      error: "Failed to generate construction spelling word",
+      message: error.message,
+    });
+  }
+});
+
+// Get all spelling quizzes
+app.get("/api/spelling-quizzes", async (req, res) => {
+  try {
+    const snapshot = await db.collection("spellingQuizzes").get();
+    const quizzes = [];
+    snapshot.forEach((doc) => quizzes.push({ id: doc.id, ...doc.data() }));
+    res.json({ success: true, quizzes });
+  } catch (error) {
+    console.error("Error fetching spelling quizzes:", error);
+    res.status(500).json({ error: "Failed to fetch spelling quizzes" });
+  }
+});
+
+// Get spelling quiz by ID
+app.get("/api/spelling-quizzes/:id", async (req, res) => {
+  try {
+    const doc = await db.collection("spellingQuizzes").doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: "Spelling quiz not found" });
+    res.json({ success: true, quiz: { id: doc.id, ...doc.data() } });
+  } catch (error) {
+    console.error("Error fetching spelling quiz:", error);
+    res.status(500).json({ error: "Failed to fetch spelling quiz" });
+  }
+});
 
 // Get all quizzes
 app.get("/api/quizzes", async (req, res) => {

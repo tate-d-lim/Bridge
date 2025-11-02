@@ -28,6 +28,13 @@ service cloud.firestore {
       allow create, update: if request.auth != null;
     }
     
+    // Spelling Quizzes
+    match /spellingQuizzes/{quizId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if false; // Spelling quizzes are immutable once created
+    }
+    
     // Quiz Results - NEW
     match /quizResults/{resultId} {
       allow read: if request.auth != null;

@@ -155,16 +155,36 @@ export default {
       const word = currentWordData.value
       if (!word) return
 
-      letterSlots.value = word.letters.map(() => ({ letter: null, letterId: null }))
-      const uniqueWordLetters = [...new Set(word.letters)]
+      // Ensure word and letters are normalized and match
+      const normalizedWord = (word.word || '').toUpperCase().trim()
+      let normalizedLetters = word.letters
+        ? word.letters.map(l => (l || '').toUpperCase().trim()).filter(l => l)
+        : []
+      
+      // Validate that letters array matches word length
+      if (normalizedWord.length !== normalizedLetters.length) {
+        console.warn('Word length mismatch:', {
+          word: normalizedWord,
+          wordLength: normalizedWord.length,
+          letters: normalizedLetters,
+          lettersLength: normalizedLetters.length
+        })
+        // If mismatch, create letters array from word
+        if (normalizedWord.length > 0) {
+          normalizedLetters = normalizedWord.split('')
+        }
+      }
+
+      letterSlots.value = normalizedLetters.map(() => ({ letter: null, letterId: null }))
+      const uniqueWordLetters = [...new Set(normalizedLetters)]
       
       // Use API distractors if available, otherwise generate random ones
       const extras = word.distractors && word.distractors.length > 0 
-        ? word.distractors 
+        ? word.distractors.map(d => (d || '').toUpperCase().trim()).filter(d => d)
         : createExtraLetters(uniqueWordLetters, 3)
       
-      const shuffled = [...word.letters, ...extras].sort(() => Math.random() - 0.5)
-      availableLetters.value = shuffled.map(char => ({ char, used: false }))
+      const shuffled = [...normalizedLetters, ...extras].sort(() => Math.random() - 0.5)
+      availableLetters.value = shuffled.map(char => ({ char: char.toUpperCase(), used: false }))
 
       await nextTick()
       setupInteract()
@@ -349,8 +369,23 @@ export default {
 
     const checkAnswer = () => {
       if (!currentWordData.value) return
-      const userAnswer = letterSlots.value.map(slot => slot.letter || '').join('')
-      const correctAnswer = currentWordData.value.word
+      // Get user answer and normalize (uppercase, trim whitespace)
+      const userAnswer = letterSlots.value
+        .map(slot => slot.letter || '')
+        .join('')
+        .toUpperCase()
+        .trim()
+      
+      // Get correct answer and normalize (uppercase, trim whitespace)
+      const correctAnswer = (currentWordData.value.word || '').toUpperCase().trim()
+      
+      // Debug logging
+      console.log('Answer check:', { 
+        userAnswer, 
+        correctAnswer, 
+        match: userAnswer === correctAnswer 
+      })
+      
       if (userAnswer === correctAnswer) {
         correctAnswers.value++
         showToast('Correct!', 'success')
@@ -405,35 +440,77 @@ export default {
         // Get difficulty from query parameter, default to 'Beginner' if not provided
         const difficulty = route.query.difficulty || 'Beginner'
         
-        // Generate 5 words
+        // Generate 5 words - ensure all are uppercase and properly formatted
         const generatedWords = []
         for (let i = 0; i < 5; i++) {
-          const response = await quizApi.generateConstructionSpellingWord({ difficulty })
-          if (response.data.success && response.data.word) {
-            const word = response.data.word
-            // Combine word letters with distractors for the letter pool
-            generatedWords.push({
-              word: word.word,
-              hint: word.hint,
-              letters: word.letters,
-              distractors: word.distractors || [],
-              image: null
-            })
+          try {
+            const response = await quizApi.generateConstructionSpellingWord({ difficulty })
+            if (response.data.success && response.data.word) {
+              const word = response.data.word
+              // Normalize word to uppercase and ensure proper structure
+              const normalizedWord = {
+                word: (word.word || '').toUpperCase().trim(),
+                hint: word.hint || '',
+                letters: Array.isArray(word.letters) 
+                  ? word.letters.map(l => (l || '').toUpperCase().trim()).filter(l => l)
+                  : [],
+                distractors: Array.isArray(word.distractors)
+                  ? word.distractors.map(d => (d || '').toUpperCase().trim()).filter(d => d)
+                  : [],
+                image: null
+              }
+              
+              // Validate word structure
+              if (normalizedWord.word && normalizedWord.letters.length > 0) {
+                generatedWords.push(normalizedWord)
+                console.log(`Generated word ${i + 1}/5:`, normalizedWord.word)
+              } else {
+                console.warn(`Skipping invalid word ${i + 1}:`, word)
+              }
+            } else {
+              console.warn(`Failed to generate word ${i + 1}:`, response.data)
+            }
+          } catch (wordError) {
+            console.error(`Error generating word ${i + 1}:`, wordError)
           }
         }
         
+        // Only proceed if we have at least some words
+        if (generatedWords.length === 0) {
+          throw new Error('Failed to generate any words')
+        }
+        
+        // Save the complete quiz to Firestore AFTER all words are generated
+        // This ensures the saved quiz matches exactly what the user sees
+        try {
+          const response = await quizApi.generateSpellingQuiz({
+            skill: 'construction',
+            difficulty: difficulty,
+            numberOfWords: generatedWords.length,
+            words: generatedWords  // Send the exact same words array we'll use
+          })
+          console.log('✅ Spelling quiz saved to Firestore:', response.data.quizId)
+          console.log('Saved words:', generatedWords.map(w => w.word))
+        } catch (saveError) {
+          // If saving fails, still use the words but log the error
+          console.error('⚠️ Failed to save spelling quiz to Firestore:', saveError)
+        }
+        
+        // Set words AFTER saving - this ensures consistency
         words.value = generatedWords
+        console.log('Quiz loaded with words:', words.value.map(w => w.word))
+        
         await nextTick()
         initializeWord()
       } catch (error) {
         console.error('Error fetching spelling words:', error)
         showToast('Failed to generate quiz. Please try again.', 'error')
-        // Fallback to hardcoded words if API fails
+        // Fallback to hardcoded words if API fails (all normalized)
         words.value = [
-          { word: 'SAFETY', hint: 'Protection from danger', letters: ['S','A','F','E','T','Y'], distractors: [], image: null },
-          { word: 'TOOLS', hint: 'Equipment used for work', letters: ['T','O','O','L','S'], distractors: [], image: null },
-          { word: 'HELMET', hint: 'Protective headgear worn on construction sites', letters: ['H','E','L','M','E','T'], distractors: [], image: null },
-          { word: 'HAMMER', hint: 'Tool for hitting nails', letters: ['H','A','M','M','E','R'], distractors: [], image: null }
+          { word: 'SAFETY', hint: 'Protection from danger', letters: ['S','A','F','E','T','Y'], distractors: ['X','Z','Q'], image: null },
+          { word: 'TOOLS', hint: 'Equipment used for work', letters: ['T','O','O','L','S'], distractors: ['X','Z','Q'], image: null },
+          { word: 'HELMET', hint: 'Protective headgear worn on construction sites', letters: ['H','E','L','M','E','T'], distractors: ['X','Z','Q','J'], image: null },
+          { word: 'HAMMER', hint: 'Tool for hitting nails', letters: ['H','A','M','M','E','R'], distractors: ['X','Z','Q','J'], image: null }
         ]
         await nextTick()
         initializeWord()

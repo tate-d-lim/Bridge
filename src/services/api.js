@@ -70,7 +70,11 @@ export const quizApi = {
   getQuizzes: () => api.get('/api/quizzes'),
   getQuizById: (id) => api.get(`/api/quizzes/${id}`),
   submitQuizResult: (data) => api.post('/api/quizzes/results', data),
-  generateConstructionSpellingWord: (data) => api.post('/api/construction-spelling/generate', data)
+  // Spelling quiz endpoints
+  generateConstructionSpellingWord: (data) => api.post('/api/construction-spelling/generate', data),
+  generateSpellingQuiz: (data) => api.post('/api/spelling-quiz/generate', data),
+  getSpellingQuizzes: () => api.get('/api/spelling-quizzes'),
+  getSpellingQuizById: (id) => api.get(`/api/spelling-quizzes/${id}`)
 }
 
 export const jobApi = {
