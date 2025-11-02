@@ -87,7 +87,7 @@ Format the response as a JSON array with this structure:
   }
 ]
 
-Make the questions practical and relevant for job seekers in Singapore. The correctAnswer should be the index (0-3) of the correct option.`;
+Make the questions practical and relevant for migrant workers in Singapore. The correctAnswer should be the index (0-3) of the correct option.`;
 
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
@@ -158,13 +158,13 @@ Format the response as a JSON object with this EXACT structure:
 }
 
 Requirements:
+- THE WORD MUST NOT BE REPEATED FROM PREVIOUS REQUESTS
 - The word must be a construction-related term (e.g., tools, materials, techniques, safety equipment, building parts)
 - The word length must match ${wordLengthRange}
 - The letters array must contain ALL letters of the word as separate uppercase strings
 - The distractors array must contain exactly 4 different uppercase letters that are NOT in the word
 - The hint should be practical and helpful for someone learning construction terminology
 - Make it suitable for construction workers in Singapore
-- DO NOT RETURN REPEATED WORDS
 
 Respond with ONLY valid JSON, no additional text.`;
 
@@ -232,7 +232,16 @@ app.post("/api/spelling-quiz/generate", async (req, res) => {
       return res.status(400).json({ error: "Skill and difficulty are required" });
     }
 
+    console.log('[spelling-quiz] generate request:', { skill, difficulty, numberOfWords });
+
     const words = await generateSpellingWords(numberOfWords, difficulty, skill);
+
+    // DEBUG: ensure we got an array
+    if (!Array.isArray(words)) {
+      console.error('[spelling-quiz] generated words is not an array:', words);
+      return res.status(500).json({ error: 'AI returned unexpected format for spelling words' });
+    }
+    console.log('[spelling-quiz] generated words:', words);
 
     // Save spelling quiz to Firestore
     const quizRef = await db.collection("spellingQuizzes").add({
@@ -242,6 +251,8 @@ app.post("/api/spelling-quiz/generate", async (req, res) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       numberOfWords: words.length,
     });
+
+    console.log('[spelling-quiz] saved quiz id:', quizRef.id);
 
     res.json({
       success: true,
@@ -257,29 +268,6 @@ app.post("/api/spelling-quiz/generate", async (req, res) => {
   }
 });
 
-// Generate Construction-themed Spelling Word
-app.post("/api/construction-spelling/generate", async (req, res) => {
-  try {
-    const { difficulty } = req.body;
-
-    if (!difficulty) {
-      return res.status(400).json({ error: "Difficulty is required" });
-    }
-
-    const word = await generateConstructionSpellingWord(difficulty);
-
-    res.json({
-      success: true,
-      word,
-    });
-  } catch (error) {
-    console.error("Error generating construction spelling word:", error);
-    res.status(500).json({
-      error: "Failed to generate construction spelling word",
-      message: error.message,
-    });
-  }
-});
 
 // Get all quizzes
 app.get("/api/quizzes", async (req, res) => {
