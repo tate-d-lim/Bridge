@@ -410,7 +410,7 @@ export default {
 }
 
 .application-card:hover {
-  transform: translateY(-2px);
+  /* Hover animation removed */
 }
 
 .card-wrapper {

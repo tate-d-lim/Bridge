@@ -382,7 +382,6 @@ export default {
 }
 
 .quiz-card:hover {
-  transform: translateY(-4px);
   box-shadow: var(--shadow-md);
 }
 
@@ -422,7 +421,7 @@ export default {
 }
 
 .quiz-card:hover .quiz-icon {
-  transform: scale(1.1);
+  /* Icon hover effect removed */
 }
 
 .green-icon-bg {

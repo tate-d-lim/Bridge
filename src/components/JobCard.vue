@@ -149,9 +149,6 @@ export default {
   transition: all 0.3s ease;
 }
 
-.job-card:hover {
-  transform: translateY(-4px);
-}
 
 .job-card-wrapper {
   background: var(--bg);
@@ -298,7 +295,6 @@ export default {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
-  transform: scale(1.05);
 }
 
 .dark-mode .view-details-btn {
