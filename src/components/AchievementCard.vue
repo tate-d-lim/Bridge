@@ -5,9 +5,8 @@
   >
     <div class="card-content">
       <div class="card-icon" :class="unlocked ? tierClass : 'locked-icon'">
-        <img v-if="unlocked && iconType === 'svg'" :src="`/icons/${icon}.svg`" :alt="title" class="badge-svg-icon" />
-        <span v-else-if="unlocked" class="badge-emoji">{{ icon }}</span>
-        <img v-else src="/icons/lock.svg" alt="Locked" class="lock-icon" />
+        <img v-if="unlocked" :src="medalIcon" :alt="title" class="medal-icon" />
+        <img v-else :src="lockIcon" alt="Locked" class="lock-icon" />
       </div>
       <div class="card-details">
         <div class="card-header">
@@ -29,8 +28,17 @@
 </template>
 
 <script>
+import medalIcon from '../assets/medal.svg'
+import lockIcon from '../assets/lock.svg'
+
 export default {
   name: 'AchievementCard',
+  data() {
+    return {
+      medalIcon,
+      lockIcon
+    }
+  },
   props: {
     icon: {
       type: String,
@@ -123,11 +131,7 @@ export default {
   transform: rotate(12deg);
 }
 
-.badge-emoji {
-  font-size: 1.75rem;
-}
-
-.badge-svg-icon {
+.medal-icon {
   width: 28px;
   height: 28px;
   filter: brightness(0) invert(1);
@@ -137,6 +141,7 @@ export default {
   width: 24px;
   height: 24px;
   opacity: 0.5;
+  filter: brightness(0) saturate(100%);
 }
 
 .locked-icon {
