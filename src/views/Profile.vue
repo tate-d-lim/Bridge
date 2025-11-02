@@ -90,36 +90,13 @@
 
         <!-- Stats Card (Job Seekers Only) -->
         <div v-if="userProfile?.role === 'jobseeker'" class="stats-card">
-          <div class="stats-grid">
-            <div class="stat-box">
-              <img src="../assets/trophy.svg" alt="Trophy" class="stat-icon-img" />
-              <div class="stat-content">
-                <div class="stat-value">{{ earnedBadges.length }}</div>
-                <div class="stat-label">Total Badges</div>
-              </div>
-            </div>
-            <div class="stat-box">
-              <img src="../assets/checkmark.svg" alt="Checkmark" class="stat-icon-img" />
-              <div class="stat-content">
-                <div class="stat-value">{{ userStats?.totalWins || 0 }}</div>
-                <div class="stat-label">Quiz Wins</div>
-              </div>
-            </div>
-            <div class="stat-box">
-              <img src="../assets/chart.svg" alt="Chart" class="stat-icon-img" />
-              <div class="stat-content">
-                <div class="stat-value">{{ userStats?.winPercentage || 0 }}%</div>
-                <div class="stat-label">Win Rate</div>
-              </div>
-            </div>
-            <div class="stat-box">
-              <img src="../assets/flame.svg" alt="Flame" class="stat-icon-img" />
-              <div class="stat-content">
-                <div class="stat-value">{{ userStats?.currentDayStreak || 0 }}</div>
-                <div class="stat-label">Day Streak</div>
-              </div>
-            </div>
-          </div>
+          <StatsOverview
+            :badges="earnedBadges.length"
+            :plays="userStats?.totalPlays || 0"
+            :wins="userStats?.totalWins || 0"
+            :winRate="userStats?.winPercentage || 0"
+            :streak="userStats?.currentDayStreak || 0"
+          />
         </div>
 
         <!-- Tabs Navigation -->
@@ -385,12 +362,14 @@ import { db } from '../firebase/config'
 import { doc, getDoc } from 'firebase/firestore'
 import CandidateReviewForm from '../components/reviews/CandidateReviewForm.vue'
 import CandidateReviewList from '../components/reviews/CandidateReviewList.vue'
+import StatsOverview from '../components/StatsOverview.vue'
 
 export default {
   name: 'Profile',
   components: { 
     CandidateReviewForm, 
-    CandidateReviewList
+    CandidateReviewList,
+    StatsOverview
   },
   setup() {
     const store = useStore()
@@ -694,18 +673,6 @@ export default {
       }
       
       await fetchBadgesAndStats()
-
-      if (currentUser.value) {
-        try {
-          badgesLoading.value = true
-          await store.dispatch('badges/fetchEarnedBadges', currentUser.value.uid)
-          await store.dispatch('badges/initializeUserStats', currentUser.value.uid)
-        } catch (error) {
-          console.error('Direct fetch error:', error)
-        } finally {
-          badgesLoading.value = false
-        }
-      }
 
       if (!isViewingOtherProfile.value && userProfile.value?.role === 'jobseeker') {
         await fetchRecentApplications()
@@ -1023,59 +990,7 @@ export default {
   box-shadow: var(--shadow-sm);
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 20px;
-}
-
-.stat-box {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: var(--bg-light);
-  border-radius: 12px;
-  transition: transform 0.2s;
-}
-
-.stat-box:hover {
-  transform: translateY(-2px);
-}
-
-.stat-icon-img {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-}
-
-.stat-icon-text {
-  font-size: 2rem;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-content {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--primary);
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
+/* Stats Card - uses StatsOverview component */
 
 /* Tabs */
 .tabs-container {
@@ -1556,8 +1471,5 @@ export default {
     padding: 20px;
   }
 
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 </style>

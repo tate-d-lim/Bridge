@@ -1,5 +1,5 @@
 <template>
-  <div class="stats-grid">
+  <div class="stats-grid" :class="{ 'stats-grid-5': stats.length === 5 }">
     <div
       v-for="(stat, index) in stats"
       :key="stat.label"
@@ -36,11 +36,15 @@ export default {
     streak: {
       type: Number,
       default: 0
+    },
+    badges: {
+      type: Number,
+      default: null
     }
   },
   computed: {
     stats() {
-      return [
+      const baseStats = [
         {
           label: 'Total Plays',
           value: this.plays,
@@ -66,6 +70,21 @@ export default {
           colorClass: 'orange-bg'
         }
       ]
+      
+      // Add badges if provided
+      if (this.badges !== null) {
+        return [
+          {
+            label: 'Total Badges',
+            value: this.badges,
+            iconUrl: '/icons/trophy.svg',
+            colorClass: 'gold-bg'
+          },
+          ...baseStats
+        ]
+      }
+      
+      return baseStats
     }
   }
 }
@@ -87,6 +106,10 @@ export default {
 @media (min-width: 1024px) {
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .stats-grid-5 {
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 
@@ -154,6 +177,14 @@ export default {
 
 .orange-bg img {
   filter: brightness(0) saturate(100%) invert(62%) sepia(99%) saturate(2462%) hue-rotate(0deg) brightness(100%) contrast(101%);
+}
+
+.gold-bg {
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.gold-bg img {
+  filter: brightness(0) saturate(100%) invert(88%) sepia(96%) saturate(1821%) hue-rotate(351deg) brightness(104%) contrast(101%);
 }
 
 .stat-content {
