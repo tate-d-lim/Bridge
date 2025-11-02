@@ -25,11 +25,11 @@
             Your pathway to success in Singapore. Connect with top employers and build your career today.
           </p>
           <div class="hero-actions">
-            <router-link to="/register" class="btn btn-primary btn-hero">
-              Get Started
-            </router-link>
-            <router-link to="/login" class="btn btn-secondary btn-hero">
+            <router-link to="/login" class="btn btn-primary btn-hero">
               Sign In
+            </router-link>
+            <router-link to="/register" class="btn btn-secondary btn-hero">
+              Register
             </router-link>
           </div>
         </div>
