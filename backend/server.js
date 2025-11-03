@@ -75,6 +75,9 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
+// In-memory history to avoid repeating words across requests while the server runs
+const generatedWordHistory = new Set();
+
 async function generateQuizQuestions(numberOfQuestions, difficulty, skill) {
   const prompt = `Generate ${numberOfQuestions} multiple choice questions for a ${difficulty} level quiz about ${skill}. 
 
@@ -106,37 +109,7 @@ Make the questions practical and relevant for migrant workers in Singapore. The 
   return JSON.parse(jsonMatch[0]);
 }
 
-async function generateSpellingWords(numberOfWords, difficulty, skill) {
-  const prompt = `Generate ${numberOfWords} spelling words for a ${difficulty} level spelling quiz about ${skill}. 
-
-Format the response as a JSON array with this structure:
-[
-  {
-    "word": "WORD",
-    "hint": "A helpful hint about the word",
-    "letters": ["W", "O", "R", "D"]
-  }
-]
-
-Make the words practical and relevant for job seekers in Singapore. The letters array should contain each letter of the word as separate strings.`;
-
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-  });
-
-  const text = response.text;
-
-  const jsonMatch = text.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) {
-    console.error("Gemini raw response:", text);
-    throw new Error("Failed to parse spelling words from AI response");
-  }
-
-  return JSON.parse(jsonMatch[0]);
-}
-
-async function generateConstructionSpellingWord(difficulty) {
+async function generateConstructionSpellingWord(difficulty, excludeWords = []) {
   // Define word length based on difficulty
   let wordLengthRange;
   if (difficulty === 'beginner' || difficulty === 'Beginner') {
@@ -145,6 +118,19 @@ async function generateConstructionSpellingWord(difficulty) {
     wordLengthRange = "6-8 letters";
   } else {
     wordLengthRange = "9 letters and above";
+  }
+
+  // Build exclusion text from passed excludeWords array
+  let excludeText = '';
+  if (Array.isArray(excludeWords) && excludeWords.length > 0) {
+    const safeList = excludeWords
+      .filter(Boolean)
+      .map(w => String(w).trim())
+      .filter(Boolean)
+      .slice(0, 50); // guard length
+    if (safeList.length > 0) {
+      excludeText = `\nDo NOT use any of the following words (case-insensitive): ${safeList.join(", ")}.`;
+    }
   }
 
   const prompt = `Generate ONE construction-themed spelling word for a ${difficulty} level spelling quiz. The word must be exactly ${wordLengthRange} long.
@@ -162,9 +148,10 @@ Requirements:
 - The word must be a construction-related term (e.g., tools, materials, techniques, safety equipment, building parts)
 - The word length must match ${wordLengthRange}
 - The letters array must contain ALL letters of the word as separate uppercase strings
-- The distractors array must contain exactly 4 different uppercase letters that are NOT in the word
+- The distractors array must contain exactly 1 different uppercase letters that are NOT in the word
 - The hint should be practical and helpful for someone learning construction terminology
 - Make it suitable for construction workers in Singapore
+${excludeText}
 
 Respond with ONLY valid JSON, no additional text.`;
 
@@ -182,7 +169,66 @@ Respond with ONLY valid JSON, no additional text.`;
     throw new Error("Failed to parse construction spelling word from AI response");
   }
 
-  return JSON.parse(jsonMatch[0]);
+  const parsed = JSON.parse(jsonMatch[0]);
+
+  // defensive normalization: uppercase letters array and distractors
+  if (Array.isArray(parsed.letters)) {
+    parsed.letters = parsed.letters.map(l => String(l).toUpperCase());
+  }
+  if (Array.isArray(parsed.distractors)) {
+    parsed.distractors = parsed.distractors.map(l => String(l).toUpperCase());
+  }
+
+  return parsed;
+}
+
+// -- new helper: validate single spelling word object
+function isValidSpellingWord(obj) {
+  return (
+    obj &&
+    typeof obj.word === 'string' &&
+    Array.isArray(obj.letters) &&
+    obj.letters.length === obj.word.length &&
+    Array.isArray(obj.distractors)
+  );
+}
+
+// -- new helper: generate multiple unique, validated spelling words
+async function generateSpellingWords(count, difficulty) {
+  const results = [];
+  const seen = new Set();
+  for (let i = 0; i < count; i++) {
+    let attempts = 0;
+    let wordObj = null;
+    while (attempts < 6) {
+      attempts++;
+      try {
+        // pass global history + local seen as exclusions so AI is forced to produce new words
+        const exclude = [...generatedWordHistory, ...Array.from(seen)];
+        wordObj = await generateConstructionSpellingWord(difficulty, exclude);
+      } catch (e) {
+        console.warn('[spelling] AI call failed, retrying', { attempt: attempts, err: e?.message });
+        continue;
+      }
+      if (!isValidSpellingWord(wordObj)) {
+        console.warn('[spelling] invalid word from AI, retrying', wordObj);
+        continue;
+      }
+      const key = (wordObj.word || '').toLowerCase();
+      if (seen.has(key) || generatedWordHistory.has(key)) {
+        console.warn('[spelling] duplicate word from AI, retrying', key);
+        continue;
+      }
+      seen.add(key);
+      generatedWordHistory.add(key); // persist into global history to avoid repeats across requests
+      results.push(wordObj);
+      break;
+    }
+    if (!results[i]) {
+      throw new Error(`Failed to generate a valid unique spelling word after ${attempts} attempts`);
+    }
+  }
+  return results;
 }
 
 app.get("/health", (req, res) => {
@@ -235,17 +281,11 @@ app.post("/api/spelling-quiz/generate", async (req, res) => {
     console.log('[spelling-quiz] generate request:', { skill, difficulty, numberOfWords, hasWords: !!words });
 
     let quizWords = words;
-    
-    // If words are not provided, generate them using AI
-    if (!quizWords || !Array.isArray(quizWords) || quizWords.length === 0) {
-      quizWords = await generateSpellingWords(numberOfWords, difficulty, skill);
 
-      // DEBUG: ensure we got an array
-      if (!Array.isArray(quizWords)) {
-        console.error('[spelling-quiz] generated words is not an array:', quizWords);
-        return res.status(500).json({ error: 'AI returned unexpected format for spelling words' });
-      }
-      console.log('[spelling-quiz] generated words:', quizWords);
+    // If words are not provided, generate them using AI (multiple words)
+    if (!quizWords || !Array.isArray(quizWords) || quizWords.length === 0) {
+      quizWords = await generateSpellingWords(numberOfWords, difficulty);
+      console.log('[spelling-quiz] generated words count:', quizWords.length);
     } else {
       console.log('[spelling-quiz] using provided words:', quizWords.length);
     }
@@ -282,13 +322,20 @@ app.post("/api/construction-spelling/generate", async (req, res) => {
 
     console.log('[construction-spelling] generate request:', { difficulty });
 
-    const word = await generateConstructionSpellingWord(difficulty);
+    // pass global history so single-word endpoint also avoids repeats
+    const word = await generateConstructionSpellingWord(difficulty, Array.from(generatedWordHistory));
 
     // DEBUG: ensure we got a valid word object
     if (!word || !word.word || !word.letters) {
       console.error('[construction-spelling] generated word is invalid:', word);
       return res.status(500).json({ error: 'AI returned unexpected format for spelling word' });
     }
+
+    // record in-memory history
+    try {
+      generatedWordHistory.add(String(word.word).toLowerCase());
+    } catch (e) {}
+
     console.log('[construction-spelling] generated word:', word);
 
     res.json({
