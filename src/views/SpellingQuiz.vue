@@ -1,16 +1,6 @@
 <template>
   <div class="spelling-quiz-page">
     <div class="spelling-quiz-container">
-      <div class="quiz-header">
-        <h1>Spelling Challenge</h1>
-        <div class="quiz-progress">
-          <span>Word {{ currentWord + 1 }} of {{ words.length }}</span>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: `${progress}%` }"></div>
-          </div>
-        </div>
-      </div>
-
       <div v-if="loading" class="loading-state">
         <div class="loading-content">
           <div class="loading-image">
@@ -26,7 +16,18 @@
         </div>
       </div>
 
-      <div v-else-if="!quizCompleted && currentWordData" class="spelling-game">
+      <template v-else>
+        <div class="quiz-header">
+          <h1>Spelling Challenge</h1>
+          <div class="quiz-progress">
+            <span>Word {{ currentWord + 1 }} of {{ words.length }}</span>
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: `${progress}%` }"></div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="!quizCompleted && currentWordData" class="spelling-game">
         <div class="word-display">
           <div class="hint-section">
             <div v-if="currentWordData.image" class="hint-image">
@@ -76,11 +77,11 @@
         </div>
       </div>
 
-      <div v-else-if="!currentWordData && !loading" class="empty-state">
-        <p>No words available. Please try again.</p>
-      </div>
+        <div v-else-if="!currentWordData" class="empty-state">
+          <p>No words available. Please try again.</p>
+        </div>
 
-      <div v-else class="quiz-results">
+        <div v-else class="quiz-results">
         <div class="results-card">
           <div class="score-circle">
             <h2>{{ score }}%</h2>
@@ -104,7 +105,8 @@
             </button>
           </div>
         </div>
-      </div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -625,9 +627,6 @@ export default {
   justify-content: center;
   background: var(--bg);
   padding: 60px 20px;
-  border-radius: 0 0 12px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-top: none;
 }
 
 .loading-content {

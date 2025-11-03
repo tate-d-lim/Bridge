@@ -570,7 +570,10 @@ export default {
 .reviews-header-section {
   background: var(--bg);
   padding: 40px 0;
-  border-bottom: 1px solid var(--border);
+}
+
+.header-content {
+  text-align: center;
 }
 
 .header-content h2 {

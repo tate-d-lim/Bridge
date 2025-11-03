@@ -262,12 +262,14 @@ export default {
   font-size: 2.5rem;
   color: var(--text);
   margin-bottom: 10px;
+  text-align: center;
 }
 
 .subtitle {
   color: var(--text-muted);
   margin-bottom: 30px;
   font-size: 1.1rem;
+  text-align: center;
 }
 
 .job-form {
