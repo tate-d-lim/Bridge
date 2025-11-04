@@ -140,7 +140,7 @@ Format the response as a JSON object with this EXACT structure:
   "word": "WORD",
   "hint": "A helpful hint describing what this construction term means",
   "letters": ["W", "O", "R", "D"],
-  "distractors": ["X", "Y", "Z", "A"]
+  "distractors": ["X"]
 }
 
 Requirements:
@@ -148,7 +148,7 @@ Requirements:
 - The word must be a construction-related term (e.g., tools, materials, techniques, safety equipment, building parts)
 - The word length must match ${wordLengthRange}
 - The letters array must contain ALL letters of the word as separate uppercase strings
-- The distractors array must contain exactly 1 different uppercase letters that are NOT in the word
+- The distractors array must contain exactly 1 different uppercase letter that is NOT in the word
 - The hint should be practical and helpful for someone learning construction terminology
 - Make it suitable for construction workers in Singapore
 ${excludeText}

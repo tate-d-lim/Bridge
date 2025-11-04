@@ -17,7 +17,7 @@
           icon-bg="bg-blue-50"
         >
           <template #icon>
-            <img src="../assets/briefcase.svg" alt="Active Jobs" style="width: 20px; height: 20px;" />
+            <Briefcase :size="20" :stroke-width="2" />
           </template>
         </StatCard>
         
@@ -27,7 +27,7 @@
           icon-bg="bg-green-50"
         >
           <template #icon>
-            <img src="../assets/task-checklist.svg" alt="Applications" style="width: 20px; height: 20px;" />
+            <FileCheck :size="20" :stroke-width="2" />
           </template>
         </StatCard>
         
@@ -37,7 +37,7 @@
           icon-bg="bg-purple-50"
         >
           <template #icon>
-            <img src="../assets/hired.svg" alt="Hired" style="width: 20px; height: 20px;" />
+            <UserCheck :size="20" :stroke-width="2" />
           </template>
         </StatCard>
       </div>
@@ -177,6 +177,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { useToast } from '../composables/useToast'
+import { Briefcase, FileCheck, UserCheck } from 'lucide-vue-next'
 import StatCard from '../components/StatCard.vue'
 import JobPostingCard from '../components/JobPostingCard.vue'
 import ApplicationItem from '../components/ApplicationItem.vue'
@@ -190,7 +191,10 @@ export default {
     JobPostingCard,
     ApplicationItem,
     Tabs,
-    ConfirmationDialog
+    ConfirmationDialog,
+    Briefcase,
+    FileCheck,
+    UserCheck
   },
   setup() {
     const store = useStore()

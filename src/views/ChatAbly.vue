@@ -93,11 +93,21 @@
       <!-- Chat Window -->
       <div class="chat-window">
         <div v-if="!activeRoom" class="no-room-selected">
-          <div class="welcome-icon">👋</div>
-          <GradientText>
-            <h3>Welcome to Bridge Chat</h3>
-          </GradientText>
-          <p>Select a conversation to start messaging</p>
+          <div class="empty-state-container">
+            <div class="icon-wrapper">
+              <svg class="chat-bubble-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="empty-title">Welcome to Bridge Chat</h3>
+            <p class="empty-subtitle">Select a conversation from the sidebar to start messaging</p>
+            <button @click="openNewChatModal" class="start-chat-btn">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Start New Conversation
+            </button>
+          </div>
         </div>
 
         <div v-else class="chat-content">
@@ -250,81 +260,105 @@
       </button>
     </div>
 
-    <!-- New Chat Modal -->
-    <div v-if="showNewChatModal" class="modal-overlay" @click="closeNewChatModal">
-      <div class="modal-content new-chat-modal" @click.stop>
-        <div class="modal-header">
-          <div class="header-content">
-            <h3>Start New Chat</h3>
-            <p class="header-subtitle">Search and select a user to start chatting</p>
+    <!-- New Chat Modal 2.0 - Redesigned -->
+    <div v-if="showNewChatModal" class="modal-overlay-2" @click="closeNewChatModal">
+      <div class="modal-content-2 new-chat-modal-2" @click.stop>
+        <!-- Header 2.0 -->
+        <div class="modal-header-2">
+          <div class="header-icon-wrapper">
+            <svg class="header-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </div>
-          <button @click="closeNewChatModal" class="btn-close">&times;</button>
+          <div class="header-text">
+            <h3>Start New Conversation</h3>
+            <p>Connect with colleagues and start chatting</p>
+          </div>
+          <button @click="closeNewChatModal" class="btn-close-2">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
-        <div class="modal-body">
-          <div class="search-section">
-            <div class="form-group">
-              <label class="search-label">
-                <span class="search-icon">🔍</span>
-                Search Users
-              </label>
-              <input 
-                v-model="searchQuery" 
-                @input="searchUsers" 
-                placeholder="Type a name to search users..."
-                class="form-input search-input"
-                ref="searchInput"
-              />
+
+        <!-- Search Section 2.0 -->
+        <div class="search-section-2">
+          <div class="search-wrapper">
+            <svg class="search-icon-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+              <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input 
+              v-model="searchQuery" 
+              @input="searchUsers" 
+              placeholder="Search by name or email..."
+              class="search-input-2"
+              ref="searchInput"
+            />
+            <div v-if="searchQuery" class="clear-search" @click="searchQuery = ''; searchResults = []">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M15 9l-6 6m0-6l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
             </div>
           </div>
-          
-          <div class="results-section">
-            <div v-if="searchQuery && searchResults.length > 0" class="search-results">
-              <div class="results-header">
-                <h4>Found {{ searchResults.length }} user(s)</h4>
-              </div>
-              <div class="users-list">
-                <div 
-                  v-for="user in searchResults" 
-                  :key="user.id"
-                  @click="startChatWithUser(user)"
-                  class="user-result"
-                >
-                  <div class="user-avatar">
-                    {{ getInitials(user.name) }}
-                  </div>
-                  <div class="user-info">
-                    <h4>{{ user.name }}</h4>
-                    <p class="user-role">{{ user.role || 'user' }}</p>
-                    <p v-if="user.email" class="user-email">{{ user.email }}</p>
-                  </div>
-                  <div class="user-action">
-                    <span class="action-text">Start Chat</span>
-                    <span class="action-icon">💬</span>
-                  </div>
+        </div>
+
+        <!-- Results Section 2.0 -->
+        <div class="results-section-2">
+          <!-- Results with users -->
+          <div v-if="searchQuery && searchResults.length > 0" class="search-results-2">
+            <div class="results-count">
+              <span class="count-badge">{{ searchResults.length }}</span>
+              <span class="count-text">{{ searchResults.length === 1 ? 'user found' : 'users found' }}</span>
+            </div>
+            <div class="users-grid">
+              <div 
+                v-for="user in searchResults" 
+                :key="user.id"
+                @click="startChatWithUser(user)"
+                class="user-card-2"
+              >
+                <div class="user-avatar-2">
+                  <img v-if="user.photoURL" :src="user.photoURL" :alt="user.name" class="avatar-img"/>
+                  <span v-else class="avatar-initials">{{ getInitials(user.name) }}</span>
+                  <div class="avatar-status"></div>
                 </div>
-              </div>
-            </div>
-            
-            <div v-if="searchQuery && searchResults.length === 0" class="no-results">
-              <div class="no-results-icon">👥</div>
-              <h4>No users found</h4>
-              <p>No users found matching "{{ searchQuery }}"</p>
-              <p class="suggestion">Try searching with a different name</p>
-            </div>
-            
-            <div v-if="!searchQuery" class="search-prompt">
-              <div class="prompt-icon">💬</div>
-              <h4>Start a conversation</h4>
-              <p>Type a name above to search for users and start chatting</p>
-              <div class="quick-actions">
-                <button @click="searchQuery = 'John'; searchUsers()" class="quick-btn">
-                  Try "John"
-                </button>
-                <button @click="searchQuery = 'Jane'; searchUsers()" class="quick-btn">
-                  Try "Jane"
+                <div class="user-details">
+                  <h4 class="user-name">{{ user.name }}</h4>
+                  <p class="user-role-badge">{{ user.role || 'User' }}</p>
+                  <p v-if="user.email" class="user-email-text">{{ user.email }}</p>
+                </div>
+                <button class="chat-action">
+                  <MessageCirclePlus :size="18" :stroke-width="2.5" class="chat-icon" />
+                  <span class="chat-text">Start new chat</span>
                 </button>
               </div>
             </div>
+          </div>
+
+          <!-- No results -->
+          <div v-if="searchQuery && searchResults.length === 0" class="empty-state-2">
+            <div class="empty-icon-2">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M8 15s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h4>No users found</h4>
+            <p>We couldn't find anyone matching <strong>"{{ searchQuery }}"</strong></p>
+            <button @click="searchQuery = ''" class="retry-btn">Clear search</button>
+          </div>
+
+          <!-- Initial state -->
+          <div v-if="!searchQuery" class="initial-state-2">
+            <div class="initial-icon-2">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h4>Find someone to chat with</h4>
+            <p>Search for users by their name or email address</p>
           </div>
         </div>
       </div>
@@ -336,17 +370,20 @@
 <script>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useStore } from 'vuex'
+import { useRoute } from 'vue-router'
 import { collection, query, where, getDocs, orderBy, limit, getDoc, doc } from 'firebase/firestore'
 import { db } from '../firebase/config'
 import GradientText from '../components/GradientText.vue'
 import Toast from '../components/Toast.vue'
 import ConfirmationDialog from '../components/ConfirmationDialog.vue'
 import { useToast } from '../composables/useToast'
+import { MessageCirclePlus } from 'lucide-vue-next'
 
 export default {
   name: 'ChatAbly',
   setup() {
     const store = useStore()
+    const route = useRoute()
     const { showToast } = useToast()
     
     // Reactive data
@@ -1100,6 +1137,25 @@ export default {
           }
         }
       }
+
+      // Check for query parameters to auto-open modal with search
+      if (route.query.openModal === 'true' && route.query.searchName) {
+        // Open modal after a short delay to ensure everything is loaded
+        setTimeout(() => {
+          showNewChatModal.value = true
+          searchQuery.value = route.query.searchName
+          
+          // Trigger search after modal opens
+          nextTick(() => {
+            searchUsers()
+            // Focus search input
+            const searchInput = document.querySelector('.search-input-2')
+            if (searchInput) {
+              searchInput.focus()
+            }
+          })
+        }, 300)
+      }
     })
     
     onUnmounted(() => {
@@ -1235,7 +1291,8 @@ export default {
   components: {
     GradientText,
     Toast,
-    ConfirmationDialog
+    ConfirmationDialog,
+    MessageCirclePlus
   }
 }
 </script>
@@ -1764,33 +1821,166 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background pattern */
+.no-room-selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(0, 123, 255, 0.03) 1px, transparent 0);
+  background-size: 40px 40px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.empty-state-container {
+  position: relative;
+  z-index: 1;
   text-align: center;
+  max-width: 480px;
+  padding: 48px 32px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Icon wrapper */
+.icon-wrapper {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 32px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(0, 123, 255, 0.08) 0%, rgba(0, 123, 255, 0.04) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.icon-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.icon-wrapper:hover::before {
+  opacity: 0.1;
+}
+
+.chat-bubble-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--primary);
   position: relative;
   z-index: 1;
 }
 
-.welcome-icon {
-  font-size: 4.5rem;
-  margin-bottom: 25px;
-  opacity: 0.8;
+.dark-mode .icon-wrapper {
+  background: linear-gradient(135deg, rgba(0, 123, 255, 0.12) 0%, rgba(0, 123, 255, 0.06) 100%);
 }
 
-.no-room-selected :deep(.animated-gradient-text) {
-  margin-bottom: 15px;
+/* Title */
+.empty-title {
+  margin: 0 0 16px 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
-.no-room-selected h3 {
-  margin: 0;
-  font-size: 1.8rem;
-  font-weight: 600;
-}
-
-.no-room-selected p {
-  font-size: 1.1rem;
+/* Subtitle */
+.empty-subtitle {
+  margin: 0 0 32px 0;
+  font-size: 1rem;
   color: var(--text-muted);
-  max-width: 400px;
   line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+/* Start chat button */
+.start-chat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.start-chat-btn svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.start-chat-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.start-chat-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 123, 255, 0.4);
+}
+
+.start-chat-btn:hover::before {
+  opacity: 1;
+}
+
+.start-chat-btn:hover svg {
+  transform: scale(1.1) rotate(90deg);
+}
+
+.start-chat-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
 .chat-content {
@@ -3163,6 +3353,692 @@ export default {
   
   .user-info h4 {
     font-size: 1rem;
+  }
+}
+
+/* ============================================
+   NEW CHAT MODAL 2.0 - REDESIGNED STYLES
+   ============================================ */
+
+/* Modal Overlay 2.0 */
+.modal-overlay-2 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeInBackdrop 0.3s ease-out;
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dark-mode .modal-overlay-2 {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* Modal Content 2.0 */
+.modal-content-2 {
+  background: white;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 680px;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 
+    0 25px 100px rgba(0, 0, 0, 0.25),
+    0 10px 40px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  animation: slideInModal 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideInModal {
+  from {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dark-mode .modal-content-2 {
+  background: var(--bg);
+  box-shadow: 
+    0 25px 100px rgba(0, 0, 0, 0.6),
+    0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Header 2.0 */
+.modal-header-2 {
+  padding: 32px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  overflow: hidden;
+}
+
+.modal-header-2::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.header-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 1;
+}
+
+.header-icon {
+  width: 28px;
+  height: 28px;
+  color: white;
+  stroke-width: 2.5;
+}
+
+.header-text {
+  flex: 1;
+  z-index: 1;
+}
+
+.header-text h3 {
+  margin: 0 0 6px 0;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.header-text p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9375rem;
+  font-weight: 400;
+}
+
+.btn-close-2 {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.btn-close-2 svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+.btn-close-2:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05) rotate(90deg);
+}
+
+/* Search Section 2.0 */
+.search-section-2 {
+  padding: 28px 32px 24px;
+  background: var(--bg-light);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dark-mode .search-section-2 {
+  background: var(--bg-dark);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon-2 {
+  position: absolute;
+  left: 18px;
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.dark-mode .search-icon-2 {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.search-input-2 {
+  width: 100%;
+  padding: 14px 48px 14px 52px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  font-size: 1rem;
+  background: white;
+  color: var(--text);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  position: relative;
+}
+
+.dark-mode .search-input-2 {
+  background: var(--bg);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.search-input-2:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.search-wrapper:focus-within .search-icon-2 {
+  color: var(--primary) !important;
+}
+
+.dark-mode .search-wrapper:focus-within .search-icon-2 {
+  color: var(--primary) !important;
+}
+
+.search-input-2::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.clear-search {
+  position: absolute;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-search svg {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
+.clear-search:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+}
+
+.dark-mode .clear-search {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .clear-search:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Results Section 2.0 */
+.results-section-2 {
+  padding: 28px 32px 32px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.results-section-2::-webkit-scrollbar {
+  width: 6px;
+}
+
+.results-section-2::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.results-section-2::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+
+.dark-mode .results-section-2::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Results Count */
+.results-count {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.count-badge {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.25);
+}
+
+.count-text {
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+/* Users Grid */
+.users-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-card-2 {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+}
+
+.dark-mode .user-card-2 {
+  background: var(--bg-dark);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-card-2:hover {
+  border-color: var(--primary);
+  box-shadow: 0 8px 24px rgba(0, 123, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.dark-mode .user-card-2:hover {
+  box-shadow: 0 8px 24px rgba(0, 123, 255, 0.25);
+}
+
+.user-avatar-2 {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-initials {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.avatar-status {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid white;
+}
+
+.dark-mode .avatar-status {
+  border-color: var(--bg-dark);
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  margin: 0 0 4px 0;
+  color: var(--text);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-role-badge {
+  display: inline-block;
+  margin: 0 0 4px 0;
+  padding: 3px 10px;
+  background: rgba(0, 123, 255, 0.1);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-transform: capitalize;
+}
+
+.user-email-text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-action {
+  min-width: 150px;
+  height: 42px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  overflow: hidden;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+}
+
+/* Subtle pulse animation to draw attention */
+@keyframes subtlePulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(0, 123, 255, 0.45);
+  }
+}
+
+.chat-action {
+  animation: subtlePulse 2s ease-in-out infinite;
+}
+
+/* Ripple effect on hover */
+.chat-action::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease-out, height 0.6s ease-out;
+}
+
+.user-card-2:hover .chat-action::before {
+  width: 200px;
+  height: 200px;
+  opacity: 0;
+}
+
+/* Enhanced hover state */
+.user-card-2:hover .chat-action {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 123, 255, 0.5),
+              0 0 40px rgba(0, 123, 255, 0.3);
+  animation: none;
+}
+
+/* Active/Click state */
+.chat-action:active {
+  transform: scale(0.98) translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.4);
+}
+
+/* Icon styling */
+.chat-icon {
+  position: relative;
+  z-index: 1;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  flex-shrink: 0;
+}
+
+.user-card-2:hover .chat-icon {
+  transform: scale(1.15) rotate(5deg);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+/* Text styling */
+.chat-text {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Shine effect */
+.chat-action::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  transition: transform 0.6s ease;
+}
+
+.user-card-2:hover .chat-action::after {
+  transform: translateX(100%) translateY(100%) rotate(45deg);
+}
+
+/* Empty State 2.0 */
+.empty-state-2, .initial-state-2 {
+  text-align: center;
+  padding: 60px 40px;
+}
+
+.empty-icon-2, .initial-icon-2 {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  background: linear-gradient(135deg, rgba(0, 123, 255, 0.1) 0%, rgba(0, 123, 255, 0.05) 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon-2 svg, .initial-icon-2 svg {
+  width: 40px;
+  height: 40px;
+  color: var(--primary);
+}
+
+.empty-state-2 h4, .initial-state-2 h4 {
+  margin: 0 0 12px 0;
+  color: var(--text);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.empty-state-2 p, .initial-state-2 p {
+  margin: 0 0 24px 0;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.retry-btn {
+  padding: 10px 24px;
+  background: transparent;
+  border: 1.5px solid rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  background: rgba(0, 123, 255, 0.05);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.dark-mode .retry-btn {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark-mode .retry-btn:hover {
+  background: rgba(0, 123, 255, 0.1);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .modal-content-2 {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .modal-header-2 {
+    padding: 24px;
+  }
+
+  .header-icon-wrapper {
+    width: 48px;
+    height: 48px;
+  }
+
+  .header-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .header-text h3 {
+    font-size: 1.25rem;
+  }
+
+  .header-text p {
+    font-size: 0.875rem;
+  }
+
+  .search-section-2 {
+    padding: 20px;
+  }
+
+  .results-section-2 {
+    padding: 20px;
+    max-height: 45vh;
+  }
+
+  .user-card-2 {
+    padding: 14px 16px;
+  }
+
+  .user-avatar-2 {
+    width: 44px;
+    height: 44px;
+  }
+
+  .avatar-initials {
+    font-size: 1.125rem;
+  }
+
+  .user-name {
+    font-size: 1rem;
+  }
+
+  .chat-action {
+    min-width: 130px;
+    height: 38px;
+    padding: 8px 14px;
+    font-size: 0.8125rem;
+    gap: 6px;
+  }
+
+  .chat-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .empty-state-2, .initial-state-2 {
+    padding: 40px 20px;
+  }
+
+  .empty-icon-2, .initial-icon-2 {
+    width: 64px;
+    height: 64px;
+  }
+
+  .empty-icon-2 svg, .initial-icon-2 svg {
+    width: 32px;
+    height: 32px;
   }
 }
 </style>

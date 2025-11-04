@@ -109,30 +109,54 @@ export default {
   flex-shrink: 0;
 }
 
-.stat-icon img,
 .stat-icon svg {
   width: 20px;
   height: 20px;
+  transition: color 0.3s ease, stroke 0.3s ease;
 }
 
-.stat-icon.bg-blue-50 img,
+/* Blue Icons */
 .stat-icon.bg-blue-50 svg {
-  color: oklch(0.4 0.1 245);
+  color: #3b82f6;
+  stroke: #3b82f6;
 }
 
-.stat-icon.bg-green-50 img,
+.dark-mode .stat-icon.bg-blue-50 svg {
+  color: #60a5fa;
+  stroke: #60a5fa;
+}
+
+/* Green Icons */
 .stat-icon.bg-green-50 svg {
-  color: oklch(0.4 0.1 160);
+  color: #10b981;
+  stroke: #10b981;
 }
 
-.stat-icon.bg-purple-50 img,
+.dark-mode .stat-icon.bg-green-50 svg {
+  color: #34d399;
+  stroke: #34d399;
+}
+
+/* Purple Icons */
 .stat-icon.bg-purple-50 svg {
-  color: oklch(0.4 0.1 280);
+  color: #8b5cf6;
+  stroke: #8b5cf6;
 }
 
-.stat-icon.bg-orange-50 img,
+.dark-mode .stat-icon.bg-purple-50 svg {
+  color: #a78bfa;
+  stroke: #a78bfa;
+}
+
+/* Orange Icons */
 .stat-icon.bg-orange-50 svg {
-  color: oklch(0.4 0.1 50);
+  color: #f97316;
+  stroke: #f97316;
+}
+
+.dark-mode .stat-icon.bg-orange-50 svg {
+  color: #fb923c;
+  stroke: #fb923c;
 }
 
 /* Icon background colors */
@@ -153,19 +177,19 @@ export default {
 }
 
 .dark-mode .bg-blue-50 {
-  background: oklch(0.15 0.05 245);
+  background: oklch(0.25 0.08 245);
 }
 
 .dark-mode .bg-green-50 {
-  background: oklch(0.15 0.05 160);
+  background: oklch(0.25 0.08 160);
 }
 
 .dark-mode .bg-purple-50 {
-  background: oklch(0.15 0.05 280);
+  background: oklch(0.25 0.08 280);
 }
 
 .dark-mode .bg-orange-50 {
-  background: oklch(0.15 0.05 50);
+  background: oklch(0.25 0.08 50);
 }
 
 .stat-content {

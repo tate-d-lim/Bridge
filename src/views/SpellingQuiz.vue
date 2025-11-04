@@ -442,9 +442,13 @@ export default {
         // Get difficulty from query parameter, default to 'Beginner' if not provided
         const difficulty = route.query.difficulty || 'Beginner'
         
-        // Generate 5 words - ensure all are uppercase and properly formatted
+        // Generate exactly 5 words - keep trying until we have 5 valid words
         const generatedWords = []
-        for (let i = 0; i < 5; i++) {
+        const maxRetries = 15 // Maximum total attempts to prevent infinite loops
+        let attempts = 0
+        
+        while (generatedWords.length < 5 && attempts < maxRetries) {
+          attempts++
           try {
             const response = await quizApi.generateConstructionSpellingWord({ difficulty })
             if (response.data.success && response.data.word) {
@@ -462,25 +466,27 @@ export default {
                 image: null
               }
               
-              // Validate word structure
-              if (normalizedWord.word && normalizedWord.letters.length > 0) {
+              // Validate word structure - ensure we have at least 1 distractor
+              if (normalizedWord.word && normalizedWord.letters.length > 0 && normalizedWord.distractors.length >= 1) {
                 generatedWords.push(normalizedWord)
-                console.log(`Generated word ${i + 1}/5:`, normalizedWord.word)
+                console.log(`✅ Generated word ${generatedWords.length}/5:`, normalizedWord.word)
               } else {
-                console.warn(`Skipping invalid word ${i + 1}:`, word)
+                console.warn(`❌ Invalid word structure (letters: ${normalizedWord.letters.length}, distractors: ${normalizedWord.distractors.length}), retrying... (attempt ${attempts})`, word)
               }
             } else {
-              console.warn(`Failed to generate word ${i + 1}:`, response.data)
+              console.warn(`⚠️ Failed to generate word (attempt ${attempts}):`, response.data)
             }
           } catch (wordError) {
-            console.error(`Error generating word ${i + 1}:`, wordError)
+            console.error(`❌ Error generating word (attempt ${attempts}):`, wordError)
           }
         }
         
-        // Only proceed if we have at least some words
-        if (generatedWords.length === 0) {
-          throw new Error('Failed to generate any words')
+        // Ensure we have exactly 5 words
+        if (generatedWords.length < 5) {
+          throw new Error(`Failed to generate 5 words. Only generated ${generatedWords.length} words after ${attempts} attempts.`)
         }
+        
+        console.log(`🎉 Successfully generated all 5 words in ${attempts} attempts`)
         
         // Save the complete quiz to Firestore AFTER all words are generated
         // This ensures the saved quiz matches exactly what the user sees
@@ -641,9 +647,19 @@ export default {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.dark-mode .loading-content {
+  background: #000000;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .loading-content:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+.dark-mode .loading-content:hover {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.8);
 }
 
 .loading-image {
@@ -685,6 +701,11 @@ export default {
   border-radius: 50%;
   opacity: 0.7;
   animation: bounce 1.4s cubic-bezier(0.45, 0, 0.55, 1) infinite both;
+}
+
+.dark-mode .loading-dots span {
+  opacity: 1;
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
 }
 
 @keyframes bounce {
