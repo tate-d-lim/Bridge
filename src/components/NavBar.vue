@@ -530,7 +530,6 @@ export default {
   width: 24px;
   height: 24px;
   fill: currentColor;
-  transition: transform 0.3s;
 }
 
 .nav-spacer {
@@ -649,6 +648,8 @@ export default {
 .dark-mode .dropdown-item img[src*="briefcase"],
 .dark-mode .dropdown-item img[src*="task-checklist"] {
   filter: brightness(0) invert(1);
+}
+
 .nav-hamburger-menu {
   position: relative;
 }
