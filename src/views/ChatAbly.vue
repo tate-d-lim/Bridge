@@ -1,16 +1,47 @@
-<template>
+  <template>
   <div class="chat-page">
+    <Toast />
+    <ConfirmationDialog
+      :show="showDeleteConfirm"
+      title="Delete Conversation"
+      :message="deleteConfirmMessage"
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      @confirm="confirmDeleteChatRoom"
+      @cancel="cancelDeleteChatRoom"
+      @update:show="showDeleteConfirm = $event"
+    />
+    <ConfirmationDialog
+      :show="showDeleteMessageConfirm"
+      title="Delete Message"
+      message="Are you sure you want to delete this message? This action cannot be undone."
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      @confirm="confirmDeleteMessage"
+      @cancel="showDeleteMessageConfirm = false"
+      @update:show="showDeleteMessageConfirm = $event"
+    />
     <div class="chat-container">
       <!-- Chat Sidebar -->
       <div class="chat-sidebar">
         <div class="sidebar-header">
-          <h2>Messages</h2>
-          <div class="connection-status">
-            <div :class="['status-indicator', { online: isConnected }]"></div>
-            <span class="status-text">{{ connectionStatus }}</span>
+          <div class="header-top">
+            <div class="messages-header-content">
+              <svg class="messages-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <h2>Messages</h2>
+            </div>
+            <div class="connection-badge" :class="{ connected: isConnected }">
+              <div class="status-dot"></div>
+              <span>{{ isConnected ? 'Online' : 'Offline' }}</span>
+            </div>
           </div>
-          <button @click="openNewChatModal" class="btn btn-primary btn-sm">
-            <span class="icon">+</span> New Chat
+          <button @click="openNewChatModal" class="btn-new-chat">
+            <svg class="plus-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>New Chat</span>
           </button>
         </div>
         
@@ -20,6 +51,7 @@
             :key="room.id"
             :class="['chat-room-item', { active: activeRoom === (room.roomName || room.id) }]"
             @click="selectRoom(room)"
+            @contextmenu.prevent="openContextMenu($event, room)"
           >
             <div class="room-avatar">
               <img 
@@ -30,7 +62,6 @@
                 @error="(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }"
               />
               <span v-show="!getRoomPictureSync(room)">{{ getRoomInitials(room) }}</span>
-              <div v-if="isRoomActive(room)" class="online-indicator"></div>
             </div>
             <div class="room-info">
               <h3>{{ getRoomDisplayName(room) }}</h3>
@@ -47,13 +78,6 @@
                 {{ getUnreadCount(room.id) > 99 ? '99+' : getUnreadCount(room.id) }}
               </div>
             </div>
-            <button 
-              @click.stop="deleteChatRoom(room)"
-              class="btn-delete-room"
-              title="Delete conversation"
-            >
-              🗑️
-            </button>
           </div>
           
           <div v-if="chatRooms.length === 0" class="empty-rooms">
@@ -70,7 +94,9 @@
       <div class="chat-window">
         <div v-if="!activeRoom" class="no-room-selected">
           <div class="welcome-icon">👋</div>
-          <h3>Welcome to Bridge Chat</h3>
+          <GradientText>
+            <h3>Welcome to Bridge Chat</h3>
+          </GradientText>
           <p>Select a conversation to start messaging</p>
         </div>
 
@@ -87,16 +113,9 @@
                   @error="(e) => { e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }"
                 />
                 <span v-show="!getCurrentRoom() || !getRoomPictureSync(getCurrentRoom())">{{ getRoomInitials(getCurrentRoom()) }}</span>
-                <div v-if="isRoomActive(getCurrentRoom())" class="online-indicator"></div>
               </div>
               <div class="chat-details">
                 <h3>{{ getRoomDisplayName(getCurrentRoom()) }}</h3>
-                <p class="status">
-                  <span v-if="isRoomActive(getCurrentRoom())" class="online">
-                    {{ getPresence(activeRoom).length }} online
-                  </span>
-                  <span v-else class="offline">Offline</span>
-                </p>
               </div>
             </div>
           </div>
@@ -113,17 +132,36 @@
                   <div v-if="message.clientId !== clientId" class="sender-name">
                     {{ getCachedUsername(message.clientId, getCurrentRoom()) }}
                   </div>
-                  <div class="message-bubble">
-                    <p>{{ message.text }}</p>
-                    <div class="message-footer">
-                      <span class="message-time">{{ formatMessageTime(message.timestamp) }}</span>
-                      <div v-if="message.clientId === clientId" class="message-actions">
-                        <button @click="editMessage(message)" class="action-btn" title="Edit">
-                          ✏️
+                  <div 
+                    class="message-bubble"
+                    @contextmenu.prevent="message.clientId === clientId ? openMessageContextMenu($event, message) : null"
+                  >
+                    <div v-if="editingMessageSerial === message.serial" class="edit-mode">
+                      <textarea
+                        v-model="editMessageText"
+                        class="edit-textarea"
+                        @keydown.enter.exact.prevent="saveInlineEdit"
+                        @keydown.esc="cancelInlineEdit"
+                        ref="editTextarea"
+                      ></textarea>
+                      <div class="edit-actions">
+                        <button @click="cancelInlineEdit" class="edit-btn cancel-btn">
+                          <svg class="edit-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
                         </button>
-                        <button @click="deleteMessage(message)" class="action-btn" title="Delete">
-                          🗑️
+                        <button @click="saveInlineEdit" class="edit-btn save-btn">
+                          <svg class="edit-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
                         </button>
+                      </div>
+                      <span class="edit-hint">Press Enter to save • Esc to cancel</span>
+                    </div>
+                    <div v-else>
+                      <p>{{ message.text }}</p>
+                      <div class="message-footer">
+                        <span class="message-time">{{ formatMessageTime(message.timestamp) }}</span>
                       </div>
                     </div>
                   </div>
@@ -159,10 +197,12 @@
               />
               <button 
                 @click="sendMessage" 
-                class="btn btn-primary send-btn"
+                class="send-btn"
                 :disabled="!newMessage.trim() || !isConnected"
               >
-                <span class="icon">📤</span>
+                <svg class="send-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Send message">
+                  <path d="M3 20l18-8L3 4l.01 6.02L15 12 3.01 13.98z" fill="currentColor"/>
+                </svg>
               </button>
             </div>
             <div v-if="!isConnected" class="connection-status">
@@ -172,6 +212,42 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Chat Room Context Menu -->
+    <div 
+      v-if="contextMenu.show" 
+      class="context-menu"
+      :style="{ top: contextMenu.y + 'px', left: contextMenu.x + 'px' }"
+      @click.stop
+    >
+      <button @click="deleteContextRoom" class="context-menu-item delete-item">
+        <svg class="context-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6m4-6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Delete Conversation</span>
+      </button>
+    </div>
+
+    <!-- Message Context Menu -->
+    <div 
+      v-if="messageContextMenu.show" 
+      class="context-menu"
+      :style="{ top: messageContextMenu.y + 'px', left: messageContextMenu.x + 'px' }"
+      @click.stop
+    >
+      <button @click="editContextMessage" class="context-menu-item edit-item">
+        <svg class="context-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Edit Message</span>
+      </button>
+      <button @click="deleteContextMessage" class="context-menu-item delete-item">
+        <svg class="context-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6m4-6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Delete Message</span>
+      </button>
     </div>
 
     <!-- New Chat Modal -->
@@ -215,16 +291,11 @@
                 >
                   <div class="user-avatar">
                     {{ getInitials(user.name) }}
-                    <div v-if="isUserOnline(user.id)" class="online-indicator"></div>
                   </div>
                   <div class="user-info">
                     <h4>{{ user.name }}</h4>
                     <p class="user-role">{{ user.role || 'user' }}</p>
                     <p v-if="user.email" class="user-email">{{ user.email }}</p>
-                    <div class="user-status">
-                      <span v-if="isUserOnline(user.id)" class="status-online">Online</span>
-                      <span v-else class="status-offline">Offline</span>
-                    </div>
                   </div>
                   <div class="user-action">
                     <span class="action-text">Start Chat</span>
@@ -259,29 +330,6 @@
       </div>
     </div>
 
-    <!-- Edit Message Modal -->
-    <div v-if="showEditModal" class="modal-overlay" @click="closeEditModal">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h3>Edit Message</h3>
-          <button @click="closeEditModal" class="btn-close">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Message:</label>
-            <textarea 
-              v-model="editMessageText" 
-              class="form-input"
-              rows="3"
-            ></textarea>
-          </div>
-          <div class="modal-actions">
-            <button @click="saveEditMessage" class="btn btn-primary">Save</button>
-            <button @click="closeEditModal" class="btn btn-secondary">Cancel</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -290,33 +338,47 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useStore } from 'vuex'
 import { collection, query, where, getDocs, orderBy, limit, getDoc, doc } from 'firebase/firestore'
 import { db } from '../firebase/config'
+import GradientText from '../components/GradientText.vue'
+import Toast from '../components/Toast.vue'
+import ConfirmationDialog from '../components/ConfirmationDialog.vue'
+import { useToast } from '../composables/useToast'
 
 export default {
   name: 'ChatAbly',
   setup() {
     const store = useStore()
+    const { showToast } = useToast()
     
     // Reactive data
     const newMessage = ref('')
     const messagesContainer = ref(null)
     const messageInput = ref(null)
     const showNewChatModal = ref(false)
-    const showEditModal = ref(false)
     const searchQuery = ref('')
     const searchResults = ref([])
     const editMessageText = ref('')
-    const editingMessage = ref(null)
+    const editingMessageSerial = ref(null)
+    const editTextarea = ref(null)
     const typingTimeout = ref(null)
     const chatRoomUnsubscribe = ref(null)
+    const contextMenu = ref({
+      show: false,
+      x: 0,
+      y: 0,
+      room: null
+    })
+    const messageContextMenu = ref({
+      show: false,
+      x: 0,
+      y: 0,
+      message: null
+    })
     
     // Computed properties
     const currentUser = computed(() => store.getters['auth/currentUser'])
     const userProfile = computed(() => store.getters['auth/userProfile'])
     const isConnected = computed(() => {
       return store.getters['chatAbly/isConnected']
-    })
-    const connectionStatus = computed(() => {
-      return store.getters['chatAbly/connectionStatus']
     })
     const clientId = computed(() => store.getters['chatAbly/clientId'])
     const activeRoom = computed(() => store.getters['chatAbly/activeRoom'])
@@ -600,10 +662,6 @@ export default {
       return store.getters['chatAbly/getMessages'](roomName)
     }
     
-    const getPresence = (roomName) => {
-      return store.getters['chatAbly/getPresence'](roomName)
-    }
-    
     const getTypingUsers = (roomName) => {
       return store.getters['chatAbly/getTypingUsers'](roomName)
     }
@@ -619,16 +677,6 @@ export default {
       return chatRooms.value.find(room => (room.roomName || room.id) === activeRoomName) || null
     }
     
-    const isRoomActive = (room) => {
-      if (!room || !room.participants) return false
-      return room.participants.some(p => 
-        store.getters['chatAbly/onlineUsers'].includes(p)
-      )
-    }
-    
-    const isUserOnline = (userId) => {
-      return store.getters['chatAbly/onlineUsers'].includes(userId)
-    }
     
     const selectRoom = async (room) => {
       const roomName = room.roomName || room.id
@@ -665,62 +713,148 @@ export default {
         }, 100)
       } catch (error) {
         console.error('Error sending message:', error)
+        showToast('Error sending message: ' + error.message, 'error')
       }
     }
     
-    const editMessage = (message) => {
-      editingMessage.value = message
-      editMessageText.value = message.text
-      showEditModal.value = true
-    }
     
-    const saveEditMessage = async () => {
-      if (!editMessageText.value.trim() || !editingMessage.value) return
-      
-      try {
-        await store.dispatch('chatAbly/editMessage', {
-          roomName: activeRoom.value,
-          messageSerial: editingMessage.value.serial,
-          newText: editMessageText.value
-        })
-        
-        closeEditModal()
-      } catch (error) {
-        console.error('Error editing message:', error)
-      }
-    }
+    const showDeleteMessageConfirm = ref(false)
+    const messageToDelete = ref(null)
     
     const deleteMessage = async (message) => {
-      if (!confirm('Are you sure you want to delete this message?')) return
+      messageToDelete.value = message
+      showDeleteMessageConfirm.value = true
+    }
+    
+    const confirmDeleteMessage = async () => {
+      if (!messageToDelete.value) return
       
       try {
         await store.dispatch('chatAbly/deleteMessage', {
           roomName: activeRoom.value,
-          messageSerial: message.serial
+          messageSerial: messageToDelete.value.serial
         })
+        showToast('Message deleted successfully', 'success')
+        messageToDelete.value = null
       } catch (error) {
         console.error('Error deleting message:', error)
+        showToast('Error deleting message: ' + error.message, 'error')
       }
     }
     
+    const showDeleteConfirm = ref(false)
+    const roomToDelete = ref(null)
+    const deleteConfirmMessage = computed(() => {
+      if (!roomToDelete.value) return ''
+      return `Are you sure you want to delete this conversation with ${getRoomDisplayName(roomToDelete.value)}? This will hide it from your chat list, but the other participant will still see it.`
+    })
+    
     const deleteChatRoom = async (room) => {
-      if (!confirm('Are you sure you want to delete this conversation? This will hide it from your chat list, but the other participant will still see it.')) return
+      roomToDelete.value = room
+      showDeleteConfirm.value = true
+    }
+    
+    const confirmDeleteChatRoom = async () => {
+      if (!roomToDelete.value) return
       
       try {
         await store.dispatch('chatAbly/deleteChatRoomForUser', {
-          roomId: room.id,
+          roomId: roomToDelete.value.id,
           userId: currentUser.value.uid
         })
+        showToast('Conversation deleted successfully', 'success')
+        roomToDelete.value = null
       } catch (error) {
         console.error('Error deleting chat room:', error)
-        alert('Error deleting conversation: ' + error.message)
+        showToast('Error deleting conversation: ' + error.message, 'error')
       }
     }
     
-    const closeEditModal = () => {
-      showEditModal.value = false
+    const cancelDeleteChatRoom = () => {
+      roomToDelete.value = null
+      showDeleteConfirm.value = false
+    }
+    
+    const openContextMenu = (event, room) => {
+      contextMenu.value.show = true
+      contextMenu.value.x = event.clientX
+      contextMenu.value.y = event.clientY
+      contextMenu.value.room = room
+    }
+    
+    const closeContextMenu = () => {
+      contextMenu.value.show = false
+      contextMenu.value.room = null
+    }
+    
+    const deleteContextRoom = () => {
+      if (contextMenu.value.room) {
+        deleteChatRoom(contextMenu.value.room)
+      }
+      closeContextMenu()
+    }
+    
+    const openMessageContextMenu = (event, message) => {
+      messageContextMenu.value.show = true
+      messageContextMenu.value.x = event.clientX
+      messageContextMenu.value.y = event.clientY
+      messageContextMenu.value.message = message
+    }
+    
+    const closeMessageContextMenu = () => {
+      messageContextMenu.value.show = false
+      messageContextMenu.value.message = null
+    }
+    
+    const editContextMessage = () => {
+      if (messageContextMenu.value.message) {
+        startInlineEdit(messageContextMenu.value.message)
+      }
+      closeMessageContextMenu()
+    }
+    
+    const deleteContextMessage = () => {
+      if (messageContextMenu.value.message) {
+        deleteMessage(messageContextMenu.value.message)
+      }
+      closeMessageContextMenu()
+    }
+    
+    const startInlineEdit = (message) => {
+      editingMessageSerial.value = message.serial
+      editMessageText.value = message.text
+      // Focus textarea after DOM updates
+      nextTick(() => {
+        const textarea = document.querySelector('.edit-textarea')
+        if (textarea) {
+          textarea.focus()
+          textarea.select()
+        }
+      })
+    }
+    
+    const cancelInlineEdit = () => {
+      editingMessageSerial.value = null
       editMessageText.value = ''
-      editingMessage.value = null
+    }
+    
+    const saveInlineEdit = async () => {
+      if (!editMessageText.value.trim() || !editingMessageSerial.value) return
+      
+      try {
+        await store.dispatch('chatAbly/editMessage', {
+          roomName: activeRoom.value,
+          messageSerial: editingMessageSerial.value,
+          newText: editMessageText.value
+        })
+        
+        showToast('Message updated successfully', 'success')
+        editingMessageSerial.value = null
+        editMessageText.value = ''
+      } catch (error) {
+        console.error('Error editing message:', error)
+        showToast('Error editing message: ' + error.message, 'error')
+      }
     }
     
     const handleTyping = () => {
@@ -889,9 +1023,11 @@ export default {
         const newRoom = store.getters['chatAbly/getRoomById'](roomId)
         if (newRoom) {
           await selectRoom(newRoom)
+          showToast(`Started chat with ${user.name}`, 'success')
         }
       } catch (error) {
         console.error('Error starting chat:', error)
+        showToast('Error starting chat: ' + error.message, 'error')
       }
     }
     
@@ -912,8 +1048,27 @@ export default {
       })
     }
     
+    // Close context menu when clicking anywhere
+    const handleClickOutside = (event) => {
+      if (contextMenu.value.show || messageContextMenu.value.show) {
+        // Don't close if clicking inside the context menu
+        const contextMenuElements = document.querySelectorAll('.context-menu')
+        for (const element of contextMenuElements) {
+          if (element && element.contains(event.target)) {
+            return
+          }
+        }
+        closeContextMenu()
+        closeMessageContextMenu()
+      }
+    }
+    
     // Lifecycle
     onMounted(async () => {
+      // Add global click listener for context menu with slight delay
+      setTimeout(() => {
+        document.addEventListener('click', handleClickOutside)
+      }, 100)
       if (currentUser.value) {
         try {
           await store.dispatch('chatAbly/initializeConnection', {
@@ -963,6 +1118,9 @@ export default {
           roomName: activeRoom.value
         })
       }
+      
+      // Remove global listeners
+      document.removeEventListener('click', handleClickOutside)
     })
     
     // Watch for new messages to scroll to bottom
@@ -974,10 +1132,6 @@ export default {
     
     // Watch connection status changes
     watch(() => store.getters['chatAbly/isConnected'], () => {
-      // Connection status changed - UI will update automatically
-    })
-    
-    watch(() => store.getters['chatAbly/connectionStatus'], () => {
       // Connection status changed - UI will update automatically
     })
     
@@ -1018,14 +1172,12 @@ export default {
       messagesContainer,
       messageInput,
       showNewChatModal,
-      showEditModal,
       searchQuery,
       searchResults,
       editMessageText,
       currentUser,
       userProfile,
       isConnected,
-      connectionStatus,
       clientId,
       activeRoom,
       chatRooms,
@@ -1042,28 +1194,48 @@ export default {
       scrollToBottom,
       forceScrollToBottom,
       getMessages,
-      getPresence,
       getTypingUsers,
       getUnreadCount,
       getCurrentRoom,
-      isRoomActive,
-      isUserOnline,
       filteredMessages,
       selectRoom,
       sendMessage,
-      editMessage,
-      saveEditMessage,
       deleteMessage,
       deleteChatRoom,
-      closeEditModal,
       handleTyping,
       handleFocus,
       handleBlur,
       searchUsers,
       startChatWithUser,
       openNewChatModal,
-      closeNewChatModal
+      closeNewChatModal,
+      showDeleteConfirm,
+      showDeleteMessageConfirm,
+      deleteConfirmMessage,
+      confirmDeleteChatRoom,
+      cancelDeleteChatRoom,
+      confirmDeleteMessage,
+      showToast,
+      contextMenu,
+      openContextMenu,
+      closeContextMenu,
+      deleteContextRoom,
+      messageContextMenu,
+      openMessageContextMenu,
+      closeMessageContextMenu,
+      editContextMessage,
+      deleteContextMessage,
+      editingMessageSerial,
+      editTextarea,
+      startInlineEdit,
+      cancelInlineEdit,
+      saveInlineEdit
     }
+  },
+  components: {
+    GradientText,
+    Toast,
+    ConfirmationDialog
   }
 }
 </script>
@@ -1109,23 +1281,138 @@ export default {
 }
 
 .sidebar-header {
-  padding: 25px;
-  border-bottom: 2px solid var(--border);
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  color: white;
+  gap: 16px;
+  background: var(--bg);
   position: relative;
   z-index: 1;
 }
 
+.dark-mode .sidebar-header {
+  background: var(--bg-dark);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.messages-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.messages-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--primary);
+  stroke-width: 2;
+}
+
+.dark-mode .messages-icon {
+  color: var(--primary);
+}
+
 .sidebar-header h2 {
   margin: 0;
-  color: white;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.connection-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ef4444;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.connection-badge.connected {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.dark-mode .connection-badge {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.dark-mode .connection-badge.connected {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: pulse-red 2s infinite;
+}
+
+.connection-badge.connected .status-dot {
+  background: #10b981;
+  animation: pulse-green 2s infinite;
+}
+
+.btn-new-chat {
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  color: #6b7280;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.btn-new-chat:hover {
+  background: rgba(79, 70, 229, 0.05);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-new-chat:active {
+  transform: scale(0.98);
+}
+
+.plus-icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+}
+
+.dark-mode .btn-new-chat {
+  color: #9ca3af;
+  border-color: #374151;
+}
+
+.dark-mode .btn-new-chat:hover {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 .connection-status {
@@ -1147,21 +1434,10 @@ export default {
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
 }
 
-.status-indicator.online {
-  background: var(--success);
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
-  animation: pulse-green 2s infinite;
-}
 
 @keyframes pulse-green {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
-}
-
-.status-text {
-  color: rgba(255, 255, 255, 0.9);
-  text-transform: capitalize;
-  font-weight: 500;
 }
 
 .chat-rooms-list {
@@ -1194,16 +1470,25 @@ export default {
 }
 
 .chat-room-item.active {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  color: white;
-  box-shadow: var(--shadow-md);
-  transform: translateX(8px);
+  background: #f0f0ff;
+  border-left: 3px solid var(--primary);
+  transform: translateX(0);
+  box-shadow: none;
 }
 
-.chat-room-item.active .room-info h3,
+.dark-mode .chat-room-item.active {
+  background: #2a2a3e;
+  border-left-color: var(--primary);
+}
+
+.chat-room-item.active .room-info h3 {
+  color: var(--text);
+  font-weight: 700;
+}
+
 .chat-room-item.active .last-message,
 .chat-room-item.active .room-time {
-  color: white;
+  color: var(--text-muted);
 }
 
 .room-avatar {
@@ -1245,56 +1530,97 @@ export default {
 }
 
 .chat-room-item.active .room-avatar {
-  background: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.online-indicator {
-  position: absolute;
-  bottom: 3px;
-  right: 3px;
-  width: 14px;
-  height: 14px;
-  background: var(--success);
-  border: 3px solid var(--bg-light);
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-}
-
-.chat-room-item.active .online-indicator {
-  border-color: white;
-}
-
-.btn-delete-room {
-  position: absolute;
-  top: 50%;
-  right: 15px;
-  transform: translateY(-50%);
-  background: rgba(239, 68, 68, 0.1);
   border: none;
-  border-radius: 50%;
-  width: 35px;
-  height: 35px;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+/* Context Menu */
+.context-menu {
+  position: fixed;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  min-width: 220px;
+  padding: 8px;
+  animation: contextMenuSlideIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(79, 70, 229, 0.2);
+  backdrop-filter: blur(20px);
+}
+
+.dark-mode .context-menu {
+  background: #2a2a2a;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes contextMenuSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.context-menu-item {
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
   cursor: pointer;
-  opacity: 0;
-  transition: all 0.3s ease;
-  font-size: 1rem;
-  z-index: 10;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  color: var(--text);
 }
 
-.chat-room-item:hover .btn-delete-room {
-  opacity: 1;
-  background: rgba(239, 68, 68, 0.2);
+.context-menu-item:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
-.btn-delete-room:hover {
-  background: var(--danger) !important;
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+.dark-mode .context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.context-menu-item.delete-item {
+  color: #ef4444;
+}
+
+.context-menu-item.delete-item:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.dark-mode .context-menu-item.delete-item:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.context-menu-item.edit-item {
+  color: #3b82f6;
+}
+
+.context-menu-item.edit-item:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.dark-mode .context-menu-item.edit-item:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.context-icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+  flex-shrink: 0;
 }
 
 .room-info {
@@ -1328,7 +1654,8 @@ export default {
 }
 
 .chat-room-item.active .typing-indicator {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .room-meta {
@@ -1346,23 +1673,31 @@ export default {
 }
 
 .unread-badge {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
   border-radius: 50%;
-  width: 22px;
+  min-width: 22px;
   height: 22px;
+  padding: 0 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  font-weight: bold;
-  box-shadow: var(--shadow-sm);
+  font-size: 0.7rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
   animation: pulse-badge 2s infinite;
+  border: 2px solid var(--bg-light);
 }
 
 @keyframes pulse-badge {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  }
+  50% { 
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6);
+  }
 }
 
 .empty-rooms {
@@ -1441,9 +1776,12 @@ export default {
   opacity: 0.8;
 }
 
-.no-room-selected h3 {
+.no-room-selected :deep(.animated-gradient-text) {
   margin-bottom: 15px;
-  color: var(--text);
+}
+
+.no-room-selected h3 {
+  margin: 0;
   font-size: 1.8rem;
   font-weight: 600;
 }
@@ -1534,28 +1872,10 @@ export default {
 }
 
 .chat-details h3 {
-  margin: 0 0 8px 0;
+  margin: 0;
   color: var(--text);
   font-size: 1.3rem;
   font-weight: 600;
-}
-
-.status {
-  margin: 0;
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status .online {
-  color: var(--success);
-  font-weight: 500;
-}
-
-.status .offline {
-  color: var(--text-muted);
-  font-weight: 500;
 }
 
 /* Messages */
@@ -1634,35 +1954,40 @@ export default {
 
 .message-bubble {
   background: white;
-  padding: 12px 16px;
-  border-radius: 18px;
+  padding: 14px 18px;
+  border-radius: 20px;
   word-wrap: break-word;
   position: relative;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-block;
   max-width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  color: #000000;
 }
 
 .message-bubble:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 .message-sent .message-bubble {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25), 0 2px 4px rgba(59, 130, 246, 0.15);
 }
 
 .message-sent .message-bubble:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35), 0 4px 8px rgba(59, 130, 246, 0.2);
 }
 
 .message-bubble p {
   margin: 0 0 8px 0;
   line-height: 1.5;
+  color: inherit;
 }
 
 .message-footer {
@@ -1678,40 +2003,101 @@ export default {
   font-weight: 500;
 }
 
-.message-actions {
-  display: flex;
-  gap: 6px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.message-sent .message-bubble {
+  cursor: context-menu;
 }
 
-.message-bubble:hover .message-actions {
-  opacity: 1;
+/* Inline Edit Mode */
+.edit-mode {
+  width: 100%;
 }
 
-.action-btn {
-  background: rgba(0, 0, 0, 0.1);
-  border: none;
-  padding: 4px 6px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  opacity: 0.7;
+.edit-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  border: 2px solid var(--primary);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+  background: white;
+  resize: vertical;
+  margin-bottom: 8px;
   transition: all 0.3s ease;
 }
 
-.action-btn:hover {
-  opacity: 1;
-  background: rgba(0, 0, 0, 0.2);
-  transform: scale(1.1);
+.dark-mode .edit-textarea {
+  background: #1a1a1a;
+  border-color: var(--primary);
+  color: white;
 }
 
-.message-sent .action-btn {
-  background: rgba(255, 255, 255, 0.2);
+.edit-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.message-sent .action-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+
+.edit-btn {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+}
+
+.cancel-btn {
+  color: #6b7280;
+}
+
+.cancel-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.save-btn {
+  color: #10b981;
+}
+
+.save-btn:hover {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.edit-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+  display: block;
+  text-align: right;
+}
+
+.message-sent .edit-textarea {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text);
+}
+
+.dark-mode .message-sent .edit-textarea {
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
 }
 
 /* Typing Indicator */
@@ -1739,11 +2125,12 @@ export default {
 }
 
 .typing-dots span {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   border-radius: 50%;
   animation: typing 1.4s infinite ease-in-out;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
 }
 
 .typing-dots span:nth-child(2) {
@@ -1773,98 +2160,123 @@ export default {
 
 /* Message Input */
 .message-input-container {
-  padding: 25px;
-  border-top: 2px solid var(--border);
-  background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg) 100%);
-  backdrop-filter: blur(10px);
+  padding: 20px 30px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: white;
   position: relative;
 }
 
-.message-input-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.03) 0%, rgba(124, 58, 237, 0.03) 100%);
-  pointer-events: none;
+.dark-mode .message-input-container {
+  background: #1a1a1a;
+  border-top-color: rgba(255, 255, 255, 0.08);
 }
 
 .input-wrapper {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   align-items: center;
-  position: relative;
-  z-index: 1;
+  background: #f5f5f5;
+  border-radius: 24px;
+  padding: 6px 8px 6px 20px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.dark-mode .input-wrapper {
+  background: #2a2a2a;
+}
+
+.input-wrapper:focus-within {
+  background: white;
+  border-color: #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.dark-mode .input-wrapper:focus-within {
+  background: #333;
+  border-color: #404040;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .message-input {
   flex: 1;
-  padding: 15px 20px;
-  border: 2px solid var(--border);
-  border-radius: 30px;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
   color: var(--text);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-
-.message-input:focus {
+  font-weight: 400;
   outline: none;
-  border-color: var(--primary);
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-  transform: translateY(-2px);
 }
 
 .message-input::placeholder {
-  color: var(--text-muted);
+  color: #9ca3af;
   font-weight: 400;
 }
 
+.dark-mode .message-input::placeholder {
+  color: #6b7280;
+}
+
+.message-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .send-btn {
-  padding: 15px;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: var(--primary);
   color: white;
   border: none;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .send-btn:hover:not(:disabled) {
-  transform: scale(1.1);
-  box-shadow: var(--shadow-md);
+  background: #4338ca;
+  transform: scale(1.05);
+}
+
+.send-btn:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 .send-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  transform: none;
+  background: #d1d5db;
+}
+
+.dark-mode .send-btn:disabled {
+  background: #4b5563;
+}
+
+.send-icon {
+  width: 18px;
+  height: 18px;
+  color: white;
+  fill: white;
 }
 
 .connection-status {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 10px;
-  font-size: 0.9rem;
+  margin-top: 12px;
+  font-size: 0.85rem;
   color: var(--text-muted);
-  position: relative;
-  z-index: 1;
+  padding-left: 4px;
 }
 
 .connection-status .status-indicator {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--danger);
 }
@@ -2180,27 +2592,6 @@ export default {
   gap: 8px;
 }
 
-.status-online {
-  color: var(--success);
-  font-size: 0.95rem;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-.user-result:hover .status-online {
-  color: #34d399;
-}
-
-.status-offline {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: color 0.3s ease;
-}
-
-.user-result:hover .status-offline {
-  color: rgba(255, 255, 255, 0.7);
-}
 
 .user-action {
   display: flex;
@@ -2396,118 +2787,286 @@ export default {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .chat-container {
-    flex-direction: column;
-  }
-  
+
+/* Tablet (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
   .chat-sidebar {
-    width: 100%;
-    height: 250px;
-    border-right: none;
-    border-bottom: 2px solid var(--border);
-  }
-  
-  .chat-window {
-    height: calc(100vh - 320px);
+    width: 320px;
   }
   
   .sidebar-header {
     padding: 20px;
   }
   
-  .sidebar-header h2 {
-    font-size: 1.5rem;
-  }
-  
   .chat-room-item {
-    padding: 15px 20px;
-    margin: 0 10px;
+    padding: 14px 18px;
+    margin: 0 12px;
   }
   
-  .room-avatar {
-    width: 45px;
-    height: 45px;
-    font-size: 1rem;
-  }
-  
-  .chat-header {
-    padding: 20px;
-  }
-  
+  .room-avatar,
   .chat-avatar {
-    width: 45px;
-    height: 45px;
-    font-size: 1rem;
+    width: 48px;
+    height: 48px;
+    font-size: 1.05rem;
   }
   
-  .chat-details h3 {
-    font-size: 1.1rem;
+  .message-content {
+    max-width: 55%;
   }
   
   .messages-container {
     padding: 20px;
-    max-height: calc(100vh - 300px);
+  }
+  
+  .modal-content {
+    max-width: 85%;
+  }
+}
+
+/* Mobile & Small Tablet (max-width: 768px) */
+@media (max-width: 768px) {
+  .chat-page {
+    height: 100vh;
+    max-height: 100vh;
+  }
+  
+  .chat-container {
+    flex-direction: row;
+    max-width: 100%;
+  }
+  
+  .chat-sidebar {
+    width: 100%;
+    max-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    height: auto;
+    max-height: 50vh;
+    z-index: 10;
+    overflow-y: auto;
+  }
+  
+  .chat-window {
+    width: 100%;
+    height: calc(100vh - 70px);
+    margin-top: 0;
+  }
+  
+  .sidebar-header {
+    padding: 16px 20px;
+    flex-direction: row;
+    gap: 12px;
+  }
+  
+  .header-top {
+    flex-wrap: wrap;
+  }
+  
+  .sidebar-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .connection-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
+  
+  .btn-new-chat {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+  
+  .plus-icon {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .chat-rooms-list {
+    max-height: calc(50vh - 120px);
+  }
+  
+  .chat-room-item {
+    padding: 12px 16px;
+    margin: 0 8px;
+    border-radius: 12px;
+  }
+  
+  .chat-room-item:hover {
+    transform: translateX(3px);
+  }
+  
+  .room-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
+  
+  .room-info h3 {
+    font-size: 0.95rem;
+  }
+  
+  .last-message {
+    font-size: 0.85rem;
+  }
+  
+  .room-time {
+    font-size: 0.75rem;
+  }
+  
+  .unread-badge {
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.65rem;
+  }
+  
+  .chat-header {
+    padding: 16px 20px;
+  }
+  
+  .chat-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
+  
+  .chat-details h3 {
+    font-size: 1.05rem;
+  }
+  
+  .messages-container {
+    padding: 16px;
+    max-height: calc(100vh - 280px);
   }
   
   .message-content {
-    max-width: 70%;
+    max-width: 75%;
+  }
+  
+  .message-bubble {
+    padding: 12px 16px;
+    border-radius: 16px;
+  }
+  
+  .sender-name {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+  
+  .message-time {
+    font-size: 0.7rem;
   }
   
   .message-input-container {
-    padding: 20px;
+    padding: 14px 16px;
+  }
+  
+  .input-wrapper {
+    padding: 5px 8px 5px 16px;
   }
   
   .message-input {
-    padding: 12px 18px;
     font-size: 0.95rem;
   }
   
   .send-btn {
-    width: 45px;
-    height: 45px;
-    padding: 12px;
+    width: 38px;
+    height: 38px;
   }
   
+  .send-icon {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .connection-status {
+    font-size: 0.8rem;
+    margin-top: 10px;
+  }
+  
+  /* Modal adjustments */
   .modal-content {
     width: 95%;
-    margin: 20px;
+    max-width: 95%;
+    margin: 10px;
+    max-height: 90vh;
   }
   
   .modal-header {
-    padding: 25px 25px 20px 25px;
+    padding: 20px;
   }
   
   .header-content h3 {
+    font-size: 1.4rem;
+  }
+  
+  .header-subtitle {
+    font-size: 0.95rem;
+  }
+  
+  .btn-close {
+    width: 40px;
+    height: 40px;
     font-size: 1.5rem;
   }
   
   .modal-body {
-    padding: 25px;
+    padding: 20px;
+    max-height: calc(90vh - 150px);
+  }
+  
+  .search-input {
+    padding: 14px 20px;
+    font-size: 1rem;
   }
   
   .user-result {
-    padding: 15px;
-    gap: 15px;
+    padding: 14px;
+    gap: 12px;
+    border-radius: 16px;
   }
   
   .user-avatar {
-    width: 45px;
-    height: 45px;
+    width: 48px;
+    height: 48px;
     font-size: 1rem;
   }
   
   .user-info h4 {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+  }
+  
+  .user-role,
+  .user-email {
+    font-size: 0.85rem;
+  }
+  
+  .action-text {
+    font-size: 0.85rem;
   }
   
   .quick-actions {
     flex-direction: column;
-    align-items: center;
+    gap: 10px;
   }
   
   .quick-btn {
-    width: 200px;
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  /* Context menu adjustments */
+  .context-menu {
+    min-width: 200px;
+    max-width: 90vw;
+  }
+  
+  .context-menu-item {
+    padding: 12px 14px;
+    font-size: 0.9rem;
   }
 }
 
@@ -2558,18 +3117,25 @@ export default {
   }
   
   .message-input-container {
-    padding: 15px;
+    padding: 15px 20px;
+  }
+  
+  .input-wrapper {
+    padding: 4px 6px 4px 14px;
   }
   
   .message-input {
-    padding: 10px 15px;
     font-size: 0.9rem;
   }
   
   .send-btn {
-    width: 40px;
-    height: 40px;
-    padding: 10px;
+    width: 36px;
+    height: 36px;
+  }
+  
+  .send-icon {
+    width: 15px;
+    height: 15px;
   }
   
   .modal-header {
