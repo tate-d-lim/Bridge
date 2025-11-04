@@ -160,6 +160,10 @@ export default {
   backdrop-filter: blur(20px);
 }
 
+.dark-mode .quiz-card-content {
+  background: #000000;
+}
+
 .card-pattern {
   position: absolute;
   inset: 0;
@@ -261,8 +265,12 @@ export default {
 .card-header h3 {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text);
+  color: black;
   margin: 0;
+}
+
+.dark-mode .card-header h3 {
+  color: white;
 }
 
 .duration-badge {
@@ -271,6 +279,10 @@ export default {
   gap: 4px;
   color: var(--text-muted);
   font-size: 14px;
+}
+
+.dark-mode .duration-badge {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .duration-icon {
@@ -285,6 +297,10 @@ export default {
   line-height: 1.5;
 }
 
+.dark-mode .quiz-description {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .quiz-info {
   display: flex;
   align-items: center;
@@ -297,6 +313,10 @@ export default {
   font-size: 14px;
 }
 
+.dark-mode .questions-count {
+  color: rgba(255, 255, 255, 0.7);
+}
+
 .difficulty-stars {
   display: flex;
   gap: 2px;
@@ -307,9 +327,6 @@ export default {
   color: var(--border);
 }
 
-.dark-mode .star {
-  color: var(--border-muted);
-}
 
 .star-filled {
   color: #fbbf24;

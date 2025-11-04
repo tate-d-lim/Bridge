@@ -10,7 +10,9 @@
       <div class="footer-content">
         <div class="footer-section footer-brand">
           <div class="footer-brand-header">
-            <img :src="bridgeLogo" alt="Bridge Logo" class="footer-logo" />
+            <!-- REPLACE lines 13–14 -->
+            <img :src="bridgeLogo" alt="Bridge Logo" class="footer-logo footer-logo-light" />
+            <img :src="logoBlack" alt="Bridge Logo" class="footer-logo footer-logo-dark" />
             <h3>Bridge</h3>
           </div>
           <p>Connecting employers with skilled migrant workers in Singapore</p>
@@ -67,6 +69,7 @@ import NavBar from './components/NavBar.vue'
 import BadgeNotification from './components/BadgeNotification.vue'
 import Toast from './components/Toast.vue'
 import bridgeLogo from './assets/bridgeLogo.png'
+import logoBlack from './assets/logo-black.png'
 
 export default {
   name: 'App',
@@ -86,6 +89,7 @@ export default {
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
     const isEmployer = computed(() => store.getters['auth/isEmployer'])
     const isJobSeeker = computed(() => store.getters['auth/isJobSeeker'])
+    const isDarkMode = computed(() => store.getters['theme/isDarkMode'])
 
     // Watch for authentication changes to initialize chat
     watch(isAuthenticated, async (authenticated) => {
@@ -114,9 +118,11 @@ export default {
 
     return {
       bridgeLogo,
+      logoBlack, 
       isAuthenticated,
       isEmployer,
-      isJobSeeker
+      isJobSeeker,
+      isDarkMode
     }
   }
 }
@@ -167,10 +173,16 @@ export default {
 }
 
 .footer-logo {
-  width: 40px;
   height: 40px;
+  width: auto;
   flex-shrink: 0;
+  display: block;
 }
+
+/* Show/hide based on global .dark-mode class set by NavBar */
+.footer-logo-dark { display: none; }
+.dark-mode .footer-logo-dark { display: block; }
+.dark-mode .footer-logo-light { display: none; }
 
 .footer-brand h3 {
   font-size: 1.75rem;

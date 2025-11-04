@@ -13,118 +13,175 @@
       </button>
 
       <div class="nav-menu" :class="{ active: menuOpen }">
-        <!-- Left Side Navigation Links -->
-        <template v-if="isAuthenticated">
-          <!-- Home Link -->
-          <router-link :to="getHomeRoute" class="nav-link" @click="closeMenu">
-            Home
-          </router-link>
+        <!-- Close button for mobile menu -->
+        <button class="menu-close" @click="closeMenu">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
 
-          <!-- Job Seeker-specific links -->
-          <template v-if="isJobSeeker">
+        <!-- Left Side Navigation Links -->
+        <div class="nav-links-section">
+          <template v-if="isAuthenticated">
+            <!-- Home Link -->
+            <router-link :to="getHomeRoute" class="nav-link" @click="closeMenu">
+              Home
+            </router-link>
+
+            <!-- Job Seeker-specific links -->
+            <template v-if="isJobSeeker">
+              <router-link to="/browse-jobs" class="nav-link" @click="closeMenu">
+                Browse Jobs
+              </router-link>
+              <router-link to="/reviews" class="nav-link" @click="closeMenu">
+                Company Reviews
+              </router-link>
+              <router-link to="/quizzes" class="nav-link" @click="closeMenu">
+                AI Quiz
+              </router-link>
+            </template>
+
+            <!-- Employer-specific links -->
+            <template v-if="isEmployer">
+              <router-link to="/employer/post-job" class="nav-link" @click="closeMenu">
+                Post Job
+              </router-link>
+              <router-link to="/candidates" class="nav-link" @click="closeMenu">
+                Browse Candidates
+              </router-link>
+            </template>
+          </template>
+
+          <!-- Non-authenticated user navigation -->
+          <template v-else>
+            <router-link to="/" class="nav-link" @click="closeMenu">
+              Home
+            </router-link>
             <router-link to="/browse-jobs" class="nav-link" @click="closeMenu">
               Browse Jobs
             </router-link>
-            <router-link to="/reviews" class="nav-link" @click="closeMenu">
-              Company Reviews
-            </router-link>
-            <router-link to="/quizzes" class="nav-link" @click="closeMenu">
-              AI Quiz
-            </router-link>
           </template>
-
-          <!-- Employer-specific links -->
-          <template v-if="isEmployer">
-            <router-link to="/employer/post-job" class="nav-link" @click="closeMenu">
-              Post Job
-            </router-link>
-            <router-link to="/candidates" class="nav-link" @click="closeMenu">
-              Browse Candidates
-            </router-link>
-          </template>
-        </template>
-
-        <!-- Non-authenticated user navigation -->
-        <template v-else>
-          <router-link to="/" class="nav-link" @click="closeMenu">
-            Home
-          </router-link>
-          <router-link to="/browse-jobs" class="nav-link" @click="closeMenu">
-            Browse Jobs
-          </router-link>
-        </template>
+        </div>
 
         <!-- Spacer to push right items to the right -->
         <div class="nav-spacer"></div>
 
         <!-- Right Side Controls -->
-        <template v-if="isAuthenticated">
-          <!-- Dark Mode Toggle -->
-          <button @click="toggleDarkMode" class="dark-mode-toggle" title="Toggle Dark Mode">
-            <img v-if="isDarkMode" src="../assets/moon-white.svg" alt="Light Mode" class="toggle-icon" />
-            <img v-else src="../assets/moon-black.svg" alt="Dark Mode" class="toggle-icon" />
-          </button>
-
-          <!-- Messages Icon -->
-          <router-link to="/chat" class="nav-link chat-icon" @click="closeMenu">
-            <div class="chat-icon-wrapper">
-              <img v-if="isDarkMode" src="../assets/darkModeMessages.png" alt="Messages" class="envelope-icon" />
-              <img v-else src="../assets/messages-light.svg" alt="Messages" class="envelope-icon" />
-              <span v-if="totalUnreadCount > 0" class="unread-badge-nav">{{ totalUnreadCount > 99 ? '99+' : totalUnreadCount }}</span>
-            </div>
-          </router-link>
-
-          <!-- User Menu -->
-          <div class="user-menu">
-            <button @click="toggleUserDropdown" class="user-avatar">
-              <img 
-                v-if="userProfile?.photoURL" 
-                :src="userProfile.photoURL" 
-                :alt="userProfile.name"
-                class="avatar-image"
-              />
-              <span v-else>{{ userInitials }}</span>
+        <div class="nav-controls-section">
+          <template v-if="isAuthenticated">
+            <!-- Dark Mode Toggle -->
+            <button @click="toggleDarkMode" class="dark-mode-toggle mobile-control-item" title="Toggle Dark Mode">
+              <img v-if="isDarkMode" src="../assets/moon-white.svg" alt="Light Mode" class="toggle-icon" />
+              <img v-else src="../assets/moon-black.svg" alt="Dark Mode" class="toggle-icon" />
+              <span class="control-label">{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
             </button>
-            <div class="user-dropdown" :class="{ active: userDropdownOpen }">
-              <router-link to="/profile" class="dropdown-item" @click="closeMenus">
-                <img v-if="isDarkMode" src="../assets/userDark.png" alt="" class="dropdown-icon" />
-                <img v-else src="../assets/user.svg" alt="" class="dropdown-icon" />
-                Profile
-              </router-link>
-              <router-link v-if="isJobSeeker" to="/achievements" class="dropdown-item" @click="closeMenus">
-                <img src="../assets/trophy-star.svg" alt="" class="dropdown-icon" />
-                Achievements
-              </router-link>
-              <router-link v-if="isJobSeeker" to="/applications" class="dropdown-item" @click="closeMenus">
-                <img src="../assets/briefcase.svg" alt="" class="dropdown-icon" /> Applications
-              </router-link>
-              <router-link v-if="isEmployer" to="/employer/applications" class="dropdown-item" @click="closeMenus">
-                <img src="../assets/task-checklist.svg" alt="" class="dropdown-icon" /> Applications
-              </router-link>
-              <button @click="handleLogout" class="dropdown-item">
-                <img v-if="isDarkMode" src="../assets/user-logout-dark.png" alt="" class="dropdown-icon" />
-                <img v-else src="../assets/user-logout.svg" alt="" class="dropdown-icon" />
-                Logout
-              </button>
-            </div>
-          </div>
-        </template>
 
-        <!-- Guest Right Side Controls -->
-        <template v-else>
-          <!-- Dark Mode Toggle for guests -->
-          <button @click="toggleDarkMode" class="dark-mode-toggle" title="Toggle Dark Mode">
-            <img v-if="isDarkMode" src="../assets/moon-white.svg" alt="Light Mode" class="toggle-icon" />
-            <img v-else src="../assets/moon-black.svg" alt="Dark Mode" class="toggle-icon" />
-          </button>
-          
-          <router-link to="/login" class="nav-link" @click="closeMenu">
-            Login
-          </router-link>
-          <router-link to="/register" class="nav-link" @click="closeMenu">
-            Sign Up
-          </router-link>
-        </template>
+            <!-- Messages Icon -->
+            <router-link to="/chat" class="nav-link chat-icon mobile-control-item" @click="closeMenu">
+              <div class="chat-icon-wrapper">
+                <img v-if="isDarkMode" src="../assets/darkModeMessages.png" alt="Messages" class="envelope-icon" />
+                <img v-else src="../assets/messages-light.svg" alt="Messages" class="envelope-icon" />
+                <span v-if="totalUnreadCount > 0" class="unread-badge-nav">{{ totalUnreadCount > 99 ? '99+' : totalUnreadCount }}</span>
+              </div>
+              <span class="control-label">Messages</span>
+            </router-link>
+
+            <!-- User Profile Section (Mobile) -->
+            <div class="mobile-user-section">
+              <div class="mobile-user-header">
+                <div class="user-avatar-mobile">
+                  <img 
+                    v-if="userProfile?.photoURL" 
+                    :src="userProfile.photoURL" 
+                    :alt="userProfile.name"
+                    class="avatar-image"
+                  />
+                  <span v-else>{{ userInitials }}</span>
+                </div>
+                <div class="user-info">
+                  <span class="user-name">{{ userProfile?.name || 'User' }}</span>
+                  <span class="user-type">{{ isJobSeeker ? 'Job Seeker' : 'Employer' }}</span>
+                </div>
+              </div>
+              
+              <div class="mobile-user-links">
+                <router-link to="/profile" class="dropdown-item" @click="closeMenu">
+                  <img v-if="isDarkMode" src="../assets/userDark.png" alt="" class="dropdown-icon" />
+                  <img v-else src="../assets/user.svg" alt="" class="dropdown-icon" />
+                  Profile
+                </router-link>
+                <router-link v-if="isJobSeeker" to="/achievements" class="dropdown-item" @click="closeMenu">
+                  <img src="../assets/trophy-star.svg" alt="" class="dropdown-icon" />
+                  Achievements
+                </router-link>
+                <router-link v-if="isJobSeeker" to="/applications" class="dropdown-item" @click="closeMenu">
+                  <img src="../assets/briefcase.svg" alt="" class="dropdown-icon" /> Applications
+                </router-link>
+                <router-link v-if="isEmployer" to="/employer/applications" class="dropdown-item" @click="closeMenu">
+                  <img src="../assets/task-checklist.svg" alt="" class="dropdown-icon" /> Applications
+                </router-link>
+                <button @click="handleLogout" class="dropdown-item">
+                  <img v-if="isDarkMode" src="../assets/user-logout-dark.png" alt="" class="dropdown-icon" />
+                  <img v-else src="../assets/user-logout.svg" alt="" class="dropdown-icon" />
+                  Logout
+                </button>
+              </div>
+            </div>
+
+            <!-- User Menu (Desktop) -->
+            <div class="user-menu">
+              <button @click="toggleUserDropdown" class="user-avatar">
+                <img 
+                  v-if="userProfile?.photoURL" 
+                  :src="userProfile.photoURL" 
+                  :alt="userProfile.name"
+                  class="avatar-image"
+                />
+                <span v-else>{{ userInitials }}</span>
+              </button>
+              <div class="user-dropdown" :class="{ active: userDropdownOpen }">
+                <router-link to="/profile" class="dropdown-item" @click="closeMenus">
+                  <img v-if="isDarkMode" src="../assets/userDark.png" alt="" class="dropdown-icon" />
+                  <img v-else src="../assets/user.svg" alt="" class="dropdown-icon" />
+                  Profile
+                </router-link>
+                <router-link v-if="isJobSeeker" to="/achievements" class="dropdown-item" @click="closeMenus">
+                  <img src="../assets/trophy-star.svg" alt="" class="dropdown-icon" />
+                  Achievements
+                </router-link>
+                <router-link v-if="isJobSeeker" to="/applications" class="dropdown-item" @click="closeMenus">
+                  <img src="../assets/briefcase.svg" alt="" class="dropdown-icon" /> Applications
+                </router-link>
+                <router-link v-if="isEmployer" to="/employer/applications" class="dropdown-item" @click="closeMenus">
+                  <img src="../assets/task-checklist.svg" alt="" class="dropdown-icon" /> Applications
+                </router-link>
+                <button @click="handleLogout" class="dropdown-item">
+                  <img v-if="isDarkMode" src="../assets/user-logout-dark.png" alt="" class="dropdown-icon" />
+                  <img v-else src="../assets/user-logout.svg" alt="" class="dropdown-icon" />
+                  Logout
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <!-- Guest Right Side Controls -->
+          <template v-else>
+            <!-- Dark Mode Toggle for guests -->
+            <button @click="toggleDarkMode" class="dark-mode-toggle mobile-control-item" title="Toggle Dark Mode">
+              <img v-if="isDarkMode" src="../assets/moon-white.svg" alt="Light Mode" class="toggle-icon" />
+              <img v-else src="../assets/moon-black.svg" alt="Dark Mode" class="toggle-icon" />
+              <span class="control-label">{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
+            </button>
+            
+            <router-link to="/login" class="nav-link" @click="closeMenu">
+              Login
+            </router-link>
+            <router-link to="/register" class="nav-link nav-link-signup" @click="closeMenu">
+              Sign Up
+            </router-link>
+          </template>
+        </div>
       </div>
     </div>
   </nav>
@@ -143,6 +200,7 @@ export default {
     
     const menuOpen = ref(false)
     const userDropdownOpen = ref(false)
+    const navDropdownOpen = ref(false)
     const isDarkMode = ref(false)
 
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
@@ -222,9 +280,14 @@ export default {
       userDropdownOpen.value = !userDropdownOpen.value
     }
 
+    const toggleNavDropdown = () => {
+      navDropdownOpen.value = !navDropdownOpen.value
+    }
+
     const closeMenus = () => {
       menuOpen.value = false
       userDropdownOpen.value = false
+      navDropdownOpen.value = false
     }
 
     const handleLogout = async () => {
@@ -260,6 +323,7 @@ export default {
     return {
       menuOpen,
       userDropdownOpen,
+      navDropdownOpen,
       isDarkMode,
       isAuthenticated,
       isJobSeeker,
@@ -271,6 +335,7 @@ export default {
       toggleMenu,
       closeMenu,
       toggleUserDropdown,
+      toggleNavDropdown,
       closeMenus,
       handleLogout,
       toggleDarkMode
@@ -281,7 +346,7 @@ export default {
 
 <style scoped>
 .navbar {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
@@ -294,7 +359,7 @@ export default {
 
 /* Dark mode backdrop blur */
 .dark-mode .navbar {
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.95);
 }
 
 .nav-container {
@@ -332,6 +397,7 @@ export default {
   border: none;
   cursor: pointer;
   padding: 5px;
+  z-index: 102;
 }
 
 .nav-toggle span {
@@ -339,6 +405,15 @@ export default {
   height: 3px;
   background: var(--text);
   transition: all 0.3s;
+}
+
+/* Ensure hamburger is visible in light mode */
+.nav-toggle span {
+  background: #333333;
+}
+
+.dark-mode .nav-toggle span {
+  background: #ffffff;
 }
 
 .nav-toggle.active span:nth-child(1) {
@@ -358,6 +433,14 @@ export default {
   align-items: center;
   gap: 25px;
   flex: 1;
+}
+
+.nav-links-section {
+  display: contents;
+}
+
+.nav-controls-section {
+  display: contents;
 }
 
 .nav-link {
@@ -462,12 +545,12 @@ export default {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--text-muted);
-  color: var(--bg-light);
-  border: none;
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--border);
   cursor: pointer;
   font-weight: bold;
-  transition: transform 0.3s;
+  transition: all 0.3s;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -481,13 +564,20 @@ export default {
   object-fit: cover;
 }
 
-/* Dark mode avatar - keep colorful gradient */
-.dark-mode .user-avatar {
+/* Only show border when no image */
+.user-avatar:not(:has(.avatar-image)) {
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  border: none;
 }
 
 .user-avatar:hover {
   transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dark-mode .user-avatar {
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .user-dropdown {
@@ -559,6 +649,60 @@ export default {
 .dark-mode .dropdown-item img[src*="briefcase"],
 .dark-mode .dropdown-item img[src*="task-checklist"] {
   filter: brightness(0) invert(1);
+.nav-hamburger-menu {
+  position: relative;
+}
+
+.hamburger-button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  transition: transform 0.3s;
+}
+
+.hamburger-button:hover {
+  transform: scale(1.1);
+}
+
+.hamburger-button span {
+  width: 22px;
+  height: 2.5px;
+  background: var(--text);
+  transition: all 0.3s;
+  border-radius: 2px;
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s;
+  overflow: hidden;
+}
+
+.dark-mode .nav-dropdown {
+  background: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.nav-dropdown.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 @media (max-width: 768px) {
@@ -568,35 +712,117 @@ export default {
 
   .nav-toggle {
     display: flex;
+    z-index: 102;
+  }
+
+  /* Hide hamburger when menu is open */
+  .nav-toggle.active {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .nav-menu {
     position: fixed;
-    top: 70px;
-    left: 0;
+    top: 0;
     right: 0;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    width: 280px;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-left: 1px solid var(--border);
     flex-direction: column;
     align-items: stretch;
-    padding: 20px;
-    box-shadow: var(--shadow-md);
-    transform: translateY(-100%);
+    padding: 80px 20px 20px 20px;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    transform: translateX(100%);
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    z-index: 101;
+  }
+
+  .dark-mode .nav-menu {
+    background: rgba(0, 0, 0, 0.98);
+    border-left-color: rgba(255, 255, 255, 0.1);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.4);
   }
 
   .nav-menu.active {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
     visibility: visible;
   }
 
-  .nav-link,
-  .btn {
-    padding: 12px 0;
+  .nav-links-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-controls-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    padding-top: 20px;
+  }
+
+  .nav-link {
+    padding: 14px 16px;
+    text-align: left;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    transition: background 0.2s;
+  }
+
+  .nav-link:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .dark-mode .nav-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .nav-link-signup {
+    margin-top: 8px;
     text-align: center;
+  }
+
+  .dark-mode-toggle {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+  }
+
+  .dark-mode-toggle:hover {
+    background: rgba(0, 0, 0, 0.05);
+    transform: none;
+  }
+
+  .dark-mode .dark-mode-toggle:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .chat-icon {
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    justify-content: flex-start;
+  }
+
+  .chat-icon:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .dark-mode .chat-icon:hover {
+    background: rgba(255, 255, 255, 0.05);
   }
 
   .user-menu {
@@ -607,23 +833,277 @@ export default {
     width: 100%;
     height: 50px;
     border-radius: 8px;
+    justify-content: flex-start;
+    gap: 12px;
+    padding-left: 16px;
+    margin-bottom: 4px;
   }
 
   .user-avatar .avatar-image {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  /* Add text label next to avatar on mobile */
+  .user-avatar::after {
+    content: 'Account';
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .user-avatar:not(:has(.avatar-image)) {
+    background: transparent;
+    border: 1px solid var(--border);
+  }
+
+  .user-avatar:not(:has(.avatar-image))::before {
+    content: '';
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
   }
 
   .user-dropdown {
     position: static;
-    margin-top: 10px;
+    margin-top: 8px;
     box-shadow: none;
     border: 1px solid var(--border);
+    transform: none;
+  }
+
+  .user-dropdown.active {
+    transform: none;
   }
 
   .nav-spacer {
     display: none;
+  }
+
+  /* Backdrop overlay for mobile menu */
+  .nav-menu::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 280px;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .nav-menu.active::before {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
+/* Tablet size adjustments */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .nav-menu {
+    gap: 15px;
+  }
+
+  .nav-container {
+    padding: 0 30px;
+  }
+}
+
+.menu-close {
+  display: none;
+}
+
+.control-label {
+  display: none;
+}
+
+.mobile-user-section {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .menu-close {
+    display: flex;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    z-index: 103;
+  }
+
+  .menu-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .dark-mode .menu-close:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .menu-close svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .mobile-control-item {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .control-label {
+    display: inline;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .dark-mode-toggle {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+  }
+
+  .chat-icon {
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    justify-content: flex-start;
+  }
+
+  .chat-icon-wrapper {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Mobile User Section */
+  .mobile-user-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+  }
+
+  .mobile-user-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+
+  .dark-mode .mobile-user-header {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .user-avatar-mobile {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .user-avatar-mobile .avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .user-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-type {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .mobile-user-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .mobile-user-links .dropdown-item {
+    padding: 14px 16px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+
+  .mobile-user-links .dropdown-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .dark-mode .mobile-user-links .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Hide desktop user menu on mobile */
+  .user-menu {
+    display: none;
+  }
+
+  /* Remove old mobile avatar styles */
+  .user-avatar::after {
+    display: none;
+  }
+}
+
+/* Desktop - hide mobile elements */
+@media (min-width: 769px) {
+  .mobile-user-section {
+    display: none !important;
+  }
+
+  .control-label {
+    display: none !important;
+  }
+
+  .menu-close {
+    display: none !important;
   }
 }
 </style>
