@@ -384,7 +384,7 @@ export default {
 
 .filter-badge {
   background: var(--primary);
-  color: var(--bg-light);
+  color: white;
   border-radius: 12px;
   padding: 4px 12px;
   font-size: 0.75rem;

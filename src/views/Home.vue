@@ -1,144 +1,326 @@
 <template>
   <div class="home">
-    <!-- Hero Section - Only show when not logged in -->
-    <section v-if="!isAuthenticated" class="hero-section">
-      <div class="hero-content">
-        <div class="hero-text">
-          <h1 class="hero-title">
-            <GradientText
-              :colors="['var(--primary)', '#ffffff', 'oklch(0.7 0.1 245)', '#ffffff', 'var(--primary)']"
-              :animationSpeed="3"
-            >
-              BRIDGE
-            </GradientText>
-          </h1>
-          <p class="hero-subtitle">
-            <TextType 
-              :text="['Matching Job-Seekers with Singaporean Employers', 'Connecting Talent with Opportunities', 'Building Careers in Singapore']"
-              :typingSpeed="75"
-              :pauseDuration="2000"
-              :showCursor="true"
-              cursorCharacter="|"
-            />
-          </p>
-          <p class="hero-description">
-            Your pathway to success in Singapore. Connect with top employers and build your career today.
-          </p>
-          <div class="hero-actions">
-            <router-link to="/login" class="btn btn-primary btn-hero">
-              Sign In
-            </router-link>
-            <router-link to="/register" class="btn btn-secondary btn-hero">
-              Register
-            </router-link>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Carousel Background -->
-      <div class="hero-bg">
-        <div class="carousel-container">
-          <div class="carousel-wrapper">
-            <div
-              class="carousel-slide"
-              :class="{ active: currentSlide === index }"
-              v-for="(image, index) in heroImages"
-              :key="index"
-            >
-              <img :src="image.src" :alt="image.alt" />
+    <!-- Logged Out Home Page -->
+    <template v-if="!isAuthenticated">
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-content">
+          <div class="hero-text">
+            <h1 class="hero-title">
+              <GradientText
+                :colors="['var(--primary)', '#ffffff', 'oklch(0.7 0.1 245)', '#ffffff', 'var(--primary)']"
+                :animationSpeed="3"
+              >
+                BRIDGE
+              </GradientText>
+            </h1>
+            <p class="hero-subtitle">
+              <TextType 
+                :text="['Matching Job-Seekers with Singaporean Employers', 'Connecting Talent with Opportunities', 'Building Careers in Singapore']"
+                :typingSpeed="75"
+                :pauseDuration="2000"
+                :showCursor="true"
+                cursorCharacter="|"
+              />
+            </p>
+            <p class="hero-description">
+              Your pathway to success in Singapore. Connect with top employers and build your career today.
+            </p>
+            <div class="hero-actions">
+              <router-link to="/login" class="btn btn-primary btn-hero">
+                Sign In
+              </router-link>
+              <router-link to="/register" class="btn btn-secondary btn-hero">
+                Register
+              </router-link>
             </div>
           </div>
+        </div>
+        
+        <!-- Carousel Background -->
+        <div class="hero-bg">
+          <div class="carousel-container">
+            <div class="carousel-wrapper">
+              <div
+                class="carousel-slide"
+                :class="{ active: currentSlide === index }"
+                v-for="(image, index) in heroImages"
+                :key="index"
+              >
+                <img :src="image.src" :alt="image.alt" />
+              </div>
+            </div>
 
-          <!-- Carousel Navigation Dots -->
-          <div class="carousel-dots">
-            <button
-              v-for="(image, index) in heroImages"
-              :key="index"
-              @click="currentSlide = index"
-              class="dot"
-              :class="{ active: currentSlide === index }"
-              :aria-label="`Go to slide ${index + 1}`"
-            ></button>
+            <!-- Carousel Navigation Dots -->
+            <div class="carousel-dots">
+              <button
+                v-for="(image, index) in heroImages"
+                :key="index"
+                @click="currentSlide = index"
+                class="dot"
+                :class="{ active: currentSlide === index }"
+                :aria-label="`Go to slide ${index + 1}`"
+              ></button>
+            </div>
+
+            <!-- Carousel Arrows -->
+            <button 
+              @click="previousSlide" 
+              class="carousel-arrow carousel-arrow-prev"
+              aria-label="Previous slide"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button 
+              @click="nextSlide" 
+              class="carousel-arrow carousel-arrow-next"
+              aria-label="Next slide"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
           </div>
-
-          <!-- Carousel Arrows -->
-          <button 
-            @click="previousSlide" 
-            class="carousel-arrow carousel-arrow-prev"
-            aria-label="Previous slide"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button 
-            @click="nextSlide" 
-            class="carousel-arrow carousel-arrow-next"
-            aria-label="Next slide"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          <div class="hero-overlay"></div>
         </div>
-        <div class="hero-overlay"></div>
-      </div>
-    </section>
+      </section>
 
-    <!-- How It Works Section -->
-    <section class="how-it-works-section">
-      <HowItWorks />
-    </section>
+      <!-- How It Works Section -->
+      <section class="how-it-works-section">
+        <HowItWorks />
+      </section>
 
-    <!-- Stats Section - Only show when not logged in -->
-    <section v-if="!isAuthenticated" class="stats-section">
-      <StatsSection />
-    </section>
-    
-    <!-- Category Chips Section -->
-    <section class="categories-section">
-      <div class="section-container">
-        <div class="section-header">
-          <h2 class="section-title">Explore Opportunities</h2>
-          <p class="section-description">
-            Browse jobs by category and find the perfect match for your skills
-          </p>
-        </div>
-        <CategoryChips @category-selected="onCategorySelected" />
-      </div>
-    </section>
-
-    <!-- Call to Action Section -->
-    <section class="cta-section">
-      <div class="section-container">
-        <div class="cta-content">
-          <div class="cta-icon">
-            <img src="../assets/briefcase.svg" alt="Briefcase" class="cta-icon-img" />
+      <!-- Stats Section -->
+      <section class="stats-section">
+        <StatsSection />
+      </section>
+      
+      <!-- Category Chips Section -->
+      <section class="categories-section">
+        <div class="section-container">
+          <div class="section-header">
+            <h2 class="section-title">Explore Opportunities</h2>
+            <p class="section-description">
+              Browse jobs by category and find the perfect match for your skills
+            </p>
           </div>
-          <h2 class="cta-title">Ready to Find Your Next Job?</h2>
-          <p class="cta-description">
-            Browse through hundreds of job opportunities from top employers in Singapore
-          </p>
-          <router-link to="/browse-jobs" class="btn btn-primary btn-cta">
-            Browse All Jobs
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </router-link>
+          <CategoryChips @category-selected="onCategorySelected" />
         </div>
-      </div>
-    </section>
+      </section>
+
+      <!-- Call to Action Section -->
+      <section class="cta-section">
+        <div class="section-container">
+          <div class="cta-content">
+            <div class="cta-icon">
+              <img src="../assets/briefcase.svg" alt="Briefcase" class="cta-icon-img" />
+            </div>
+            <h2 class="cta-title">Ready to Find Your Next Job?</h2>
+            <p class="cta-description">
+              Browse through hundreds of job opportunities from top employers in Singapore
+            </p>
+            <router-link to="/browse-jobs" class="btn btn-primary btn-cta">
+              Browse All Jobs
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </router-link>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <!-- Job Seeker Personalized Home Page -->
+    <template v-else-if="isJobSeeker">
+      <!-- Personalized Hero Section -->
+      <section class="personalized-hero">
+        <div class="hero-gradient-bg"></div>
+        <div class="section-container">
+          <div class="hero-content-wrapper">
+            <div class="hero-greeting">
+              <div class="greeting-icon">
+                <img v-if="userProfile?.photoURL" :src="userProfile.photoURL" :alt="userName" class="profile-avatar" />
+                <div v-else class="avatar-placeholder">
+                  {{ userName.charAt(0).toUpperCase() }}
+                </div>
+              </div>
+              <div class="greeting-text">
+                <h1 class="greeting-title">
+                  <span class="greeting-time">{{ timeBasedGreeting }}</span>
+                  <span class="greeting-name">{{ userName }}!</span>
+                </h1>
+                <p class="greeting-subtitle">{{ personalizedMessage }}</p>
+              </div>
+            </div>
+            
+            <!-- Quick Stats Cards -->
+            <div class="quick-stats-grid">
+              <div class="quick-stat-card" @click="$router.push('/applications')">
+                <div class="stat-icon-wrapper stat-primary">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ totalApplications }}</div>
+                  <div class="stat-label">Total Applications</div>
+                </div>
+              </div>
+
+              <div class="quick-stat-card" @click="$router.push('/applications')">
+                <div class="stat-icon-wrapper stat-warning">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ pendingApplications }}</div>
+                  <div class="stat-label">Pending</div>
+                </div>
+              </div>
+
+              <div class="quick-stat-card" @click="$router.push('/profile')">
+                <div class="stat-icon-wrapper stat-success">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ profileCompletion }}%</div>
+                  <div class="stat-label">Profile Complete</div>
+                </div>
+              </div>
+
+              <div class="quick-stat-card" @click="$router.push('/browse-jobs')">
+                <div class="stat-icon-wrapper stat-info">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <div class="stat-content">
+                  <div class="stat-value">{{ recommendedJobsCount }}</div>
+                  <div class="stat-label">Recommended Jobs</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent Applications Section -->
+      <section class="recent-applications-section" v-if="recentApplications.length > 0">
+        <div class="section-container">
+          <div class="section-header-with-action">
+            <div>
+              <h2 class="section-title">Recent Applications</h2>
+              <p class="section-description">
+                Track the status of your latest job applications
+              </p>
+            </div>
+            <router-link to="/applications" class="view-all-link">
+              View All <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </router-link>
+          </div>
+          
+          <div class="applications-list">
+            <div
+              v-for="application in recentApplications.slice(0, 3)"
+              :key="application.id"
+              class="application-card"
+              @click="$router.push(`/applications/${application.id}`)"
+            >
+              <div class="application-header">
+                <div class="application-info">
+                  <h3 class="application-job-title">{{ application.jobTitle }}</h3>
+                  <p class="application-company">{{ application.company }}</p>
+                </div>
+                <div class="application-status" :class="`status-${application.status}`">
+                  {{ formatStatus(application.status) }}
+                </div>
+              </div>
+              <div class="application-footer">
+                <span class="application-date">{{ formatDate(application.createdAt) }}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick Actions Section -->
+      <section class="quick-actions-section">
+        <div class="section-container">
+          <h2 class="section-title">Quick Actions</h2>
+          <div class="actions-grid">
+            <router-link to="/browse-jobs" class="action-card action-primary">
+              <div class="action-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <h3>Browse Jobs</h3>
+              <p>Explore new opportunities</p>
+            </router-link>
+
+            <router-link to="/profile" class="action-card action-secondary">
+              <div class="action-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h3>Update Profile</h3>
+              <p>Keep your profile current</p>
+            </router-link>
+
+            <router-link to="/quizzes" class="action-card action-accent">
+              <div class="action-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                </svg>
+              </div>
+              <h3>Take Quiz</h3>
+              <p>Improve your skills</p>
+            </router-link>
+
+            <router-link to="/achievements" class="action-card action-tertiary">
+              <div class="action-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+              <h3>View Achievements</h3>
+              <p>See your progress</p>
+            </router-link>
+          </div>
+        </div>
+      </section>
+
+      <!-- Category Chips Section -->
+      <section class="categories-section">
+        <div class="section-container">
+          <CategoryChips @category-selected="onCategorySelected" />
+        </div>
+      </section>
+    </template>
   </div>
 </template>
 
 <script>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import CategoryChips from '../components/CategoryChips.vue'
 import HowItWorks from '../components/HowItWorks.vue'
 import StatsSection from '../components/StatsSection.vue'
 import GradientText from '../components/GradientText.vue'
 import TextType from '../components/TextType.vue'
+import JobCard from '../components/JobCard.vue'
 import { getCarouselImagesFromConfig } from '../config/carousel.js'
 
 export default {
@@ -148,19 +330,131 @@ export default {
     HowItWorks,
     StatsSection,
     TextType,
-    GradientText
+    GradientText,
+    JobCard
   },
   setup() {
     const store = useStore()
+    const router = useRouter()
     const loading = computed(() => store.getters['jobs/loading'])
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
+    const isJobSeeker = computed(() => store.getters['auth/isJobSeeker'])
+    const userProfile = computed(() => store.getters['auth/userProfile'])
+    const currentUser = computed(() => store.getters['auth/currentUser'])
+    const allJobs = computed(() => store.getters['jobs/allJobs'])
+    const allApplications = computed(() => store.getters['applications/allApplications'])
     
     const currentSlide = ref(0)
     let autoSlideInterval = null
 
     // Automatically load ALL images from src/assets/carousel/ folder
-    // Just add images to that folder and they'll appear automatically!
     const heroImages = getCarouselImagesFromConfig()
+
+    // Personalized greeting based on time of day
+    const timeBasedGreeting = computed(() => {
+      const hour = new Date().getHours()
+      if (hour < 12) return 'Good morning'
+      if (hour < 17) return 'Good afternoon'
+      return 'Good evening'
+    })
+
+    // User's name
+    const userName = computed(() => {
+      return userProfile.value?.name || 'there'
+    })
+
+    // Personalized message
+    const personalizedMessage = computed(() => {
+      if (!userProfile.value) return 'Welcome back!'
+      
+      const totalApps = totalApplications.value
+      const pendingApps = pendingApplications.value
+      
+      if (totalApps === 0) {
+        return 'Start your job search journey today! Browse opportunities that match your skills.'
+      } else if (pendingApps > 0) {
+        return `You have ${pendingApps} ${pendingApps === 1 ? 'application' : 'applications'} pending. Keep it up!`
+      } else if (profileCompletion.value < 50) {
+        return 'Complete your profile to unlock better job recommendations!'
+      } else {
+        return 'Your career journey continues. Check out new opportunities below!'
+      }
+    })
+
+    // Total applications
+    const totalApplications = computed(() => {
+      return allApplications.value.length
+    })
+
+    // Pending applications
+    const pendingApplications = computed(() => {
+      return allApplications.value.filter(app => app.status === 'pending').length
+    })
+
+    // Recent applications (last 3)
+    const recentApplications = computed(() => {
+      return allApplications.value.slice(0, 3)
+    })
+
+    // Profile completion percentage
+    const profileCompletion = computed(() => {
+      if (!userProfile.value) return 0
+      
+      let completed = 0
+      const fields = ['name', 'email', 'phone', 'skills', 'experience']
+      
+      fields.forEach(field => {
+        if (userProfile.value[field]) {
+          if (field === 'skills' && Array.isArray(userProfile.value[field]) && userProfile.value[field].length > 0) {
+            completed++
+          } else if (field !== 'skills') {
+            completed++
+          }
+        }
+      })
+      
+      // Add photo as bonus
+      if (userProfile.value.photoURL) completed += 0.5
+      
+      return Math.min(100, Math.round((completed / fields.length) * 100))
+    })
+
+    // Recommended jobs based on skills
+    const recommendedJobs = computed(() => {
+      if (!userProfile.value || !allJobs.value.length) return []
+      
+      const userSkills = userProfile.value.skills || []
+      if (userSkills.length === 0) return allJobs.value.slice(0, 6)
+      
+      // Score jobs based on category match with skills
+      const scoredJobs = allJobs.value.map(job => {
+        let score = 0
+        const jobCategory = job.category?.toLowerCase() || ''
+        
+        userSkills.forEach(skill => {
+          const skillLower = skill.toLowerCase()
+          if (jobCategory.includes(skillLower) || job.title?.toLowerCase().includes(skillLower)) {
+            score += 2
+          }
+          if (job.description?.toLowerCase().includes(skillLower)) {
+            score += 1
+          }
+        })
+        
+        return { ...job, score }
+      })
+      
+      // Sort by score and return top matches
+      return scoredJobs
+        .sort((a, b) => b.score - a.score)
+        .filter(job => job.score > 0 || scoredJobs.length < 6)
+        .slice(0, 6)
+        .map(({ score, ...job }) => job)
+    })
+
+    const recommendedJobsCount = computed(() => {
+      return recommendedJobs.value.length
+    })
 
     const nextSlide = () => {
       currentSlide.value = (currentSlide.value + 1) % heroImages.length
@@ -183,7 +477,30 @@ export default {
     }
 
     const onCategorySelected = (category) => {
-      window.location.href = `/browse-jobs?category=${category.id}`
+      router.push(`/browse-jobs?category=${category.id}`)
+    }
+
+    const formatStatus = (status) => {
+      const statusMap = {
+        pending: 'Pending',
+        accepted: 'Accepted',
+        rejected: 'Rejected'
+      }
+      return statusMap[status] || status
+    }
+
+    const formatDate = (dateString) => {
+      if (!dateString) return 'Recently'
+      const date = new Date(dateString)
+      const now = new Date()
+      const diffTime = Math.abs(now - date)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays === 0) return 'Today'
+      if (diffDays === 1) return 'Yesterday'
+      if (diffDays < 7) return `${diffDays} days ago`
+      if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+      return date.toLocaleDateString()
     }
 
     const fetchJobs = async () => {
@@ -194,9 +511,24 @@ export default {
       }
     }
 
+    const fetchApplications = async () => {
+      if (isAuthenticated.value && currentUser.value) {
+        try {
+          await store.dispatch('applications/fetchUserApplications', currentUser.value.uid)
+        } catch (error) {
+          console.error('Error fetching applications:', error)
+        }
+      }
+    }
+
     onMounted(() => {
       fetchJobs()
-      startAutoSlide()
+      if (isAuthenticated.value) {
+        fetchApplications()
+      }
+      if (!isAuthenticated.value) {
+        startAutoSlide()
+      }
     })
 
     onUnmounted(() => {
@@ -205,12 +537,25 @@ export default {
 
     return {
       isAuthenticated,
+      isJobSeeker,
+      userProfile,
       loading,
       onCategorySelected,
       heroImages,
       currentSlide,
       nextSlide,
-      previousSlide
+      previousSlide,
+      timeBasedGreeting,
+      userName,
+      personalizedMessage,
+      totalApplications,
+      pendingApplications,
+      recentApplications,
+      profileCompletion,
+      recommendedJobs,
+      recommendedJobsCount,
+      formatStatus,
+      formatDate
     }
   }
 }
@@ -649,6 +994,568 @@ export default {
 
   .dot.active {
     width: 20px;
+  }
+}
+
+/* ============================================
+   PERSONALIZED JOB SEEKER HOMEPAGE STYLES
+   ============================================ */
+
+/* Personalized Hero Section */
+.personalized-hero {
+  position: relative;
+  padding: 80px 0 60px;
+  background: linear-gradient(135deg, var(--primary) 0%, oklch(0.5 0.15 245) 100%);
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+.hero-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hero-content-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-greeting {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 48px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.greeting-icon {
+  flex-shrink: 0;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.greeting-text {
+  flex: 1;
+}
+
+.greeting-title {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.greeting-time {
+  opacity: 0.95;
+}
+
+.greeting-name {
+  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.greeting-subtitle {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Quick Stats Grid */
+.quick-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.quick-stat-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.quick-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  background: #fff;
+}
+
+.dark-mode .quick-stat-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .quick-stat-card:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.stat-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-icon-wrapper svg {
+  width: 24px;
+  height: 24px;
+}
+
+.stat-primary {
+  background: rgba(59, 130, 246, 0.1);
+  color: rgb(59, 130, 246);
+}
+
+.stat-warning {
+  background: rgba(249, 115, 22, 0.1);
+  color: rgb(249, 115, 22);
+}
+
+.stat-success {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+}
+
+.stat-info {
+  background: rgba(147, 51, 234, 0.1);
+  color: rgb(147, 51, 234);
+}
+
+.stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-content .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.stat-content .stat-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Section Header with Action */
+.section-header-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 24px;
+}
+
+.view-all-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.view-all-link:hover {
+  color: var(--primary);
+  gap: 8px;
+}
+
+.view-all-link svg {
+  transition: transform 0.3s ease;
+}
+
+.view-all-link:hover svg {
+  transform: translateX(4px);
+}
+
+/* Recommended Jobs Section */
+.recommended-jobs-section {
+  padding: 80px 0;
+  background: var(--bg);
+}
+
+.jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--bg-light);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 16px;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--bg-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.empty-state p {
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 400px;
+}
+
+/* Recent Applications Section */
+.recent-applications-section {
+  padding: 80px 0;
+  background: var(--bg-light);
+}
+
+.applications-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.application-card {
+  background: var(--bg);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.dark-mode .application-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.application-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+
+.application-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.application-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.application-job-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.application-company {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.application-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-pending {
+  background: rgba(249, 115, 22, 0.1);
+  color: rgb(249, 115, 22);
+}
+
+.status-accepted {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+}
+
+.status-rejected {
+  background: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+}
+
+.application-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dark-mode .application-footer {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.application-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.application-footer svg {
+  color: var(--text-muted);
+  transition: transform 0.3s ease;
+}
+
+.application-card:hover .application-footer svg {
+  transform: translateX(4px);
+}
+
+/* Quick Actions Section */
+.quick-actions-section {
+  padding: 80px 0;
+  background: var(--bg);
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+}
+
+.action-card {
+  background: var(--bg-light);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.action-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary);
+}
+
+.action-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  transition: all 0.3s ease;
+}
+
+.action-primary .action-icon {
+  background: rgba(59, 130, 246, 0.1);
+  color: rgb(59, 130, 246);
+}
+
+.action-secondary .action-icon {
+  background: rgba(147, 51, 234, 0.1);
+  color: rgb(147, 51, 234);
+}
+
+.action-accent .action-icon {
+  background: rgba(249, 115, 22, 0.1);
+  color: rgb(249, 115, 22);
+}
+
+.action-tertiary .action-icon {
+  background: rgba(34, 197, 94, 0.1);
+  color: rgb(34, 197, 94);
+}
+
+.action-card:hover .action-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.action-card h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+
+.action-card p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Responsive Design for Personalized Sections */
+@media (max-width: 768px) {
+  .personalized-hero {
+    padding: 60px 0 40px;
+  }
+
+  .hero-greeting {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .greeting-icon {
+    margin: 0 auto;
+  }
+
+  .quick-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .quick-stat-card {
+    padding: 20px;
+  }
+
+  .stat-content .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .section-header-with-action {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .jobs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .applications-list {
+    grid-template-columns: 1fr;
+  }
+
+  .actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .recommended-jobs-section,
+  .recent-applications-section,
+  .quick-actions-section {
+    padding: 60px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-avatar,
+  .avatar-placeholder {
+    width: 60px;
+    height: 60px;
+  }
+
+  .greeting-title {
+    font-size: 1.75rem;
   }
 }
 </style>

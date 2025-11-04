@@ -554,6 +554,13 @@ export default {
   fill: currentColor;
 }
 
+/* Make SVG icons white in dark mode */
+.dark-mode .dropdown-item img[src*="trophy-star"],
+.dark-mode .dropdown-item img[src*="briefcase"],
+.dark-mode .dropdown-item img[src*="task-checklist"] {
+  filter: brightness(0) invert(1);
+}
+
 @media (max-width: 768px) {
   .nav-container {
     padding: 0 20px;
