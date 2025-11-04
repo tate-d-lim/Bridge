@@ -516,7 +516,7 @@ export default {
 }
 
 .application-card:hover {
-  transform: translateY(-4px);
+  /* Hover animation removed */
 }
 
 .application-card-wrapper {
@@ -670,7 +670,6 @@ export default {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
-  transform: scale(1.05);
 }
 
 .dark-mode .view-details-btn {

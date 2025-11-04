@@ -40,12 +40,12 @@
       </div>
 
       <!-- Candidates Grid -->
-      <div v-else-if="candidates.length === 0" class="empty-state">
+      <div v-else-if="filteredCandidates.length === 0" class="empty-state">
         <p>No candidates found. Try adjusting your filters.</p>
       </div>
 
       <div v-else class="candidates-grid">
-        <div v-for="candidate in candidates" :key="candidate.id" class="card card-interactive candidate-card">
+        <div v-for="candidate in filteredCandidates" :key="candidate.id" class="card card-interactive candidate-card">
           <div class="candidate-avatar">
             <img 
               v-if="candidate.photoURL" 
@@ -122,6 +122,54 @@ export default {
 
     const isEmployer = computed(() => store.getters['auth/isEmployer'])
 
+    // Filtered candidates based on search and filters
+    const filteredCandidates = computed(() => {
+      let filtered = [...candidates.value]
+
+      // Filter by search query (name or skills)
+      if (searchQuery.value.trim()) {
+        const query = searchQuery.value.toLowerCase().trim()
+        filtered = filtered.filter(candidate => {
+          const nameMatch = candidate.name?.toLowerCase().includes(query) || false
+          const skillsMatch = candidate.skills?.some(skill => 
+            skill.toLowerCase().includes(query)
+          ) || false
+          return nameMatch || skillsMatch
+        })
+      }
+
+      // Filter by skill
+      if (selectedSkill.value) {
+        filtered = filtered.filter(candidate => {
+          const skills = candidate.skills || []
+          return skills.some(skill => 
+            skill.toLowerCase() === selectedSkill.value.toLowerCase()
+          )
+        })
+      }
+
+      // Filter by experience
+      if (selectedExperience.value) {
+        filtered = filtered.filter(candidate => {
+          const experience = candidate.experience || 0
+          const expRange = selectedExperience.value
+
+          if (expRange === '0-2') {
+            return experience >= 0 && experience <= 2
+          } else if (expRange === '3-5') {
+            return experience >= 3 && experience <= 5
+          } else if (expRange === '6-10') {
+            return experience >= 6 && experience <= 10
+          } else if (expRange === '10+') {
+            return experience > 10
+          }
+          return true
+        })
+      }
+
+      return filtered
+    })
+
     const fetchCandidates = async () => {
       loading.value = true
       try {
@@ -183,6 +231,7 @@ export default {
       selectedSkill,
       selectedExperience,
       candidates,
+      filteredCandidates,
       loading,
       isEmployer,
       ratingsMap,

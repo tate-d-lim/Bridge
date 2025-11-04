@@ -3,7 +3,7 @@
     <div class="dashboard-container">
       <!-- Header -->
       <div class="dashboard-header">
-        <h1>Welcome back, Employer!</h1>
+        <h1>Welcome back, {{ employerName }}!</h1>
         <p class="header-subtitle">
           Manage your job postings and connect with skilled migrant workers
         </p>
@@ -209,6 +209,11 @@ export default {
     const userProfile = computed(() => store.getters['auth/userProfile'])
     const currentUser = computed(() => store.getters['auth/currentUser'])
     
+    // Employer name for greeting
+    const employerName = computed(() => {
+      return userProfile.value?.name || 'Employer'
+    })
+    
     // Stats calculations
     const totalApplications = computed(() => allApplications.value.length)
 
@@ -360,6 +365,7 @@ export default {
 
     return {
       userProfile,
+      employerName,
       employerJobs,
       recentApplications,
       allApplications,

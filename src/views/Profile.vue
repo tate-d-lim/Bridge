@@ -1347,7 +1347,6 @@ export default {
 }
 
 .badge-card:hover {
-  transform: translateY(-3px);
   box-shadow: var(--shadow-md);
   border-color: var(--primary);
 }

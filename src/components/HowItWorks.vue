@@ -53,14 +53,14 @@ export default {
     const steps = [
       {
         icon: "search.svg",
-        title: "Browse Jobs",
-        description: "Search through thousands of verified job listings from top employers across Singapore.",
+        title: "Browse for Jobs",
+        description: "Search for jobs by category, location, or keywords.",
         colorClass: "gradient-blue",
       },
       {
         icon: "file-text.svg",
         title: "Apply Online",
-        description: "Submit your application with just a few clicks. No complicated forms or paperwork.",
+        description: "Submit your application directly to the employer.",
         colorClass: "gradient-purple",
       },
       {
@@ -71,8 +71,8 @@ export default {
       },
       {
         icon: "rocket.svg",
-        title: "Start Working",
-        description: "Complete the hiring process and start your new job with competitive pay and benefits.",
+        title: "Start Working!",
+        description: "Start your new job and build your career in Singapore.",
         colorClass: "gradient-green",
       },
     ]

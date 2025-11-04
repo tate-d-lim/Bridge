@@ -273,7 +273,6 @@ export default {
 .review-card:hover {
   border-color: var(--primary);
   box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
 }
 
 .review-header {

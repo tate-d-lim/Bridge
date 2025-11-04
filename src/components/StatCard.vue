@@ -88,7 +88,6 @@ export default {
 .stat-card:hover {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border-color: rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
 }
 
 .dark-mode .stat-card {
