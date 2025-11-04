@@ -72,7 +72,7 @@
           <template v-if="isAuthenticated">
             <!-- Dark Mode Toggle -->
             <button @click="toggleDarkMode" class="dark-mode-toggle mobile-control-item" title="Toggle Dark Mode">
-              <img v-if="isDarkMode" src="../assets/moon-white.svg" alt="Light Mode" class="toggle-icon" />
+              <img v-if="isDarkMode" src="../assets/sun-white.svg" alt="Light Mode" class="toggle-icon" />
               <img v-else src="../assets/moon-black.svg" alt="Dark Mode" class="toggle-icon" />
               <span class="control-label">{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
             </button>
@@ -169,7 +169,7 @@
           <template v-else>
             <!-- Dark Mode Toggle for guests -->
             <button @click="toggleDarkMode" class="dark-mode-toggle mobile-control-item" title="Toggle Dark Mode">
-              <img v-if="isDarkMode" src="../assets/moon-white.svg" alt="Light Mode" class="toggle-icon" />
+              <img v-if="isDarkMode" src="../assets/sun-white.svg" alt="Light Mode" class="toggle-icon" />
               <img v-else src="../assets/moon-black.svg" alt="Dark Mode" class="toggle-icon" />
               <span class="control-label">{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
             </button>

@@ -565,6 +565,11 @@ export default {
 .home {
   width: 100%;
   overflow-x: hidden;
+  background: var(--bg);
+}
+
+.dark-mode .home {
+  background: var(--bg-dark);
 }
 
 /* Hero Section */
@@ -815,16 +820,28 @@ export default {
   background: var(--bg);
 }
 
+.dark-mode .how-it-works-section {
+  background: var(--bg-dark);
+}
+
 /* Stats Section */
 .stats-section {
   padding: 80px 0;
   background: linear-gradient(135deg, rgba(var(--primary-rgb), 0.05) 0%, var(--bg) 100%);
 }
 
+.dark-mode .stats-section {
+  background: var(--bg-dark);
+}
+
 /* Categories Section */
 .categories-section {
   padding: 80px 0;
   background: var(--bg-light);
+}
+
+.dark-mode .categories-section {
+  background: var(--bg-dark);
 }
 
 /* CTA Section */
@@ -1304,6 +1321,10 @@ export default {
   background: var(--bg-light);
 }
 
+.dark-mode .recent-applications-section {
+  background: var(--bg-dark);
+}
+
 .applications-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -1412,6 +1433,10 @@ export default {
 .quick-actions-section {
   padding: 80px 0;
   background: var(--bg);
+}
+
+.dark-mode .quick-actions-section {
+  background: var(--bg-dark);
 }
 
 .actions-grid {

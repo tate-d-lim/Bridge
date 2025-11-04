@@ -429,6 +429,10 @@ export default {
   padding: 2rem 1rem;
 }
 
+.dark-mode .post-job-page {
+  background: var(--bg-dark);
+}
+
 .post-job-container {
   max-width: 56rem;
   margin: 0 auto;
@@ -471,10 +475,18 @@ export default {
   line-height: 1.2;
 }
 
+.dark-mode .header-text h1 {
+  color: var(--text);
+}
+
 .header-subtitle {
   color: #475569;
   margin-top: 0.25rem;
   font-size: 0.875rem;
+}
+
+.dark-mode .header-subtitle {
+  color: var(--text-muted);
 }
 
 /* Alert Styles */
@@ -493,10 +505,22 @@ export default {
   color: #166534;
 }
 
+.dark-mode .alert-success {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: rgb(74, 222, 128);
+}
+
 .alert-error {
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #991b1b;
+}
+
+.dark-mode .alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: rgb(248, 113, 113);
 }
 
 .alert-icon {
@@ -507,6 +531,10 @@ export default {
 .icon-small {
   width: 1rem;
   height: 1rem;
+}
+
+.dark-mode .icon-small {
+  filter: brightness(0) invert(1);
 }
 
 .alert-content {
@@ -524,8 +552,18 @@ export default {
   margin-bottom: 1.5rem;
 }
 
+.dark-mode .card {
+  background: var(--bg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
 .card:hover {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
 }
 
 .card-header {
@@ -535,8 +573,17 @@ export default {
   border-radius: 0.75rem 0.75rem 0 0;
 }
 
+.dark-mode .card-header {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.08));
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
 .card-header-indigo {
   background: linear-gradient(to right, #f8fafc, #eef2ff);
+}
+
+.dark-mode .card-header-indigo {
+  background: linear-gradient(to right, rgba(255, 255, 255, 0.05), rgba(147, 51, 234, 0.15));
 }
 
 .card-header-content {
@@ -551,6 +598,10 @@ export default {
   filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1421%) hue-rotate(200deg) brightness(99%) contrast(101%);
 }
 
+.dark-mode .card-header-icon {
+  filter: brightness(0) invert(1);
+}
+
 .card-title {
   font-size: 1.125rem;
   font-weight: 600;
@@ -558,10 +609,18 @@ export default {
   margin: 0;
 }
 
+.dark-mode .card-title {
+  color: var(--text);
+}
+
 .card-description {
   font-size: 0.875rem;
   color: #64748b;
   margin: 0.25rem 0 0 0;
+}
+
+.dark-mode .card-description {
+  color: var(--text-muted);
 }
 
 .card-body {
@@ -591,6 +650,10 @@ export default {
   color: #334155;
 }
 
+.dark-mode .label-with-badge {
+  color: var(--text);
+}
+
 .label-content {
   display: flex;
   align-items: center;
@@ -601,6 +664,11 @@ export default {
   width: 1rem;
   height: 1rem;
   opacity: 0.6;
+}
+
+.dark-mode .label-icon {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
 }
 
 .badge {
@@ -615,10 +683,20 @@ export default {
   color: #475569;
 }
 
+.dark-mode .badge-required {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+}
+
 .badge-optional {
   background: transparent;
   color: #64748b;
   border: 1px solid #e2e8f0;
+}
+
+.dark-mode .badge-optional {
+  color: var(--text-muted);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .form-input,
@@ -635,12 +713,37 @@ export default {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.dark-mode .form-input,
+.dark-mode .form-select,
+.dark-mode .form-textarea {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text);
+}
+
+.dark-mode .form-input::placeholder,
+.dark-mode .form-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.dark-mode .form-select option {
+  background: var(--bg);
+  color: var(--text);
+}
+
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.dark-mode .form-input:focus,
+.dark-mode .form-select:focus,
+.dark-mode .form-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .form-textarea {
@@ -652,6 +755,10 @@ export default {
   font-size: 0.75rem;
   color: #64748b;
   margin-top: 0.5rem;
+}
+
+.dark-mode .form-hint {
+  color: var(--text-muted);
 }
 
 .form-row {
@@ -701,8 +808,19 @@ export default {
   border: 1px solid #cbd5e1;
 }
 
+.dark-mode .btn-outline {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .btn-outline:hover:not(:disabled) {
   background: #f8fafc;
+}
+
+.dark-mode .btn-outline:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 @media (min-width: 640px) {
@@ -758,6 +876,10 @@ export default {
   color: #d97706;
   margin-top: 1rem;
   text-align: center;
+}
+
+.dark-mode .form-validation-hint {
+  color: rgb(251, 146, 60);
 }
 
 @media (min-width: 640px) {

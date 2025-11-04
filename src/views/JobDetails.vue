@@ -421,6 +421,11 @@ export default {
   transition: all 0.2s;
 }
 
+.dark-mode .detail-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .detail-icon {
   width: 40px;
   height: 40px;
@@ -432,10 +437,19 @@ export default {
   flex-shrink: 0;
 }
 
+.dark-mode .detail-icon {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .detail-icon img {
   width: 20px;
   height: 20px;
   opacity: 0.6;
+}
+
+.dark-mode .detail-icon img {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
 }
 
 .detail-content {
@@ -480,6 +494,11 @@ export default {
   opacity: 0.8;
 }
 
+.dark-mode .section-icon {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
 .section-header h3 {
   font-size: 1.125rem;
   font-weight: 600;
@@ -520,6 +539,10 @@ export default {
   flex-shrink: 0;
 }
 
+.dark-mode .check-icon {
+  filter: brightness(0) invert(1);
+}
+
 /* Benefits Grid */
 .benefits-grid {
   display: grid;
@@ -539,6 +562,10 @@ export default {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
+}
+
+.dark-mode .check-icon-small {
+  filter: brightness(0) invert(1);
 }
 
 /* Company Contact */
@@ -561,6 +588,11 @@ export default {
   width: 16px;
   height: 16px;
   opacity: 0.6;
+}
+
+.dark-mode .contact-item img {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
 }
 
 /* Actions */
