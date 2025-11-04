@@ -70,13 +70,6 @@
         <!-- Right Side Controls -->
         <div class="nav-controls-section">
           <template v-if="isAuthenticated">
-            <!-- Dark Mode Toggle -->
-            <button @click="toggleDarkMode" class="dark-mode-toggle mobile-control-item" title="Toggle Dark Mode">
-              <img v-if="isDarkMode" src="../assets/sun-white.svg" alt="Light Mode" class="toggle-icon" />
-              <img v-else src="../assets/moon-black.svg" alt="Dark Mode" class="toggle-icon" />
-              <span class="control-label">{{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}</span>
-            </button>
-
             <!-- Messages Icon -->
             <router-link to="/chat" class="nav-link chat-icon mobile-control-item" @click="closeMenu">
               <div class="chat-icon-wrapper">
@@ -107,23 +100,31 @@
               
               <div class="mobile-user-links">
                 <router-link to="/profile" class="dropdown-item" @click="closeMenu">
-                  <img v-if="isDarkMode" src="../assets/userDark.png" alt="" class="dropdown-icon" />
-                  <img v-else src="../assets/user.svg" alt="" class="dropdown-icon" />
+                  <User :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
                   Profile
                 </router-link>
                 <router-link v-if="isJobSeeker" to="/achievements" class="dropdown-item" @click="closeMenu">
-                  <img src="../assets/trophy-star.svg" alt="" class="dropdown-icon" />
+                  <Trophy :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
                   Achievements
                 </router-link>
                 <router-link v-if="isJobSeeker" to="/applications" class="dropdown-item" @click="closeMenu">
-                  <img src="../assets/briefcase.svg" alt="" class="dropdown-icon" /> Applications
+                  <Briefcase :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
+                  Applications
                 </router-link>
                 <router-link v-if="isEmployer" to="/employer/applications" class="dropdown-item" @click="closeMenu">
-                  <img src="../assets/task-checklist.svg" alt="" class="dropdown-icon" /> Applications
+                  <CheckSquare :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
+                  Applications
                 </router-link>
+                
+                <div class="dropdown-divider"></div>
+                
+                <button @click="toggleDarkMode" class="dropdown-item">
+                  <Moon v-if="!isDarkMode" :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
+                  <Sun v-else :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
+                  {{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}
+                </button>
                 <button @click="handleLogout" class="dropdown-item">
-                  <img v-if="isDarkMode" src="../assets/user-logout-dark.png" alt="" class="dropdown-icon" />
-                  <img v-else src="../assets/user-logout.svg" alt="" class="dropdown-icon" />
+                  <LogOut :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
                   Logout
                 </button>
               </div>
@@ -141,24 +142,51 @@
                 <span v-else>{{ userInitials }}</span>
               </button>
               <div class="user-dropdown" :class="{ active: userDropdownOpen }">
+                <!-- User Header in Dropdown -->
+                <div class="dropdown-user-header">
+                  <div class="user-avatar-dropdown">
+                    <img 
+                      v-if="userProfile?.photoURL" 
+                      :src="userProfile.photoURL" 
+                      :alt="userProfile.name"
+                      class="avatar-image"
+                    />
+                    <span v-else>{{ userInitials }}</span>
+                  </div>
+                  <div class="user-info-dropdown">
+                    <span class="user-name-dropdown">{{ userProfile?.name || 'User' }}</span>
+                    <span class="user-type-dropdown">{{ isJobSeeker ? 'Job Seeker' : 'Employer' }}</span>
+                  </div>
+                </div>
+                
+                <div class="dropdown-divider"></div>
+                
                 <router-link to="/profile" class="dropdown-item" @click="closeMenus">
-                  <img v-if="isDarkMode" src="../assets/userDark.png" alt="" class="dropdown-icon" />
-                  <img v-else src="../assets/user.svg" alt="" class="dropdown-icon" />
+                  <User :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
                   Profile
                 </router-link>
                 <router-link v-if="isJobSeeker" to="/achievements" class="dropdown-item" @click="closeMenus">
-                  <img src="../assets/trophy-star.svg" alt="" class="dropdown-icon" />
+                  <Trophy :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
                   Achievements
                 </router-link>
                 <router-link v-if="isJobSeeker" to="/applications" class="dropdown-item" @click="closeMenus">
-                  <img src="../assets/briefcase.svg" alt="" class="dropdown-icon" /> Applications
+                  <Briefcase :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
+                  Applications
                 </router-link>
                 <router-link v-if="isEmployer" to="/employer/applications" class="dropdown-item" @click="closeMenus">
-                  <img src="../assets/task-checklist.svg" alt="" class="dropdown-icon" /> Applications
+                  <CheckSquare :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
+                  Applications
                 </router-link>
+                
+                <div class="dropdown-divider"></div>
+                
+                <button @click="toggleDarkMode" class="dropdown-item">
+                  <Moon v-if="!isDarkMode" :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
+                  <Sun v-else :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
+                  {{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}
+                </button>
                 <button @click="handleLogout" class="dropdown-item">
-                  <img v-if="isDarkMode" src="../assets/user-logout-dark.png" alt="" class="dropdown-icon" />
-                  <img v-else src="../assets/user-logout.svg" alt="" class="dropdown-icon" />
+                  <LogOut :size="18" :stroke-width="2" class="dropdown-icon-lucide" />
                   Logout
                 </button>
               </div>
@@ -191,9 +219,19 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { User, Trophy, Briefcase, LogOut, CheckSquare, Moon, Sun } from 'lucide-vue-next'
 
 export default {
   name: 'NavBar',
+  components: {
+    User,
+    Trophy,
+    Briefcase,
+    LogOut,
+    CheckSquare,
+    Moon,
+    Sun
+  },
   setup() {
     const store = useStore()
     const router = useRouter()
@@ -346,29 +384,35 @@ export default {
 
 <style scoped>
 .navbar {
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03),
+              0 4px 24px -4px rgba(0, 0, 0, 0.06);
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: background-color 0.3s, border-color 0.3s, backdrop-filter 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Dark mode backdrop blur */
+/* Dark mode - Modern glassmorphism */
 .dark-mode .navbar {
-  background: rgba(0, 0, 0, 0.95);
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05),
+              0 4px 24px -4px rgba(0, 0, 0, 0.4);
 }
 
 .nav-container {
   width: 100%;
-  padding: 0px 20px;
+  padding: 0 48px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 70px;
+  height: 72px;
 }
 
 .nav-brand {
@@ -383,33 +427,50 @@ export default {
 }
 
 .nav-logo {
-  height: 60px;
+  height: 56px;
   width: auto;
-  margin-right: 20px;
-  transition: opacity 0.3s ease 0.5s;
+  margin-right: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
+}
+
+.nav-brand:hover .nav-logo {
+  transform: scale(1.03);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
 }
 
 .nav-toggle {
   display: none;
   flex-direction: column;
   gap: 5px;
-  background: none;
+  background: rgba(0, 123, 255, 0.08);
   border: none;
+  border-radius: 8px;
   cursor: pointer;
-  padding: 5px;
+  padding: 10px;
   z-index: 102;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-toggle:hover {
+  background: rgba(0, 123, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.dark-mode .nav-toggle {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .nav-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .nav-toggle span {
-  width: 25px;
-  height: 3px;
-  background: var(--text);
-  transition: all 0.3s;
-}
-
-/* Ensure hamburger is visible in light mode */
-.nav-toggle span {
+  width: 24px;
+  height: 2.5px;
   background: #333333;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 2px;
 }
 
 .dark-mode .nav-toggle span {
@@ -422,6 +483,7 @@ export default {
 
 .nav-toggle.active span:nth-child(2) {
   opacity: 0;
+  transform: scale(0);
 }
 
 .nav-toggle.active span:nth-child(3) {
@@ -447,16 +509,44 @@ export default {
   text-decoration: none;
   color: var(--text);
   font-weight: 500;
-  font-size: 1rem;
-  transition: color 0.3s;
+  font-size: 0.95rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .nav-link:hover {
   color: var(--primary);
+  background: rgba(0, 123, 255, 0.08);
+}
+
+.dark-mode .nav-link:hover {
+  background: rgba(0, 123, 255, 0.15);
 }
 
 .nav-link.router-link-active {
   color: var(--primary);
+  background: rgba(0, 123, 255, 0.1);
+  font-weight: 600;
+}
+
+.dark-mode .nav-link.router-link-active {
+  background: rgba(0, 123, 255, 0.2);
+}
+
+.nav-link-signup {
+  background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%) !important;
+  color: white !important;
+  font-weight: 600;
+  padding: 10px 24px !important;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.25);
+}
+
+.nav-link-signup:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #7c3aed 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.35);
 }
 
 .chat-icon {
@@ -475,41 +565,48 @@ export default {
   width: 24px;
   height: 24px;
   fill: currentColor;
-  transition: transform 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chat-icon:hover .envelope-icon {
-  transform: scale(1.1);
+  transform: scale(1.15) translateY(-2px);
 }
 
 .unread-badge-nav {
   position: absolute;
   top: -6px;
   right: -6px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
   color: white;
   border-radius: 50%;
-  min-width: 18px;
-  height: 18px;
+  min-width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.7rem;
-  font-weight: bold;
-  padding: 0 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  border: 2px solid var(--bg);
+  font-weight: 700;
+  padding: 0 5px;
+  box-shadow: 0 3px 12px rgba(255, 71, 87, 0.4),
+              0 0 0 3px rgba(255, 255, 255, 0.3);
+  border: 2px solid white;
   z-index: 10;
-  animation: pulse-badge-nav 2s infinite;
+  animation: pulse-badge-nav 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .dark-mode .unread-badge-nav {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(10, 10, 15, 1);
+  box-shadow: 0 3px 12px rgba(255, 71, 87, 0.5),
+              0 0 0 3px rgba(10, 10, 15, 0.8);
 }
 
 @keyframes pulse-badge-nav {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.12); 
+  }
 }
 
 .dark-mode-toggle {
@@ -541,20 +638,36 @@ export default {
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: transparent;
   color: var(--text);
-  border: 2px solid var(--border);
+  border: 2px solid rgba(0, 123, 255, 0.2);
   cursor: pointer;
-  font-weight: bold;
-  transition: all 0.3s;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  position: relative;
+}
+
+.user-avatar::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--primary), #8b5cf6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .user-avatar .avatar-image {
@@ -565,47 +678,131 @@ export default {
 
 /* Only show border when no image */
 .user-avatar:not(:has(.avatar-image)) {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
   color: white;
   border: none;
 }
 
 .user-avatar:hover {
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(0, 123, 255, 0.2);
+  border-color: var(--primary);
+}
+
+.user-avatar:hover::before {
+  opacity: 1;
 }
 
 .dark-mode .user-avatar {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(0, 123, 255, 0.3);
+}
+
+.dark-mode .user-avatar:hover {
+  box-shadow: 0 8px 24px rgba(0, 123, 255, 0.3);
 }
 
 .user-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 10px;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  min-width: 180px;
+  margin-top: 12px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 12px 48px -8px rgba(0, 0, 0, 0.12),
+              0 4px 16px -4px rgba(0, 0, 0, 0.08);
+  min-width: 260px;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s;
+  transform: translateY(-12px) scale(0.96);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 
 .dark-mode .user-dropdown {
-  background: #1a1a1a;
+  background: rgba(20, 20, 25, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 12px 48px -8px rgba(0, 0, 0, 0.5),
+              0 4px 16px -4px rgba(0, 0, 0, 0.3);
 }
 
 .user-dropdown.active {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+}
+
+.dropdown-user-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px;
+  background: linear-gradient(135deg, rgba(0, 123, 255, 0.06) 0%, rgba(139, 92, 246, 0.06) 100%);
+  border-radius: 12px;
+  margin: 12px 12px 8px 12px;
+  border: 1px solid rgba(0, 123, 255, 0.1);
+}
+
+.dark-mode .dropdown-user-header {
+  background: linear-gradient(135deg, rgba(0, 123, 255, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-color: rgba(0, 123, 255, 0.15);
+}
+
+.user-avatar-dropdown {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.user-avatar-dropdown .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-info-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name-dropdown {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-type-dropdown {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+
+.dark-mode .dropdown-divider {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .dropdown-item {
@@ -613,28 +810,29 @@ export default {
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 12px 20px;
+  padding: 12px 16px;
+  margin: 0 8px;
+  width: calc(100% - 16px);
   text-decoration: none;
-  color: #333333;
+  color: var(--text);
   background: none;
   border: none;
+  border-radius: 10px;
   text-align: left;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 0.95rem;
   font-weight: 500;
 }
 
 .dropdown-item:hover {
-  background: #f5f5f5;
-}
-
-.dark-mode .dropdown-item {
-  color: #ffffff;
+  background: rgba(0, 123, 255, 0.08);
+  color: var(--primary);
+  transform: translateX(2px);
 }
 
 .dark-mode .dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 123, 255, 0.15);
 }
 
 .dropdown-icon {
@@ -643,11 +841,23 @@ export default {
   fill: currentColor;
 }
 
-/* Make SVG icons white in dark mode */
-.dark-mode .dropdown-item img[src*="trophy-star"],
-.dark-mode .dropdown-item img[src*="briefcase"],
-.dark-mode .dropdown-item img[src*="task-checklist"] {
-  filter: brightness(0) invert(1);
+.dropdown-icon-lucide {
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.5);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-item:hover .dropdown-icon-lucide {
+  color: var(--primary);
+  transform: scale(1.1);
+}
+
+.dark-mode .dropdown-icon-lucide {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.dark-mode .dropdown-item:hover .dropdown-icon-lucide {
+  color: var(--primary);
 }
 
 .nav-hamburger-menu {

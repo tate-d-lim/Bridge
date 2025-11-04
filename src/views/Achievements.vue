@@ -4,7 +4,7 @@
     <div class="achievements-header">
       <div class="header-content">
         <div class="header-icon">
-          <img src="/icons/award.svg" alt="Award" />
+          <Trophy :size="40" :stroke-width="1.5" class="trophy-icon" />
         </div>
         <div class="header-text">
           <h1>Achievements</h1>
@@ -172,6 +172,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { Trophy } from 'lucide-vue-next'
 import StatsOverview from '../components/StatsOverview.vue'
 import AchievementCard from '../components/AchievementCard.vue'
 
@@ -179,7 +180,8 @@ export default {
   name: 'Achievements',
   components: {
     StatsOverview,
-    AchievementCard
+    AchievementCard,
+    Trophy
   },
   setup() {
     const store = useStore()
@@ -285,18 +287,43 @@ export default {
   width: 4rem;
   height: 4rem;
   border-radius: 1rem;
-  background: var(--primary);
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   margin-top: 0.25rem;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+  transition: all 0.3s ease;
 }
 
-.header-icon img {
-  width: 32px;
-  height: 32px;
-  filter: brightness(0) invert(1);
+.header-icon:hover {
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+  transform: translateY(-2px);
+}
+
+.dark-mode .header-icon {
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+  box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
+}
+
+.dark-mode .header-icon:hover {
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.45);
+}
+
+.trophy-icon {
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease;
+}
+
+.header-icon:hover .trophy-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.dark-mode .trophy-icon {
+  color: white;
+  filter: drop-shadow(0 2px 6px rgba(255, 255, 255, 0.2));
 }
 
 .header-text {
@@ -500,11 +527,6 @@ export default {
   .header-icon {
     width: 2.5rem;
     height: 2.5rem;
-  }
-
-  .header-icon img {
-    width: 24px;
-    height: 24px;
   }
 
   .header-text h1 {

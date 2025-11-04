@@ -14,8 +14,10 @@
     "ably": "^2.14.0",
     "axios": "^1.12.2",
     "firebase": "^12.4.0",
-    "scrollreveal": "^4.0.9",
     "gsap": "^3.13.0",
+    "lucide": "^0.552.0",
+    "lucide-vue-next": "^0.552.0",
+    "scrollreveal": "^4.0.9",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1",
     "vuex": "^4.1.0"

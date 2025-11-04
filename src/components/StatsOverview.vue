@@ -7,7 +7,7 @@
       :style="{ animationDelay: `${index * 0.1}s` }"
     >
       <div class="stat-icon" :class="stat.colorClass">
-        <img :src="stat.iconUrl" :alt="stat.label" />
+        <component :is="stat.icon" :size="28" :stroke-width="2" />
       </div>
       <div class="stat-content">
         <p class="stat-label">{{ stat.label }}</p>
@@ -18,8 +18,17 @@
 </template>
 
 <script>
+import { Play, Trophy, TrendingUp, Flame, Award } from 'lucide-vue-next'
+
 export default {
   name: 'StatsOverview',
+  components: {
+    Play,
+    Trophy,
+    TrendingUp,
+    Flame,
+    Award
+  },
   props: {
     plays: {
       type: Number,
@@ -48,25 +57,25 @@ export default {
         {
           label: 'Total Plays',
           value: this.plays,
-          iconUrl: '/icons/target.svg',
+          icon: Play,
           colorClass: 'blue-bg'
         },
         {
           label: 'Total Wins',
           value: this.wins,
-          iconUrl: '/icons/award.svg',
+          icon: Trophy,
           colorClass: 'green-bg'
         },
         {
           label: 'Win Rate',
           value: `${this.winRate}%`,
-          iconUrl: '/icons/trending-up.svg',
+          icon: TrendingUp,
           colorClass: 'purple-bg'
         },
         {
           label: 'Current Streak',
           value: this.streak,
-          iconUrl: '/icons/flame.svg',
+          icon: Flame,
           colorClass: 'orange-bg'
         }
       ]
@@ -77,7 +86,7 @@ export default {
           {
             label: 'Total Badges',
             value: this.badges,
-            iconUrl: '/icons/trophy.svg',
+            icon: Award,
             colorClass: 'gold-bg'
           },
           ...baseStats
@@ -141,49 +150,29 @@ export default {
   flex-shrink: 0;
 }
 
-.stat-icon img {
-  width: 24px;
-  height: 24px;
-}
-
 .blue-bg {
   background: rgba(59, 130, 246, 0.1);
-}
-
-.blue-bg img {
-  filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1421%) hue-rotate(200deg) brightness(99%) contrast(101%);
+  color: rgb(59, 130, 246);
 }
 
 .green-bg {
   background: rgba(34, 197, 94, 0.1);
-}
-
-.green-bg img {
-  filter: brightness(0) saturate(100%) invert(69%) sepia(69%) saturate(1913%) hue-rotate(89deg) brightness(99%) contrast(88%);
+  color: rgb(34, 197, 94);
 }
 
 .purple-bg {
   background: rgba(147, 51, 234, 0.1);
-}
-
-.purple-bg img {
-  filter: brightness(0) saturate(100%) invert(55%) sepia(88%) saturate(2324%) hue-rotate(250deg) brightness(99%) contrast(104%);
+  color: rgb(147, 51, 234);
 }
 
 .orange-bg {
   background: rgba(249, 115, 22, 0.1);
-}
-
-.orange-bg img {
-  filter: brightness(0) saturate(100%) invert(62%) sepia(99%) saturate(2462%) hue-rotate(0deg) brightness(100%) contrast(101%);
+  color: rgb(249, 115, 22);
 }
 
 .gold-bg {
-  background: rgba(255, 215, 0, 0.1);
-}
-
-.gold-bg img {
-  filter: brightness(0) saturate(100%) invert(88%) sepia(96%) saturate(1821%) hue-rotate(351deg) brightness(104%) contrast(101%);
+  background: rgba(255, 193, 7, 0.1);
+  color: rgb(255, 193, 7);
 }
 
 .stat-content {

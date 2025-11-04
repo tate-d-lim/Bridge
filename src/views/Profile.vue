@@ -275,20 +275,19 @@
                 </div>
                 
                 <div v-else class="badges-grid">
-                  <div 
-                    v-for="badge in earnedBadges" 
+                  <AchievementCard
+                    v-for="(badge, index) in earnedBadgesWithIcons" 
                     :key="badge.id"
-                    class="badge-card"
-                  >
-                    <div class="badge-icon" :class="`tier-${badge.badgeTier}`">
-                      {{ badge.badgeIcon }}
-                    </div>
-                    <div class="badge-details">
-                      <h3>{{ badge.badgeName }}</h3>
-                      <p>{{ badge.badgeDescription }}</p>
-                      <span class="earned-date">{{ formatDate(badge.earnedAt) }}</span>
-                    </div>
-                  </div>
+                    :icon="badge.icon"
+                    :icon-type="badge.iconType"
+                    :title="badge.name"
+                    :description="badge.description"
+                    :progress="1"
+                    :requirement="1"
+                    :unlocked="true"
+                    :tier="badge.tier"
+                    :index="index"
+                  />
                 </div>
               </div>
             </div>
@@ -363,13 +362,16 @@ import { doc, getDoc } from 'firebase/firestore'
 import CandidateReviewForm from '../components/reviews/CandidateReviewForm.vue'
 import CandidateReviewList from '../components/reviews/CandidateReviewList.vue'
 import StatsOverview from '../components/StatsOverview.vue'
+import AchievementCard from '../components/AchievementCard.vue'
+import { BADGE_DEFINITIONS } from '../store/modules/badges.js'
 
 export default {
   name: 'Profile',
   components: { 
     CandidateReviewForm, 
     CandidateReviewList,
-    StatsOverview
+    StatsOverview,
+    AchievementCard
   },
   setup() {
     const store = useStore()
@@ -682,6 +684,48 @@ export default {
     const earnedBadges = computed(() => store.getters['badges/earnedBadges'] || [])
     const userStats = computed(() => store.getters['badges/userStats'])
 
+    // Map earned badges to their current icon definitions from BADGE_DEFINITIONS
+    const earnedBadgesWithIcons = computed(() => {
+      // Flatten all badge definitions into a single array
+      const allBadgeDefs = [
+        ...BADGE_DEFINITIONS.performance,
+        ...BADGE_DEFINITIONS.participation,
+        ...BADGE_DEFINITIONS.streak,
+        ...BADGE_DEFINITIONS.winStreak,
+        ...BADGE_DEFINITIONS.perfect
+      ]
+
+      // Map earned badges to use current definitions
+      return earnedBadges.value.map(earnedBadge => {
+        const badgeDef = allBadgeDefs.find(def => def.id === earnedBadge.badgeId)
+        
+        if (badgeDef) {
+          return {
+            id: earnedBadge.id,
+            badgeId: earnedBadge.badgeId,
+            name: badgeDef.name,
+            description: badgeDef.description,
+            icon: badgeDef.icon,
+            iconType: badgeDef.iconType || 'emoji',
+            tier: badgeDef.tier,
+            earnedAt: earnedBadge.earnedAt
+          }
+        }
+        
+        // Fallback to stored data if definition not found
+        return {
+          id: earnedBadge.id,
+          badgeId: earnedBadge.badgeId,
+          name: earnedBadge.badgeName,
+          description: earnedBadge.badgeDescription,
+          icon: earnedBadge.badgeIcon,
+          iconType: earnedBadge.badgeIconType || 'emoji',
+          tier: earnedBadge.badgeTier,
+          earnedAt: earnedBadge.earnedAt
+        }
+      })
+    })
+
     return {
       editing,
       userProfile,
@@ -689,6 +733,7 @@ export default {
       currentUser,
       viewedProfile,
       earnedBadges,
+      earnedBadgesWithIcons,
       userStats,
       getInitials,
       isViewingOtherProfile,
@@ -1332,73 +1377,20 @@ export default {
 /* Badges */
 .badges-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
 }
 
-.badge-card {
-  background: var(--bg);
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  gap: 15px;
-  transition: all 0.3s;
+@media (min-width: 768px) {
+  .badges-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.badge-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: var(--primary);
-}
-
-.badge-icon {
-  font-size: 3rem;
-  width: 70px;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.badge-icon.tier-bronze {
-  background: linear-gradient(135deg, #cd7f32 0%, #b8860b 100%);
-}
-
-.badge-icon.tier-silver {
-  background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
-}
-
-.badge-icon.tier-gold {
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-}
-
-.badge-icon.tier-platinum {
-  background: linear-gradient(135deg, #e5e4e2 0%, #b0c4de 100%);
-}
-
-.badge-details {
-  flex: 1;
-}
-
-.badge-details h3 {
-  font-size: 1.1rem;
-  color: var(--text);
-  margin-bottom: 5px;
-  font-weight: 600;
-}
-
-.badge-details p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
-.earned-date {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  font-style: italic;
+@media (min-width: 1024px) {
+  .badges-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .empty-badges {
@@ -1459,10 +1451,6 @@ export default {
   }
 
   .info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .badges-grid {
     grid-template-columns: 1fr;
   }
 

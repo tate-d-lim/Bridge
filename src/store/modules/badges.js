@@ -14,14 +14,15 @@ import {
 } from 'firebase/firestore'
 
 // Badge Definitions
-const BADGE_DEFINITIONS = {
+export const BADGE_DEFINITIONS = {
   // Performance-Based Badges (based on wins)
   performance: [
     {
       id: 'bronze_performer',
       name: 'Bronze Performer',
       description: 'Achieve your first quiz win',
-      icon: '🥉',
+      icon: 'Award',
+      iconType: 'lucide',
       tier: 'bronze',
       requirement: 1,
       type: 'wins'
@@ -30,7 +31,8 @@ const BADGE_DEFINITIONS = {
       id: 'silver_performer',
       name: 'Silver Performer',
       description: 'Win 5 quizzes',
-      icon: '🥈',
+      icon: 'Trophy',
+      iconType: 'lucide',
       tier: 'silver',
       requirement: 5,
       type: 'wins'
@@ -39,8 +41,8 @@ const BADGE_DEFINITIONS = {
       id: 'gold_performer',
       name: 'Gold Performer',
       description: 'Win 10 quizzes',
-      icon: 'trophy',
-      iconType: 'svg',
+      icon: 'Trophy',
+      iconType: 'lucide',
       tier: 'gold',
       requirement: 10,
       type: 'wins'
@@ -49,8 +51,8 @@ const BADGE_DEFINITIONS = {
       id: 'platinum_performer',
       name: 'Platinum Performer',
       description: 'Win 25 quizzes',
-      icon: 'gem',
-      iconType: 'svg',
+      icon: 'Sparkles',
+      iconType: 'lucide',
       tier: 'platinum',
       requirement: 25,
       type: 'wins'
@@ -63,7 +65,8 @@ const BADGE_DEFINITIONS = {
       id: 'beginner',
       name: 'Beginner',
       description: 'Complete 10 quizzes',
-      icon: '📚',
+      icon: 'Play',
+      iconType: 'lucide',
       tier: 'bronze',
       requirement: 10,
       type: 'plays'
@@ -72,7 +75,8 @@ const BADGE_DEFINITIONS = {
       id: 'learner',
       name: 'Dedicated Learner',
       description: 'Complete 20 quizzes',
-      icon: '📖',
+      icon: 'Brain',
+      iconType: 'lucide',
       tier: 'silver',
       requirement: 20,
       type: 'plays'
@@ -81,7 +85,8 @@ const BADGE_DEFINITIONS = {
       id: 'scholar',
       name: 'Scholar',
       description: 'Complete 30 quizzes',
-      icon: '🎓',
+      icon: 'GraduationCap',
+      iconType: 'lucide',
       tier: 'gold',
       requirement: 30,
       type: 'plays'
@@ -90,7 +95,8 @@ const BADGE_DEFINITIONS = {
       id: 'master',
       name: 'Quiz Master',
       description: 'Complete 40 quizzes',
-      icon: '👨‍🎓',
+      icon: 'Crown',
+      iconType: 'lucide',
       tier: 'platinum',
       requirement: 40,
       type: 'plays'
@@ -103,7 +109,8 @@ const BADGE_DEFINITIONS = {
       id: 'streak_3',
       name: 'Hot Streak',
       description: 'Play for 3 consecutive days',
-      icon: '🔥',
+      icon: 'Flame',
+      iconType: 'lucide',
       tier: 'bronze',
       requirement: 3,
       type: 'day_streak'
@@ -112,7 +119,8 @@ const BADGE_DEFINITIONS = {
       id: 'streak_5',
       name: 'On Fire',
       description: 'Play for 5 consecutive days',
-      icon: '🔥🔥',
+      icon: 'Flame',
+      iconType: 'lucide',
       tier: 'silver',
       requirement: 5,
       type: 'day_streak'
@@ -121,7 +129,8 @@ const BADGE_DEFINITIONS = {
       id: 'streak_7',
       name: 'Unstoppable',
       description: 'Play for 7 consecutive days',
-      icon: '🔥🔥🔥',
+      icon: 'Flame',
+      iconType: 'lucide',
       tier: 'gold',
       requirement: 7,
       type: 'day_streak'
@@ -130,7 +139,8 @@ const BADGE_DEFINITIONS = {
       id: 'streak_14',
       name: 'Legendary',
       description: 'Play for 14 consecutive days',
-      icon: '⚡',
+      icon: 'Zap',
+      iconType: 'lucide',
       tier: 'platinum',
       requirement: 14,
       type: 'day_streak'
@@ -143,7 +153,8 @@ const BADGE_DEFINITIONS = {
       id: 'win_streak_3',
       name: 'Triple Threat',
       description: 'Win 3 quizzes in a row',
-      icon: '⭐',
+      icon: 'Star',
+      iconType: 'lucide',
       tier: 'bronze',
       requirement: 3,
       type: 'win_streak'
@@ -152,7 +163,8 @@ const BADGE_DEFINITIONS = {
       id: 'win_streak_5',
       name: 'Dominator',
       description: 'Win 5 quizzes in a row',
-      icon: '⭐⭐',
+      icon: 'TrendingUp',
+      iconType: 'lucide',
       tier: 'silver',
       requirement: 5,
       type: 'win_streak'
@@ -161,7 +173,8 @@ const BADGE_DEFINITIONS = {
       id: 'win_streak_10',
       name: 'Champion',
       description: 'Win 10 quizzes in a row',
-      icon: '🏆',
+      icon: 'Trophy',
+      iconType: 'lucide',
       tier: 'gold',
       requirement: 10,
       type: 'win_streak'
@@ -174,7 +187,8 @@ const BADGE_DEFINITIONS = {
       id: 'first_perfect',
       name: 'Perfect!',
       description: 'Get your first 100% score',
-      icon: '💯',
+      icon: 'CheckCircle',
+      iconType: 'lucide',
       tier: 'gold',
       requirement: 1,
       type: 'perfect_scores'
@@ -183,7 +197,8 @@ const BADGE_DEFINITIONS = {
       id: 'perfectionist',
       name: 'Perfectionist',
       description: 'Get 5 perfect scores',
-      icon: '✨',
+      icon: 'Sparkles',
+      iconType: 'lucide',
       tier: 'platinum',
       requirement: 5,
       type: 'perfect_scores'
@@ -420,6 +435,7 @@ export default {
               badgeId: badge.id,
               badgeName: badge.name,
               badgeIcon: badge.icon,
+              badgeIconType: badge.iconType || 'emoji',
               badgeTier: badge.tier,
               badgeDescription: badge.description,
               earnedAt: serverTimestamp()

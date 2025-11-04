@@ -171,11 +171,27 @@ export default {
 }
 
 .summary-card {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  background: var(--bg-light);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 16px;
   padding: 24px;
-  color: white;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.summary-card:hover {
   box-shadow: var(--shadow-md);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.dark-mode .summary-card {
+  background: var(--bg);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .summary-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .summary-content {
@@ -195,6 +211,7 @@ export default {
   font-size: 3rem;
   font-weight: 700;
   line-height: 1;
+  color: var(--text);
 }
 
 .rating-stars {
@@ -205,12 +222,12 @@ export default {
 .star-icon {
   width: 24px;
   height: 24px;
-  fill: rgba(255, 255, 255, 0.3);
+  fill: var(--border);
   transition: fill 0.2s;
 }
 
 .star-icon.filled {
-  fill: white;
+  fill: #f59e0b;
 }
 
 .review-count {
@@ -222,17 +239,18 @@ export default {
   font-size: 2rem;
   font-weight: 700;
   line-height: 1;
+  color: var(--text);
 }
 
 .count-label {
   font-size: 0.9rem;
-  opacity: 0.9;
+  color: var(--text-muted);
 }
 
 .no-reviews {
   margin-top: 16px;
   font-size: 0.95rem;
-  opacity: 0.9;
+  color: var(--text-muted);
   text-align: center;
 }
 
