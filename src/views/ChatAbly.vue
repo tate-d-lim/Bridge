@@ -99,42 +99,6 @@
                 </p>
               </div>
             </div>
-            <div class="chat-actions">
-              <button @click="showRoomInfo = !showRoomInfo" class="btn-icon" title="Room Info">
-                <span class="icon">ℹ️</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Room Info Panel -->
-          <div v-if="showRoomInfo" class="room-info-panel">
-            <div class="info-section">
-              <h4>Participants</h4>
-              <div class="participants-list">
-                <div
-                  v-for="member in getPresence(activeRoom)"
-                  :key="member.clientId"
-                  class="participant-item"
-                >
-                  <div class="participant-avatar">{{ getInitials(member.clientId) }}</div>
-                  <span>{{ member.clientId }}</span>
-                  <div class="online-indicator"></div>
-                </div>
-              </div>
-            </div>
-            <div class="info-section">
-              <h4>Room Reactions</h4>
-              <div class="reactions-container">
-                <button
-                  v-for="reaction in reactions"
-                  :key="reaction"
-                  @click="sendRoomReaction(reaction)"
-                  class="reaction-btn"
-                >
-                  {{ reaction }}
-                </button>
-              </div>
-            </div>
           </div>
 
           <!-- Messages Container -->
@@ -338,16 +302,12 @@ export default {
     const messageInput = ref(null)
     const showNewChatModal = ref(false)
     const showEditModal = ref(false)
-    const showRoomInfo = ref(false)
     const searchQuery = ref('')
     const searchResults = ref([])
     const editMessageText = ref('')
     const editingMessage = ref(null)
     const typingTimeout = ref(null)
     const chatRoomUnsubscribe = ref(null)
-    
-    // Available reactions
-    const reactions = ['👍', '❤️', '💥', '🚀', '👎', '💔', '🎉', '🔥']
     
     // Computed properties
     const currentUser = computed(() => store.getters['auth/currentUser'])
@@ -952,17 +912,6 @@ export default {
       })
     }
     
-    const sendRoomReaction = async (reaction) => {
-      try {
-        await store.dispatch('chatAbly/sendRoomReaction', {
-          roomName: activeRoom.value,
-          reaction
-        })
-      } catch (error) {
-        console.error('Error sending room reaction:', error)
-      }
-    }
-    
     // Lifecycle
     onMounted(async () => {
       if (currentUser.value) {
@@ -1070,11 +1019,9 @@ export default {
       messageInput,
       showNewChatModal,
       showEditModal,
-      showRoomInfo,
       searchQuery,
       searchResults,
       editMessageText,
-      reactions,
       currentUser,
       userProfile,
       isConnected,
@@ -1115,8 +1062,7 @@ export default {
       searchUsers,
       startChatWithUser,
       openNewChatModal,
-      closeNewChatModal,
-      sendRoomReaction
+      closeNewChatModal
     }
   }
 }
@@ -1610,126 +1556,6 @@ export default {
 .status .offline {
   color: var(--text-muted);
   font-weight: 500;
-}
-
-.chat-actions {
-  display: flex;
-  gap: 12px;
-  position: relative;
-  z-index: 1;
-}
-
-.btn-icon {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid var(--border);
-  padding: 10px;
-  border-radius: 50%;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
-
-.btn-icon:hover {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-  transform: scale(1.1);
-  box-shadow: var(--shadow-sm);
-}
-
-/* Room Info Panel */
-.room-info-panel {
-  padding: 25px;
-  border-bottom: 2px solid var(--border);
-  background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg) 100%);
-  backdrop-filter: blur(10px);
-  position: relative;
-}
-
-.room-info-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.03) 0%, rgba(124, 58, 237, 0.03) 100%);
-  pointer-events: none;
-}
-
-.info-section {
-  margin-bottom: 25px;
-  position: relative;
-  z-index: 1;
-}
-
-.info-section h4 {
-  margin: 0 0 15px 0;
-  color: var(--text);
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-.participants-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.participant-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 15px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-}
-
-.participant-item:hover {
-  background: rgba(79, 70, 229, 0.1);
-  transform: translateX(5px);
-}
-
-.participant-avatar {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--bg-light);
-  font-weight: bold;
-  font-size: 0.9rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.reactions-container {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.reaction-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid var(--border);
-  padding: 10px 15px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 1.3rem;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
-
-.reaction-btn:hover {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
-  transform: scale(1.1);
-  box-shadow: var(--shadow-sm);
 }
 
 /* Messages */

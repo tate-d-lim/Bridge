@@ -1651,19 +1651,6 @@ export default {
       }
     },
     
-    // Send room reaction
-    async sendRoomReaction({ state }, { roomName, reaction }) {
-      try {
-        const room = state.rooms.get(roomName)
-        if (!room) return
-        
-        await room.reactions.send({ name: reaction })
-        
-      } catch (error) {
-        console.error('Error sending room reaction:', error)
-      }
-    },
-    
     // Ensure room exists when receiving a message from unknown room
     async ensureRoomExistsFromMessage({ commit, state, dispatch }, { roomName, message }) {
       try {
