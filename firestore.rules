@@ -4,7 +4,14 @@ service cloud.firestore {
     
     // User profiles
     match /users/{userId} {
-      allow read: if request.auth != null;
+      // Allow reading if authenticated
+      // Also allow reading employer profiles for public company info (companyLogo, companyDescription)
+      // This enables job listings to display company logos/descriptions for all users
+      // Note: This makes employer profiles publicly readable, but is necessary for job listings
+      allow read: if request.auth != null || 
+                     (resource != null && 
+                      resource.data != null && 
+                      resource.data.role == 'employer');
       allow write: if request.auth.uid == userId;
     }
     

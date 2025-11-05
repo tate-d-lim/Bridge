@@ -191,6 +191,68 @@ export default {
       }
     },
     
+    async uploadCompanyLogo({ commit, state }, file) {
+      commit('SET_LOADING', true)
+      commit('SET_ERROR', null)
+      try {
+        const userId = state.user.uid
+        
+        // Convert image to base64
+        const base64Image = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+        
+        // Store base64 image directly in Firestore user document
+        await updateDoc(doc(db, 'users', userId), {
+          companyLogo: base64Image,
+          updatedAt: new Date().toISOString()
+        })
+        
+        // Update local state
+        commit('SET_USER_PROFILE', {
+          ...state.userProfile,
+          companyLogo: base64Image
+        })
+        
+        commit('SET_LOADING', false)
+        return base64Image
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        commit('SET_LOADING', false)
+        throw error
+      }
+    },
+    
+    async removeCompanyLogo({ commit, state }) {
+      commit('SET_LOADING', true)
+      commit('SET_ERROR', null)
+      try {
+        const userId = state.user.uid
+        
+        // Remove company logo from Firestore
+        await updateDoc(doc(db, 'users', userId), {
+          companyLogo: null,
+          updatedAt: new Date().toISOString()
+        })
+        
+        // Update local state
+        commit('SET_USER_PROFILE', {
+          ...state.userProfile,
+          companyLogo: null
+        })
+        
+        commit('SET_LOADING', false)
+        return true
+      } catch (error) {
+        commit('SET_ERROR', error.message)
+        commit('SET_LOADING', false)
+        throw error
+      }
+    },
+    
     initAuthListener({ commit, dispatch }) {
       onAuthStateChanged(auth, async (user) => {
         if (user) {

@@ -5,6 +5,17 @@
   >
     <div class="job-card-wrapper">
       <div class="job-card-header">
+        <div class="company-logo-wrapper-small">
+          <div class="company-logo-small">
+            <img 
+              v-if="job.companyLogo" 
+              :src="job.companyLogo" 
+              :alt="job.company || 'Company Logo'"
+              class="company-logo-img-small"
+            />
+            <span v-else class="company-logo-initials-small">{{ getCompanyInitials(job.company) }}</span>
+          </div>
+        </div>
         <div class="job-title-section">
           <h3 class="job-title">{{ job.title }}</h3>
           <p class="company-name">{{ job.company }}</p>
@@ -96,22 +107,48 @@ export default {
       router.push(`/jobs/${props.job.id}`)
     }
 
-    const truncateDescription = (description) => {
+    const truncateDescription = (description, maxLength = 120) => {
       if (!description) return ''
-      return description.length > 120 
-        ? description.substring(0, 120) + '...' 
+      return description.length > maxLength 
+        ? description.substring(0, maxLength) + '...' 
         : description
+    }
+
+    const getCompanyInitials = (companyName) => {
+      if (!companyName) return '??'
+      return companyName
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
     }
 
     const formatDate = (dateString) => {
       if (!dateString) return 'Recently'
       const date = new Date(dateString)
       const now = new Date()
-      const diffTime = Math.abs(now - date)
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
       
-      if (diffDays === 0) return 'Today'
-      if (diffDays === 1) return 'Yesterday'
+      // Check if same calendar day
+      const isSameDay = date.getFullYear() === now.getFullYear() &&
+                       date.getMonth() === now.getMonth() &&
+                       date.getDate() === now.getDate()
+      
+      if (isSameDay) return 'Today'
+      
+      // Check if yesterday (previous calendar day)
+      const yesterday = new Date(now)
+      yesterday.setDate(yesterday.getDate() - 1)
+      const isYesterday = date.getFullYear() === yesterday.getFullYear() &&
+                         date.getMonth() === yesterday.getMonth() &&
+                         date.getDate() === yesterday.getDate()
+      
+      if (isYesterday) return 'Yesterday'
+      
+      // Calculate difference in days using floor instead of ceil
+      const diffTime = Math.abs(now - date)
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      
       if (diffDays < 7) return `${diffDays} days ago`
       if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
       return date.toLocaleDateString()
@@ -135,7 +172,8 @@ export default {
       truncateDescription,
       formatDate,
       capitalize,
-      capitalizeLocation
+      capitalizeLocation,
+      getCompanyInitials
     }
   }
 }
@@ -170,10 +208,37 @@ export default {
 /* Header */
 .job-card-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+.company-logo-wrapper-small {
+  flex-shrink: 0;
+}
+
+.company-logo-small {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid var(--border);
+}
+
+.company-logo-img-small {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.company-logo-initials-small {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
 }
 
 .job-title-section {

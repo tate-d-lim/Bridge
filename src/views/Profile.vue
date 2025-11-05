@@ -243,11 +243,147 @@
                 </div>
               </div>
 
-              <!-- Employer Overview -->
+              <!-- Employer Overview - Company Information -->
               <div v-if="userProfile?.role === 'employer'" class="section-card">
                 <h2 class="section-title">Company Information</h2>
-                <p class="info-note">View your dashboard for more details.</p>
-                <router-link to="/employer/dashboard" class="btn btn-primary">Go to Dashboard</router-link>
+                
+                <!-- Company Logo Section -->
+                <div class="company-logo-section">
+                  <div class="company-logo-wrapper">
+                    <div class="company-logo">
+                      <img 
+                        v-if="companyLogoPreviewUrl || userProfile?.companyLogo" 
+                        :src="companyLogoPreviewUrl || userProfile?.companyLogo" 
+                        :alt="userProfile?.company || 'Company Logo'"
+                        class="company-logo-image"
+                      />
+                      <span v-else class="company-logo-initials">{{ getCompanyInitials(userProfile?.company) }}</span>
+                    </div>
+                    <div v-if="!isViewingOtherProfile && editing" class="company-logo-actions">
+                      <input 
+                        ref="companyLogoInput"
+                        type="file" 
+                        accept="image/jpeg,image/jpg,image/png"
+                        @change="handleCompanyLogoUpload"
+                        style="display: none"
+                      />
+                      <p v-if="companyLogoUploadError" class="inline-error">{{ companyLogoUploadError }}</p>
+                      <div class="logo-buttons">
+                        <button 
+                          @click="triggerCompanyLogoInput"
+                          class="btn-add-logo"
+                          :disabled="uploadingCompanyLogo"
+                        >
+                          <img src="../assets/add-profile-picture.svg" alt="" class="btn-icon" />
+                          {{ userProfile?.companyLogo || companyLogoPreviewUrl ? 'Change Logo' : 'Upload Logo' }}
+                        </button>
+                        <button 
+                          v-if="userProfile?.companyLogo || companyLogoPreviewUrl"
+                          @click="removeCompanyLogo"
+                          class="btn-remove-logo"
+                          :disabled="uploadingCompanyLogo"
+                        >
+                          <img src="../assets/trash.svg" alt="" class="btn-icon" />
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Company Information Fields -->
+                <div class="info-grid">
+                  <div class="info-item">
+                    <label>Company Name</label>
+                    <input 
+                      v-if="editing" 
+                      v-model="editableFields.company"
+                      type="text" 
+                      class="edit-input"
+                      placeholder="Enter company name"
+                    />
+                    <p v-else>{{ userProfile?.company || 'Not provided' }}</p>
+                  </div>
+                  <div class="info-item">
+                    <label>Industry</label>
+                    <input 
+                      v-if="editing" 
+                      v-model="editableFields.industry"
+                      type="text" 
+                      class="edit-input"
+                      placeholder="e.g., Construction, Manufacturing"
+                    />
+                    <p v-else>{{ userProfile?.industry || 'Not provided' }}</p>
+                  </div>
+                  <div class="info-item">
+                    <label>Company Website</label>
+                    <input 
+                      v-if="editing" 
+                      v-model="editableFields.companyWebsite"
+                      type="url" 
+                      class="edit-input"
+                      placeholder="https://www.example.com"
+                    />
+                    <p v-else>
+                      <a v-if="userProfile?.companyWebsite" :href="userProfile.companyWebsite" target="_blank" rel="noopener noreferrer" class="website-link">
+                        {{ userProfile.companyWebsite }}
+                      </a>
+                      <span v-else>Not provided</span>
+                    </p>
+                  </div>
+                  <div class="info-item">
+                    <label>Company Address</label>
+                    <input 
+                      v-if="editing" 
+                      v-model="editableFields.companyAddress"
+                      type="text" 
+                      class="edit-input"
+                      placeholder="Enter company address"
+                    />
+                    <p v-else>{{ userProfile?.companyAddress || 'Not provided' }}</p>
+                  </div>
+                  <div class="info-item">
+                    <label>Company Size</label>
+                    <select 
+                      v-if="editing" 
+                      v-model="editableFields.companySize"
+                      class="edit-input"
+                    >
+                      <option value="">Select size</option>
+                      <option value="1-10">1-10 employees</option>
+                      <option value="11-50">11-50 employees</option>
+                      <option value="51-200">51-200 employees</option>
+                      <option value="201-500">201-500 employees</option>
+                      <option value="501-1000">501-1000 employees</option>
+                      <option value="1000+">1000+ employees</option>
+                    </select>
+                    <p v-else>{{ formatCompanySize(userProfile?.companySize) || 'Not provided' }}</p>
+                  </div>
+                  <div class="info-item">
+                    <label>UEN (Unique Entity Number)</label>
+                    <input 
+                      v-if="editing" 
+                      v-model="editableFields.companyUEN"
+                      type="text" 
+                      class="edit-input"
+                      placeholder="e.g., 123456789A"
+                      maxlength="10"
+                    />
+                    <p v-else>{{ userProfile?.companyUEN || 'Not provided' }}</p>
+                    <p v-if="editing" class="help-text">Government-issued identification number for businesses in Singapore</p>
+                  </div>
+                  <div class="info-item full-width">
+                    <label>Company Description</label>
+                    <textarea 
+                      v-if="editing" 
+                      v-model="editableFields.companyDescription"
+                      class="edit-textarea"
+                      placeholder="Tell us about your company..."
+                      rows="4"
+                    ></textarea>
+                    <p v-else>{{ userProfile?.companyDescription || 'Not provided' }}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -389,6 +525,11 @@ export default {
     const selectedPhoto = ref(null)
     const photoPreviewUrl = ref(null)
     const activeTab = ref('overview')
+    const companyLogoInput = ref(null)
+    const selectedCompanyLogo = ref(null)
+    const companyLogoPreviewUrl = ref(null)
+    const uploadingCompanyLogo = ref(false)
+    const companyLogoUploadError = ref('')
 
     const currentUser = computed(() => store.getters['auth/currentUser'])
     const currentUserProfile = computed(() => store.getters['auth/userProfile'])
@@ -407,7 +548,12 @@ export default {
       skills: '',
       experience: '',
       company: '',
-      industry: ''
+      industry: '',
+      companyWebsite: '',
+      companyAddress: '',
+      companySize: '',
+      companyDescription: '',
+      companyUEN: ''
     })
 
     const getInitials = computed(() => {
@@ -419,6 +565,29 @@ export default {
         .toUpperCase()
         .slice(0, 2)
     })
+
+    const getCompanyInitials = (companyName) => {
+      if (!companyName) return '??'
+      return companyName
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    }
+
+    const formatCompanySize = (size) => {
+      if (!size) return ''
+      const sizeMap = {
+        '1-10': '1-10 employees',
+        '11-50': '11-50 employees',
+        '51-200': '51-200 employees',
+        '201-500': '201-500 employees',
+        '501-1000': '501-1000 employees',
+        '1000+': '1000+ employees'
+      }
+      return sizeMap[size] || size
+    }
 
     const tabs = computed(() => {
       const baseTabs = [{ id: 'overview', label: 'Overview' }]
@@ -515,6 +684,11 @@ export default {
       editableFields.experience = userProfile.value?.experience || ''
       editableFields.company = userProfile.value?.company || ''
       editableFields.industry = userProfile.value?.industry || ''
+      editableFields.companyWebsite = userProfile.value?.companyWebsite || ''
+      editableFields.companyAddress = userProfile.value?.companyAddress || ''
+      editableFields.companySize = userProfile.value?.companySize || ''
+      editableFields.companyDescription = userProfile.value?.companyDescription || ''
+      editableFields.companyUEN = userProfile.value?.companyUEN || ''
       
       if (userProfile.value?.skills && Array.isArray(userProfile.value.skills)) {
         editableFields.skills = userProfile.value.skills.join(', ')
@@ -527,6 +701,7 @@ export default {
       editing.value = false
       saveError.value = ''
       uploadError.value = ''
+      companyLogoUploadError.value = ''
       
       selectedPhoto.value = null
       if (photoPreviewUrl.value) {
@@ -535,6 +710,15 @@ export default {
       }
       if (fileInput.value) {
         fileInput.value.value = ''
+      }
+      
+      selectedCompanyLogo.value = null
+      if (companyLogoPreviewUrl.value) {
+        URL.revokeObjectURL(companyLogoPreviewUrl.value)
+        companyLogoPreviewUrl.value = null
+      }
+      if (companyLogoInput.value) {
+        companyLogoInput.value.value = ''
       }
     }
 
@@ -567,6 +751,65 @@ export default {
       }
     }
 
+    const triggerCompanyLogoInput = () => {
+      if (companyLogoInput.value) {
+        companyLogoInput.value.click()
+      }
+    }
+
+    const handleCompanyLogoUpload = (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+
+      companyLogoUploadError.value = ''
+
+      if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+        companyLogoUploadError.value = 'Please upload a JPG or PNG image'
+        return
+      }
+
+      if (file.size > 700 * 1024) {
+        companyLogoUploadError.value = 'Image size must be less than 700KB'
+        return
+      }
+
+      selectedCompanyLogo.value = file
+      
+      if (companyLogoPreviewUrl.value) {
+        URL.revokeObjectURL(companyLogoPreviewUrl.value)
+      }
+      companyLogoPreviewUrl.value = URL.createObjectURL(file)
+    }
+
+    const removeCompanyLogo = async () => {
+      if (!confirm('Are you sure you want to remove your company logo?')) {
+        return
+      }
+
+      uploadingCompanyLogo.value = true
+      companyLogoUploadError.value = ''
+      
+      try {
+        await store.dispatch('auth/removeCompanyLogo')
+        
+        selectedCompanyLogo.value = null
+        if (companyLogoPreviewUrl.value) {
+          URL.revokeObjectURL(companyLogoPreviewUrl.value)
+          companyLogoPreviewUrl.value = null
+        }
+        if (companyLogoInput.value) {
+          companyLogoInput.value.value = ''
+        }
+        
+        companyLogoUploadError.value = ''
+      } catch (error) {
+        console.error('Error removing company logo:', error)
+        companyLogoUploadError.value = 'Failed to remove company logo. Please try again.'
+      } finally {
+        uploadingCompanyLogo.value = false
+      }
+    }
+
     const saveProfile = async () => {
       saveError.value = ''
       
@@ -577,6 +820,7 @@ export default {
 
       savingProfile.value = true
       uploadingPhoto.value = false
+      uploadingCompanyLogo.value = false
       
       try {
         if (selectedPhoto.value) {
@@ -602,6 +846,29 @@ export default {
           }
         }
 
+        if (selectedCompanyLogo.value) {
+          uploadingCompanyLogo.value = true
+          try {
+            await store.dispatch('auth/uploadCompanyLogo', selectedCompanyLogo.value)
+            selectedCompanyLogo.value = null
+            if (companyLogoPreviewUrl.value) {
+              URL.revokeObjectURL(companyLogoPreviewUrl.value)
+              companyLogoPreviewUrl.value = null
+            }
+            if (companyLogoInput.value) {
+              companyLogoInput.value.value = ''
+            }
+          } catch (error) {
+            console.error('Error uploading company logo:', error)
+            saveError.value = 'Failed to upload company logo. Please try again.'
+            uploadingCompanyLogo.value = false
+            savingProfile.value = false
+            return
+          } finally {
+            uploadingCompanyLogo.value = false
+          }
+        }
+
         const updatedData = {
           name: editableFields.name.trim(),
           phone: editableFields.phone.trim()
@@ -616,6 +883,11 @@ export default {
         } else if (userProfile.value?.role === 'employer') {
           updatedData.company = editableFields.company.trim()
           updatedData.industry = editableFields.industry.trim()
+          updatedData.companyWebsite = editableFields.companyWebsite.trim()
+          updatedData.companyAddress = editableFields.companyAddress.trim()
+          updatedData.companySize = editableFields.companySize
+          updatedData.companyDescription = editableFields.companyDescription.trim()
+          updatedData.companyUEN = editableFields.companyUEN.trim()
         }
 
         await store.dispatch('auth/updateProfile', updatedData)
@@ -628,6 +900,7 @@ export default {
       } finally {
         savingProfile.value = false
         uploadingPhoto.value = false
+        uploadingCompanyLogo.value = false
       }
     }
 
@@ -756,7 +1029,16 @@ export default {
       photoPreviewUrl,
       removePhoto,
       activeTab,
-      tabs
+      tabs,
+      companyLogoInput,
+      companyLogoPreviewUrl,
+      uploadingCompanyLogo,
+      companyLogoUploadError,
+      triggerCompanyLogoInput,
+      handleCompanyLogoUpload,
+      removeCompanyLogo,
+      getCompanyInitials,
+      formatCompanySize
     }
   }
 }
@@ -800,10 +1082,14 @@ export default {
 /* Profile Header */
 .profile-header-card {
   background: var(--bg);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 16px;
   padding: 32px;
   box-shadow: var(--shadow-sm);
+}
+
+.dark-mode .profile-header-card {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .header-main {
@@ -1010,8 +1296,12 @@ export default {
 .btn-cancel {
   background: transparent;
   color: var(--text, #333);
-  border: 2px solid var(--border, #ddd);
+  border: 2px solid rgba(0, 0, 0, 0.12);
   min-width: 100px;
+}
+
+.dark-mode .btn-cancel {
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .btn-cancel:hover {
@@ -1029,10 +1319,14 @@ export default {
 /* Stats Card */
 .stats-card {
   background: var(--bg);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 16px;
   padding: 24px;
   box-shadow: var(--shadow-sm);
+}
+
+.dark-mode .stats-card {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Stats Card - uses StatsOverview component */
@@ -1040,18 +1334,26 @@ export default {
 /* Tabs */
 .tabs-container {
   background: var(--bg);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
 }
 
+.dark-mode .tabs-container {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
 .tabs-nav {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   background: var(--bg-light);
   overflow-x: auto;
+}
+
+.dark-mode .tabs-nav {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
 }
 
 .tab-button {
@@ -1096,10 +1398,14 @@ export default {
 /* Section Cards */
 .section-card {
   background: var(--bg-light);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 20px;
+}
+
+.dark-mode .section-card {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .section-title {
@@ -1182,12 +1488,17 @@ export default {
 .edit-textarea {
   width: 100%;
   padding: 10px 12px;
-  border: 2px solid var(--border);
+  border: 2px solid rgba(0, 0, 0, 0.08);
   border-radius: 8px;
   font-size: 1rem;
   color: var(--text);
   background: var(--bg);
   transition: border-color 0.3s;
+}
+
+.dark-mode .edit-input,
+.dark-mode .edit-textarea {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .edit-input:focus,
@@ -1221,7 +1532,11 @@ export default {
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 0.95rem;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dark-mode .skill-tag {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .empty-text {
@@ -1246,9 +1561,13 @@ export default {
 .application-preview-item {
   padding: 16px;
   background: var(--bg);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 8px;
   transition: all 0.3s;
+}
+
+.dark-mode .application-preview-item {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .application-preview-item:hover {
@@ -1303,8 +1622,12 @@ export default {
   background: var(--bg);
   padding: 20px;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   transition: all 0.3s;
+}
+
+.dark-mode .application-item {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .application-item:hover {
@@ -1423,6 +1746,113 @@ export default {
 .info-note {
   color: var(--text-muted);
   margin-bottom: 20px;
+}
+
+/* Company Logo Section */
+.company-logo-section {
+  margin-bottom: 24px;
+}
+
+.company-logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.company-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 3px solid var(--bg-light);
+  box-shadow: var(--shadow-md);
+}
+
+.company-logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.company-logo-initials {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+}
+
+.company-logo-actions {
+  text-align: center;
+}
+
+.logo-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-add-logo,
+.btn-remove-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.btn-add-logo {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-add-logo:hover:not(:disabled) {
+  background: oklch(0.35 0.1 245);
+  transform: translateY(-1px);
+}
+
+.btn-add-logo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-remove-logo {
+  background: transparent;
+  color: var(--danger);
+  border: 2px solid var(--danger);
+}
+
+.btn-remove-logo:hover:not(:disabled) {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-remove-logo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.website-link {
+  color: var(--primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.website-link:hover {
+  text-decoration: underline;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 768px) {

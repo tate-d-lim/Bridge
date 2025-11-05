@@ -53,9 +53,54 @@ export default {
         
         const querySnapshot = await getDocs(q)
         const jobs = []
-        querySnapshot.forEach((doc) => {
-          jobs.push({ id: doc.id, ...doc.data() })
-        })
+        
+        // First pass: collect all jobs and identify which need employer profile enrichment
+        const jobsNeedingEnrichment = []
+        const employerIdsToFetch = new Set()
+        
+        for (const docSnapshot of querySnapshot.docs) {
+          const jobData = { id: docSnapshot.id, ...docSnapshot.data() }
+          
+          // Collect employer IDs that need to be fetched
+          if (jobData.employerId && (!jobData.companyLogo || !jobData.companyDescription)) {
+            employerIdsToFetch.add(jobData.employerId)
+            jobsNeedingEnrichment.push(jobData)
+          }
+          
+          jobs.push(jobData)
+        }
+        
+        // Batch fetch all employer profiles in parallel (much faster!)
+        if (employerIdsToFetch.size > 0) {
+          const employerProfiles = {}
+          const fetchPromises = Array.from(employerIdsToFetch).map(async (employerId) => {
+            try {
+              const employerDoc = await getDoc(doc(db, 'users', employerId))
+              if (employerDoc.exists()) {
+                employerProfiles[employerId] = employerDoc.data()
+              }
+            } catch (err) {
+              // Silently fail - job will display without company logo/description
+              console.warn('Could not fetch employer profile:', employerId, err.message)
+            }
+          })
+          
+          // Wait for all employer profile fetches to complete
+          await Promise.all(fetchPromises)
+          
+          // Enrich jobs with employer profile data
+          jobsNeedingEnrichment.forEach((jobData) => {
+            const employerData = employerProfiles[jobData.employerId]
+            if (employerData) {
+              if (!jobData.companyLogo && employerData.companyLogo) {
+                jobData.companyLogo = employerData.companyLogo
+              }
+              if (!jobData.companyDescription && employerData.companyDescription) {
+                jobData.companyDescription = employerData.companyDescription
+              }
+            }
+          })
+        }
         
         commit('SET_JOBS', jobs)
         commit('SET_LOADING', false)
@@ -77,8 +122,30 @@ export default {
         
         const querySnapshot = await getDocs(q)
         const jobs = []
-        querySnapshot.forEach((doc) => {
-          jobs.push({ id: doc.id, ...doc.data() })
+        
+        // Fetch employer profile once for all jobs
+        let employerProfile = null
+        try {
+          const employerDoc = await getDoc(doc(db, 'users', employerId))
+          if (employerDoc.exists()) {
+            employerProfile = employerDoc.data()
+          }
+        } catch (err) {
+          console.warn('Could not fetch employer profile:', err.message)
+        }
+        
+        querySnapshot.forEach((docSnapshot) => {
+          const jobData = { id: docSnapshot.id, ...docSnapshot.data() }
+          
+          // Enrich with company logo and description from employer profile if missing
+          if (!jobData.companyLogo && employerProfile?.companyLogo) {
+            jobData.companyLogo = employerProfile.companyLogo
+          }
+          if (!jobData.companyDescription && employerProfile?.companyDescription) {
+            jobData.companyDescription = employerProfile.companyDescription
+          }
+          
+          jobs.push(jobData)
         })
         
         // Sort by createdAt in JavaScript since we can't use orderBy in the query
@@ -100,6 +167,27 @@ export default {
         const jobDoc = await getDoc(doc(db, 'jobs', jobId))
         if (jobDoc.exists()) {
           const job = { id: jobDoc.id, ...jobDoc.data() }
+          
+          // If job doesn't have companyLogo or companyDescription but has employerId, fetch from employer profile
+          // Note: This is a single job fetch, so sequential is fine, but we keep it optimized
+          if (job.employerId && (!job.companyLogo || !job.companyDescription)) {
+            try {
+              const employerDoc = await getDoc(doc(db, 'users', job.employerId))
+              if (employerDoc.exists()) {
+                const employerData = employerDoc.data()
+                if (!job.companyLogo && employerData.companyLogo) {
+                  job.companyLogo = employerData.companyLogo
+                }
+                if (!job.companyDescription && employerData.companyDescription) {
+                  job.companyDescription = employerData.companyDescription
+                }
+              }
+            } catch (err) {
+              // Silently fail - job will display without company logo/description
+              console.warn('Could not fetch employer profile for job:', jobId, err.message)
+            }
+          }
+          
           commit('SET_CURRENT_JOB', job)
           commit('SET_LOADING', false)
           return job
