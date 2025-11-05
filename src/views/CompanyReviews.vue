@@ -134,9 +134,22 @@
                 class="review-card"
               >
                 <div class="review-header">
-                  <div class="company-info">
-                    <h3>{{ review.company }}</h3>
-                    <span class="industry-tag">{{ getIndustryLabel(review.industry) }}</span>
+                  <div class="company-info-with-logo">
+                    <div class="company-logo-wrapper-small">
+                      <div class="company-logo-small">
+                        <img 
+                          v-if="getCompanyLogo(review.company)" 
+                          :src="getCompanyLogo(review.company)" 
+                          :alt="review.company || 'Company Logo'"
+                          class="company-logo-img-small"
+                        />
+                        <span v-else class="company-logo-initials-small">{{ getCompanyInitials(review.company) }}</span>
+                      </div>
+                    </div>
+                    <div class="company-info">
+                      <h3>{{ review.company }}</h3>
+                      <span class="industry-tag">{{ getIndustryLabel(review.industry) }}</span>
+                    </div>
                   </div>
                   <div class="rating">
                     <div class="stars-container">
@@ -396,6 +409,26 @@ export default {
       const industry = industries.find(i => i.value === value)
       return industry ? industry.label : value
     }
+    
+    // Get company logo from jobs by matching company name
+    const getCompanyLogo = (companyName) => {
+      if (!companyName) return null
+      const companyJob = jobs.value.find(job => 
+        job.company && job.company.trim().toLowerCase() === companyName.trim().toLowerCase()
+      )
+      return companyJob?.companyLogo || null
+    }
+    
+    // Get company initials for fallback
+    const getCompanyInitials = (companyName) => {
+      if (!companyName) return '??'
+      return companyName
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    }
 
 
     const formatDate = (dateString) => {
@@ -540,6 +573,8 @@ export default {
       getIndustryLabel,
       formatDate,
       likeReview,
+      getCompanyLogo,
+      getCompanyInitials,
       reviewForm,
       submitting,
       submitError,
@@ -755,6 +790,47 @@ export default {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 16px;
+}
+
+.company-info-with-logo {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.company-logo-wrapper-small {
+  flex-shrink: 0;
+}
+
+.company-logo-small {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary) 0%, #4a90e2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid var(--border);
+}
+
+.company-logo-img-small {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.company-logo-initials-small {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+}
+
+.company-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .company-info h3 {

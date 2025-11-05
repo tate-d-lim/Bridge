@@ -371,7 +371,9 @@ export default {
         const jobData = {
           ...formData,
           requirements: requirementsText.value.split('\n').filter(r => r.trim()),
-          benefits: benefitsText.value.split('\n').filter(b => b.trim())
+          benefits: benefitsText.value.split('\n').filter(b => b.trim()),
+          companyLogo: userProfile.value?.companyLogo || null,
+          companyDescription: userProfile.value?.companyDescription || null
         }
 
         if (isEditMode.value && jobId.value) {

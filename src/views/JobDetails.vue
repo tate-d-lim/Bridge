@@ -9,7 +9,13 @@
       <div class="job-header">
         <div class="job-header-content">
           <div class="company-avatar">
-            <div class="avatar-fallback">
+            <img 
+              v-if="job.companyLogo" 
+              :src="job.companyLogo" 
+              :alt="job.company || 'Company Logo'"
+              class="company-logo-img"
+            />
+            <div v-else class="avatar-fallback">
               {{ getCompanyInitials(job.company) }}
             </div>
           </div>
@@ -116,6 +122,71 @@
 
       <div class="separator"></div>
 
+      <!-- Company Details -->
+      <div v-if="employerProfile" class="section">
+        <div class="section-header">
+          <img src="/icons/building.svg" alt="Building" class="section-icon" />
+          <h3>About {{ job.company }}</h3>
+        </div>
+        
+        <div class="company-details-grid">
+          <div v-if="employerProfile.industry" class="company-detail-item">
+            <div class="company-detail-label">
+              <img :src="briefcaseIcon" alt="Industry" class="detail-icon" />
+              <span>Industry</span>
+            </div>
+            <p class="company-detail-value">{{ employerProfile.industry }}</p>
+          </div>
+          
+          <div v-if="employerProfile.companySize" class="company-detail-item">
+            <div class="company-detail-label">
+              <img src="/icons/users.svg" alt="Company Size" class="detail-icon" />
+              <span>Company Size</span>
+            </div>
+            <p class="company-detail-value">{{ formatCompanySize(employerProfile.companySize) }}</p>
+          </div>
+          
+          <div v-if="employerProfile.companyWebsite" class="company-detail-item">
+            <div class="company-detail-label">
+              <img src="/icons/search.svg" alt="Website" class="detail-icon" />
+              <span>Website</span>
+            </div>
+            <p class="company-detail-value">
+              <a :href="employerProfile.companyWebsite" target="_blank" rel="noopener noreferrer" class="website-link">
+                {{ employerProfile.companyWebsite }}
+              </a>
+            </p>
+          </div>
+          
+          <div v-if="employerProfile.companyUEN" class="company-detail-item">
+            <div class="company-detail-label">
+              <img src="/icons/file-text.svg" alt="UEN" class="detail-icon" />
+              <span>UEN</span>
+            </div>
+            <p class="company-detail-value">{{ employerProfile.companyUEN }}</p>
+            <p class="company-detail-hint">Unique Entity Number (Singapore)</p>
+          </div>
+          
+          <div v-if="employerProfile.companyAddress" class="company-detail-item">
+            <div class="company-detail-label">
+              <img :src="locationIcon" alt="Address" class="detail-icon" />
+              <span>Address</span>
+            </div>
+            <p class="company-detail-value">{{ employerProfile.companyAddress }}</p>
+          </div>
+          
+          <div v-if="employerProfile.companyDescription" class="company-detail-item full-width">
+            <div class="company-detail-label">
+              <img src="/icons/file-text.svg" alt="Description" class="detail-icon" />
+              <span>Company Description</span>
+            </div>
+            <p class="company-detail-value">{{ employerProfile.companyDescription }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="separator"></div>
+
       <!-- Action Buttons -->
       <div class="actions" v-if="isJobSeeker">
         <button @click="applyForJob" class="btn btn-primary">
@@ -168,6 +239,8 @@ import { ref, computed, onMounted, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { useToast } from '../composables/useToast'
+import { db } from '../firebase/config'
+import { doc, getDoc } from 'firebase/firestore'
 import briefcaseIcon from '../assets/briefcase.svg'
 import locationIcon from '../assets/location.svg'
 import salaryIcon from '../assets/salary.svg'
@@ -184,6 +257,7 @@ export default {
     const { showToast } = useToast()
     
     const job = ref(null)
+    const employerProfile = ref(null)
     const loading = ref(true)
     const showApplicationForm = ref(false)
 
@@ -225,14 +299,43 @@ export default {
       if (!timestamp) return 'Recently'
       const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
       const now = new Date()
-      const diffTime = Math.abs(now - date)
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
       
-      if (diffDays === 0) return 'Today'
-      if (diffDays === 1) return 'Yesterday'
+      // Check if same calendar day
+      const isSameDay = date.getFullYear() === now.getFullYear() &&
+                       date.getMonth() === now.getMonth() &&
+                       date.getDate() === now.getDate()
+      
+      if (isSameDay) return 'Today'
+      
+      // Check if yesterday (previous calendar day)
+      const yesterday = new Date(now)
+      yesterday.setDate(yesterday.getDate() - 1)
+      const isYesterday = date.getFullYear() === yesterday.getFullYear() &&
+                         date.getMonth() === yesterday.getMonth() &&
+                         date.getDate() === yesterday.getDate()
+      
+      if (isYesterday) return 'Yesterday'
+      
+      // Calculate difference in days using floor instead of ceil
+      const diffTime = Math.abs(now - date)
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      
       if (diffDays < 7) return `${diffDays} days ago`
       if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
       return `${Math.floor(diffDays / 30)} months ago`
+    }
+
+    const formatCompanySize = (size) => {
+      if (!size) return ''
+      const sizeMap = {
+        '1-10': '1-10 employees',
+        '11-50': '11-50 employees',
+        '51-200': '51-200 employees',
+        '201-500': '201-500 employees',
+        '501-1000': '501-1000 employees',
+        '1000+': '1000+ employees'
+      }
+      return sizeMap[size] || size
     }
 
     const fetchJob = async () => {
@@ -240,6 +343,20 @@ export default {
       try {
         const jobData = await store.dispatch('jobs/fetchJobById', route.params.id)
         job.value = jobData
+        
+        // Fetch employer profile to get company details
+        if (jobData.employerId) {
+          try {
+            const employerDoc = await getDoc(doc(db, 'users', jobData.employerId))
+            if (employerDoc.exists()) {
+              employerProfile.value = employerDoc.data()
+            }
+          } catch (error) {
+            // Silently fail - company details section just won't show
+            // This is expected if user is not authenticated and Firestore rules deny access
+            console.warn('Could not fetch employer profile:', error.message)
+          }
+        }
       } catch (error) {
         console.error('Error fetching job:', error)
       } finally {
@@ -291,6 +408,7 @@ export default {
 
     return {
       job,
+      employerProfile,
       loading,
       showApplicationForm,
       application,
@@ -306,6 +424,7 @@ export default {
       capitalize,
       capitalizeLocation,
       formatDate,
+      formatCompanySize,
       applyForJob,
       saveJob,
       submitApplication,
@@ -360,6 +479,14 @@ export default {
   color: var(--primary);
   font-weight: 600;
   font-size: 1.25rem;
+  border: 2px solid var(--border);
+}
+
+.company-logo-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
   border: 2px solid var(--border);
 }
 
@@ -566,6 +693,68 @@ export default {
 
 .dark-mode .check-icon-small {
   filter: brightness(0) invert(1);
+}
+
+/* Company Details Section */
+.company-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.company-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.company-detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.company-detail-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.company-detail-label .detail-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+}
+
+.dark-mode .company-detail-label .detail-icon {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.company-detail-value {
+  font-size: 0.95rem;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.company-detail-value .website-link {
+  color: var(--primary);
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.company-detail-value .website-link:hover {
+  text-decoration: underline;
+}
+
+.company-detail-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
+  font-style: italic;
 }
 
 /* Company Contact */

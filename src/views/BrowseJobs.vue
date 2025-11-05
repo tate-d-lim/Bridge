@@ -144,6 +144,13 @@ export default {
         )
       }
 
+      // Sidebar filter: Locations
+      if (sidebarFilters.value.locations.length > 0) {
+        result = result.filter(job =>
+          sidebarFilters.value.locations.includes(job.location)
+        )
+      }
+
       // Sidebar filter: Salary Range
       if (sidebarFilters.value.salaryRange) {
         const [minSalary, maxSalary] = sidebarFilters.value.salaryRange

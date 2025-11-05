@@ -45,15 +45,6 @@
             </li>
           </ul>
         </div>
-        <div class="footer-section">
-          <h4>Support</h4>
-          <ul>
-            <li><a href="#">Help Center</a></li>
-            <li><a href="#">Contact Us</a></li>
-            <li><a href="#">Terms of Service</a></li>
-            <li><a href="#">Privacy Policy</a></li>
-          </ul>
-        </div>
       </div>
       <div class="footer-bottom">
         <p>&copy; 2025 Bridge. All rights reserved.</p>
@@ -157,7 +148,7 @@ export default {
   margin: 0 auto;
   padding: 60px 20px;
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  grid-template-columns: 1.5fr 1fr 1fr;
   gap: 60px;
 }
 

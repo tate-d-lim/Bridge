@@ -519,16 +519,24 @@ export default {
   background: transparent;
   outline: none;
   margin: 0;
-  pointer-events: auto;
+  /* Let only the thumb receive events so the min slider isn’t blocked by max */
+  pointer-events: none;
+  touch-action: none;
 }
 
+/* Bring the slider being interacted with to the top */
+.salary-slider:focus {
+  z-index: 3;
+}
+
+/* Tracks remain non-interactive; thumbs are interactive */
 .salary-slider::-webkit-slider-runnable-track {
   width: 100%;
   height: 20px;
   background: transparent;
   border-radius: 10px;
   cursor: pointer;
-  pointer-events: all;
+  pointer-events: none;
 }
 
 .salary-slider::-moz-range-track {
@@ -537,16 +545,16 @@ export default {
   background: transparent;
   border-radius: 10px;
   cursor: pointer;
-  pointer-events: all;
+  pointer-events: none;
 }
 
-/* Ensure max slider is on top to be interactable */
+/* Remove fixed stacking order; focus will manage it */
 .min-slider {
   z-index: 1;
 }
 
 .max-slider {
-  z-index: 2;
+  z-index: 1;
 }
 
 .salary-slider::-webkit-slider-thumb {
@@ -559,13 +567,8 @@ export default {
   cursor: pointer;
   border: 2px solid var(--primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  pointer-events: all;
+  pointer-events: all; /* important: thumb is clickable/draggable */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.salary-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .salary-slider::-moz-range-thumb {
@@ -576,13 +579,8 @@ export default {
   cursor: pointer;
   border: 2px solid var(--primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  pointer-events: all;
+  pointer-events: all; /* important: thumb is clickable/draggable */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.salary-slider::-moz-range-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .filter-options {
