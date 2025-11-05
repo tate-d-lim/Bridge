@@ -23,7 +23,7 @@
             <div class="application-meta">
               <div class="meta-item">
                 <img src="../assets/location.svg" alt="Location" class="meta-icon" />
-                <span>{{ application.location }}</span>
+                <span>{{ capitalizeLocation(application.location) }}</span>
               </div>
               <div class="meta-item">
                 <img src="../assets/salary.svg" alt="Salary" class="meta-icon" />
@@ -184,6 +184,14 @@ export default {
         day: 'numeric' 
       })
     }
+    
+    const capitalizeLocation = (str) => {
+      if (!str) return ''
+      return str
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ')
+    }
 
     onMounted(() => {
       fetchApplication()
@@ -194,7 +202,8 @@ export default {
       loading,
       isEmployer,
       updateStatus,
-      formatDate
+      formatDate,
+      capitalizeLocation
     }
   }
 }
