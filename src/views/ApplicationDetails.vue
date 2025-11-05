@@ -251,6 +251,12 @@ export default {
   align-items: start;
 }
 
+.dark-mode .application-header {
+  background: var(--bg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .header-info h1 {
   font-size: 2.5rem;
   color: var(--text);
@@ -307,6 +313,10 @@ export default {
   color: var(--text);
 }
 
+.dark-mode .status-badge.pending {
+  color: #000;
+}
+
 .status-badge.accepted {
   background: var(--success);
   color: white;
@@ -329,6 +339,14 @@ export default {
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .candidate-section,
+.dark-mode .application-section,
+.dark-mode .job-section {
+  background: var(--bg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .candidate-section h2,
@@ -369,6 +387,11 @@ export default {
   padding: 20px;
   border-radius: 8px;
   border: 1px solid var(--border);
+}
+
+.dark-mode .content-box {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .content-box p {
@@ -416,8 +439,18 @@ export default {
   border: 2px solid var(--border);
 }
 
+.dark-mode .btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .btn-secondary:hover {
   background: var(--bg);
+  border-color: var(--primary);
+}
+
+.dark-mode .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
   border-color: var(--primary);
 }
 

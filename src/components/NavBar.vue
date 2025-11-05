@@ -141,7 +141,13 @@
                 />
                 <span v-else>{{ userInitials }}</span>
               </button>
-              <div class="user-dropdown" :class="{ active: userDropdownOpen }">
+              <div 
+                class="user-dropdown" 
+                :class="{ active: userDropdownOpen }"
+                @mouseenter="resetDropdownTimer"
+                @mouseleave="startDropdownTimer"
+                @click="resetDropdownTimer"
+              >
                 <!-- User Header in Dropdown -->
                 <div class="dropdown-user-header">
                   <div class="user-avatar-dropdown">
@@ -216,7 +222,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { User, Trophy, Briefcase, LogOut, CheckSquare, Moon, Sun } from 'lucide-vue-next'
@@ -240,6 +246,7 @@ export default {
     const userDropdownOpen = ref(false)
     const navDropdownOpen = ref(false)
     const isDarkMode = ref(false)
+    let dropdownTimeout = null
 
     const isAuthenticated = computed(() => store.getters['auth/isAuthenticated'])
     const isJobSeeker = computed(() => store.getters['auth/isJobSeeker'])
@@ -316,6 +323,33 @@ export default {
 
     const toggleUserDropdown = () => {
       userDropdownOpen.value = !userDropdownOpen.value
+      if (userDropdownOpen.value) {
+        startDropdownTimer()
+      } else {
+        clearDropdownTimer()
+      }
+    }
+    
+    const startDropdownTimer = () => {
+      clearDropdownTimer()
+      dropdownTimeout = setTimeout(() => {
+        if (userDropdownOpen.value) {
+          userDropdownOpen.value = false
+        }
+      }, 5000) // 5 seconds
+    }
+    
+    const clearDropdownTimer = () => {
+      if (dropdownTimeout) {
+        clearTimeout(dropdownTimeout)
+        dropdownTimeout = null
+      }
+    }
+    
+    const resetDropdownTimer = () => {
+      if (userDropdownOpen.value) {
+        startDropdownTimer()
+      }
     }
 
     const toggleNavDropdown = () => {
@@ -326,6 +360,7 @@ export default {
       menuOpen.value = false
       userDropdownOpen.value = false
       navDropdownOpen.value = false
+      clearDropdownTimer()
     }
 
     const handleLogout = async () => {
@@ -349,6 +384,15 @@ export default {
       }
     }
 
+    // Watch for dropdown state changes
+    watch(userDropdownOpen, (isOpen) => {
+      if (isOpen) {
+        startDropdownTimer()
+      } else {
+        clearDropdownTimer()
+      }
+    })
+    
     onMounted(() => {
       // Check for saved dark mode preference
       const savedDarkMode = localStorage.getItem('darkMode')
@@ -356,6 +400,10 @@ export default {
         isDarkMode.value = true
         document.documentElement.classList.add('dark-mode')
       }
+    })
+    
+    onUnmounted(() => {
+      clearDropdownTimer()
     })
 
     return {
