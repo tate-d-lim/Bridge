@@ -48,15 +48,11 @@
     emits: ["category-selected"],
     setup(_, { emit }) {
       const store = useStore()
-      
-      // Path to your icons folder in /public/icons
       const base = import.meta.env.BASE_URL
       const iconSrc = (file) => base + "icons/" + file
 
-      // Get jobs from store
       const jobs = computed(() => store.getters['jobs/allJobs'])
 
-      // Calculate job counts by category
       const jobCounts = computed(() => {
         const counts = {}
         jobs.value.forEach(job => {
@@ -225,7 +221,7 @@
   inset: 0;
   border-radius: 8px;
   background: currentColor;
-  opacity: 0.1;   /* only the background gets faded now */
+  opacity: 0.1; 
 }
 
 .icon-container img {
@@ -233,7 +229,7 @@
   width: 20px;
   height: 20px;
   display: block;
-  opacity: 1;     /* make sure icon is fully visible */
+  opacity: 1;
 }
 
   
@@ -258,7 +254,6 @@
     opacity: 1;    
 }
 
-  /* Color variants */
   .bg-orange-500\/10 {
     background: oklch(0.9 0.02 30);
     color: oklch(0.5 0.15 30);
@@ -331,7 +326,6 @@
     background: oklch(0.85 0.02 320);
   }
   
-  /* Animations */
   @keyframes slideInUp {
     from {
       opacity: 0;
@@ -343,7 +337,6 @@
     }
   }
   
-  /* Responsive design */
   @media (max-width: 768px) {
     .categories-grid {
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

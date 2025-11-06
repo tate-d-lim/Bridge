@@ -70,7 +70,6 @@ export default {
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
 }
 
-/* Dark mode toast */
 .dark-mode .toast {
   background: #1a1a1a;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -200,7 +199,6 @@ export default {
   }
 }
 
-/* Toast transitions */
 .toast-enter-active {
   animation: slideIn 0.3s ease-out;
 }
@@ -220,7 +218,6 @@ export default {
   }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .toast-container {
     top: 10px;

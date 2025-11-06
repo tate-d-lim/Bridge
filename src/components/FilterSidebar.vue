@@ -1,6 +1,5 @@
 <template>
   <div class="filter-sidebar">
-    <!-- Desktop Sidebar -->
     <div class="sidebar-desktop">
       <div class="filter-header">
         <div class="filter-title">
@@ -15,7 +14,6 @@
       </div>
 
       <div class="filter-content">
-        <!-- Active Filters -->
         <div v-if="activeFilterCount > 0" class="active-filters">
           <div class="active-filters-header">
             <h4>Active Filters</h4>
@@ -49,7 +47,6 @@
           </div>
         </div>
 
-        <!-- Salary Range -->
         <div class="filter-section">
           <h4 class="filter-section-title">Salary Range</h4>
           <div class="salary-range-display">
@@ -88,7 +85,6 @@
           </div>
         </div>
 
-        <!-- Categories -->
         <div class="filter-section">
           <h4 class="filter-section-title">Categories</h4>
           <div class="filter-options">
@@ -111,7 +107,6 @@
           </div>
         </div>
 
-        <!-- Locations -->
         <div class="filter-section">
           <h4 class="filter-section-title">Location</h4>
           <div class="filter-options">
@@ -133,7 +128,6 @@
           </div>
         </div>
 
-        <!-- Job Type -->
         <div class="filter-section">
           <h4 class="filter-section-title">Job Type</h4>
           <div class="filter-options">
@@ -256,7 +250,6 @@ export default {
     const onMinSalaryChange = (event) => {
       const newMin = parseInt(event.target.value)
       salaryRange.value[0] = newMin
-      // Ensure min doesn't exceed max
       if (newMin > salaryRange.value[1]) {
         salaryRange.value[1] = newMin
       }
@@ -266,7 +259,6 @@ export default {
     const onMaxSalaryChange = (event) => {
       const newMax = parseInt(event.target.value)
       salaryRange.value[1] = newMax
-      // Ensure max doesn't go below min
       if (newMax < salaryRange.value[0]) {
         salaryRange.value[0] = newMax
       }
@@ -297,19 +289,16 @@ export default {
       return type ? type.label : id
     }
 
-    // Method to update category counts
     const updateCategoryCounts = (counts) => {
       categories.value.forEach(category => {
         category.count = counts[category.id] || 0
       })
     }
 
-    // Watch for jobCounts changes and update category counts
     watch(() => props.jobCounts, (newCounts) => {
       updateCategoryCounts(newCounts)
     }, { immediate: true })
 
-    // Watch for initialCategory prop and auto-select it
     watch(() => props.initialCategory, (newCategory) => {
       if (newCategory && !selectedCategories.value.includes(newCategory)) {
         selectedCategories.value.push(newCategory)
@@ -317,7 +306,6 @@ export default {
       }
     }, { immediate: true })
 
-    // Also watch in onMounted to handle initial value
     onMounted(() => {
       if (props.initialCategory && !selectedCategories.value.includes(props.initialCategory)) {
         selectedCategories.value.push(props.initialCategory)
@@ -519,17 +507,14 @@ export default {
   background: transparent;
   outline: none;
   margin: 0;
-  /* Let only the thumb receive events so the min slider isn’t blocked by max */
   pointer-events: none;
   touch-action: none;
 }
 
-/* Bring the slider being interacted with to the top */
 .salary-slider:focus {
   z-index: 3;
 }
 
-/* Tracks remain non-interactive; thumbs are interactive */
 .salary-slider::-webkit-slider-runnable-track {
   width: 100%;
   height: 20px;
@@ -548,7 +533,6 @@ export default {
   pointer-events: none;
 }
 
-/* Remove fixed stacking order; focus will manage it */
 .min-slider {
   z-index: 1;
 }
@@ -567,7 +551,7 @@ export default {
   cursor: pointer;
   border: 2px solid var(--primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  pointer-events: all; /* important: thumb is clickable/draggable */
+  pointer-events: all; 
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -579,7 +563,7 @@ export default {
   cursor: pointer;
   border: 2px solid var(--primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  pointer-events: all; /* important: thumb is clickable/draggable */
+  pointer-events: all; 
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 

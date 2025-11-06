@@ -16,7 +16,7 @@ export default {
     },
     animationSpeed: {
       type: Number,
-      default: 8 // seconds
+      default: 8
     },
     showBorder: {
       type: Boolean,

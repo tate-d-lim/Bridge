@@ -13,9 +13,7 @@ import {
   orderBy
 } from 'firebase/firestore'
 
-// Badge Definitions
 export const BADGE_DEFINITIONS = {
-  // Performance-Based Badges (based on wins)
   performance: [
     {
       id: 'bronze_performer',
@@ -59,7 +57,6 @@ export const BADGE_DEFINITIONS = {
     }
   ],
   
-  // Participation-Based Badges (based on total quizzes)
   participation: [
     {
       id: 'beginner',
@@ -103,7 +100,6 @@ export const BADGE_DEFINITIONS = {
     }
   ],
   
-  // Streak-Based Badges (consecutive days)
   streak: [
     {
       id: 'streak_3',
@@ -147,7 +143,6 @@ export const BADGE_DEFINITIONS = {
     }
   ],
   
-  // Win Streak Badges (consecutive wins)
   winStreak: [
     {
       id: 'win_streak_3',
@@ -180,8 +175,7 @@ export const BADGE_DEFINITIONS = {
       type: 'win_streak'
     }
   ],
-  
-  // Perfect Score Badges
+
   perfect: [
     {
       id: 'first_perfect',
@@ -243,7 +237,6 @@ export default {
   },
   
   actions: {
-    // Initialize user stats when they first start taking quizzes
     async initializeUserStats({ commit }, userId) {
       try {
         const statsRef = doc(db, 'userStats', userId)
@@ -280,7 +273,6 @@ export default {
       }
     },
     
-    // Update user stats after completing a quiz
     async updateUserStats({ commit, dispatch }, { userId, score, isPerfect = false }) {
       console.log('📊 Updating user stats:', { userId, score, isPerfect })
       try {
@@ -294,9 +286,8 @@ export default {
         }
         
         const currentStats = statsDoc.data()
-        const isWin = score >= 80 // Win threshold
-        
-        // Calculate day streak
+        const isWin = score >= 80 
+
         const today = new Date().toDateString()
         const lastPlayed = currentStats.lastPlayedDate ? 
           new Date(currentStats.lastPlayedDate).toDateString() : null
@@ -310,20 +301,16 @@ export default {
           const yesterdayStr = yesterday.toDateString()
           
           if (lastPlayed === yesterdayStr) {
-            // Consecutive day
             currentDayStreak += 1
           } else if (lastPlayed !== today) {
-            // Streak broken
             currentDayStreak = 1
           }
-          // If played today already, don't increment
         } else {
           currentDayStreak = 1
         }
         
         maxDayStreak = Math.max(maxDayStreak, currentDayStreak)
         
-        // Calculate win streak
         let currentWinStreak = currentStats.currentWinStreak || 0
         let maxWinStreak = currentStats.maxWinStreak || 0
         
@@ -334,7 +321,6 @@ export default {
           currentWinStreak = 0
         }
         
-        // Calculate totals
         const totalPlays = (currentStats.totalPlays || 0) + 1
         const totalWins = (currentStats.totalWins || 0) + (isWin ? 1 : 0)
         const winPercentage = Math.round((totalWins / totalPlays) * 100)
@@ -367,7 +353,6 @@ export default {
           perfectScores: updatedStats.perfectScores
         })
         
-        // Check for new badges
         await dispatch('checkAndAwardBadges', { userId, stats: updatedStats })
         
         return updatedStats
@@ -377,7 +362,6 @@ export default {
       }
     },
     
-    // Check if user has earned any new badges
     async checkAndAwardBadges({ commit, state }, { userId, stats }) {
       console.log('🏆 Checking for new badges...')
       try {
@@ -389,7 +373,6 @@ export default {
           ...BADGE_DEFINITIONS.perfect
         ]
         
-        // Fetch currently earned badges
         const earnedQuery = query(
           collection(db, 'earnedBadges'),
           where('userId', '==', userId)
@@ -401,9 +384,7 @@ export default {
         
         const newlyEarned = []
         
-        // Check each badge type
         for (const badge of allBadgeTypes) {
-          // Skip if already earned
           if (earnedBadgeIds.includes(badge.id)) continue
           
           let shouldAward = false
@@ -429,7 +410,6 @@ export default {
           if (shouldAward) {
             console.log(`🎉 NEW BADGE EARNED: ${badge.name} (${badge.id})`)
             
-            // Award the badge
             await addDoc(collection(db, 'earnedBadges'), {
               userId,
               badgeId: badge.id,
@@ -459,12 +439,10 @@ export default {
       }
     },
     
-    // Fetch all user's earned badges
     async fetchEarnedBadges({ commit }, userId) {
       try {
         console.log('🔍 Fetching earned badges for user:', userId)
         
-        // Try with orderBy first
         try {
           const q = query(
             collection(db, 'earnedBadges'),
@@ -487,7 +465,6 @@ export default {
           return badges
         } catch (orderByError) {
           console.warn('⚠️ OrderBy query failed, trying without orderBy:', orderByError.message)
-          // Fallback: query without orderBy
           const q = query(
             collection(db, 'earnedBadges'),
             where('userId', '==', userId)
@@ -499,7 +476,6 @@ export default {
             ...doc.data()
           }))
           
-          // Sort manually by earnedAt
           badges.sort((a, b) => {
             const dateA = a.earnedAt?.seconds || 0
             const dateB = b.earnedAt?.seconds || 0
@@ -515,13 +491,11 @@ export default {
         console.error('Error code:', error.code)
         console.error('Error message:', error.message)
         commit('SET_ERROR', error.message)
-        // Return empty array instead of throwing
         commit('SET_EARNED_BADGES', [])
         return []
       }
     },
-    
-    // Get all available badges with earned status
+
     async getAllBadgesWithStatus({ commit }, userId) {
       try {
         const earnedQuery = query(
@@ -530,8 +504,6 @@ export default {
         )
         const earnedSnapshot = await getDocs(earnedQuery)
         const earnedBadgeIds = earnedSnapshot.docs.map(doc => doc.data().badgeId)
-        
-        // Also populate earnedBadges for progress tracking
         const earnedBadges = earnedSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()

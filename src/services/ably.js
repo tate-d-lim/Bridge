@@ -1,15 +1,12 @@
 import * as Ably from 'ably'
 import { ChatClient, LogLevel } from '@ably/chat'
 
-// Ably configuration
 let realtimeClient = null
 let chatClient = null
 
-// Initialize Ably clients
 export const initializeAbly = (clientId) => {
   console.log('Initializing Ably with clientId:', clientId)
   
-  // Always close and recreate to ensure correct clientId
   if (realtimeClient && chatClient) {
     const currentClientId = realtimeClient.auth.clientId
     console.log('Existing clientId:', currentClientId, 'New clientId:', clientId)
@@ -24,7 +21,6 @@ export const initializeAbly = (clientId) => {
       console.log('Existing clients have no clientId, will recreate')
     }
     
-    // Close existing connection
     realtimeClient.connection.close()
     realtimeClient = null
     chatClient = null
@@ -39,16 +35,14 @@ export const initializeAbly = (clientId) => {
   }
 
   console.log('Creating Ably Realtime client with clientId:', clientId)
-  // Create Ably Realtime client
   realtimeClient = new Ably.Realtime({
     key: apiKey,
     clientId: clientId,
-    recover: true, // Enable connection recovery
-    echoMessages: false, // Don't echo our own messages
-    recoverKey: `recover-${clientId}` // Unique recover key per user
+    recover: true, 
+    echoMessages: false, 
+    recoverKey: `recover-${clientId}` 
   })
   
-  // Verify clientId after connection
   realtimeClient.connection.once('connected', () => {
     const actualClientId = realtimeClient.auth.clientId
     console.log('Ably connected with clientId:', actualClientId, 'Expected:', clientId)
@@ -57,14 +51,12 @@ export const initializeAbly = (clientId) => {
     }
   })
 
-  // Add connection event listeners for debugging
   realtimeClient.connection.on('connecting', () => {
     console.log('Ably: Connecting...')
   })
   
   realtimeClient.connection.on('connected', () => {
     console.log('Ably: Connected successfully!')
-    // Force a state change event to ensure UI updates
     setTimeout(() => {
       console.log('Ably: Triggering state change event for UI update')
       realtimeClient.connection.emit('statechange', {
@@ -83,7 +75,6 @@ export const initializeAbly = (clientId) => {
   })
 
   console.log('Creating Ably Chat client...')
-  // Create Chat client
   chatClient = new ChatClient(realtimeClient, {
     logLevel: LogLevel.Error
   })
@@ -92,7 +83,6 @@ export const initializeAbly = (clientId) => {
   return { realtimeClient, chatClient }
 }
 
-// Get existing clients
 export const getAblyClients = () => {
   if (!realtimeClient || !chatClient) {
     throw new Error('Ably clients not initialized. Call initializeAbly first.')
@@ -100,7 +90,6 @@ export const getAblyClients = () => {
   return { realtimeClient, chatClient }
 }
 
-// Close connection
 export const closeAblyConnection = () => {
   if (realtimeClient) {
     realtimeClient.connection.close()
@@ -109,15 +98,12 @@ export const closeAblyConnection = () => {
   }
 }
 
-// Connection status helper
 export const getConnectionStatus = () => {
   if (!realtimeClient) return 'disconnected'
   return realtimeClient.connection.state
 }
 
-// Room helper functions
 export const createRoomName = (participants) => {
-  // Sort participants to ensure consistent room names
   const sortedParticipants = [...participants].sort()
   return `chat_${sortedParticipants.join('_')}`
 }

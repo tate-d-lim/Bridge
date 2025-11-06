@@ -75,15 +75,13 @@ export default {
       if (!dateString) return 'recently'
       const date = new Date(dateString)
       const now = new Date()
-      
-      // Check if same calendar day
+
       const isSameDay = date.getFullYear() === now.getFullYear() &&
                        date.getMonth() === now.getMonth() &&
                        date.getDate() === now.getDate()
       
       if (isSameDay) return 'today'
       
-      // Check if yesterday (previous calendar day)
       const yesterday = new Date(now)
       yesterday.setDate(yesterday.getDate() - 1)
       const isYesterday = date.getFullYear() === yesterday.getFullYear() &&
@@ -92,7 +90,6 @@ export default {
       
       if (isYesterday) return 'yesterday'
       
-      // Calculate difference in days using floor instead of ceil
       const diffTime = Math.abs(now - date)
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
       

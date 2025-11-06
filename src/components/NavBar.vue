@@ -13,7 +13,6 @@
       </button>
 
       <div class="nav-menu" :class="{ active: menuOpen }">
-        <!-- Close button for mobile menu -->
         <button class="menu-close" @click="closeMenu">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -21,15 +20,12 @@
           </svg>
         </button>
 
-        <!-- Left Side Navigation Links -->
         <div class="nav-links-section">
           <template v-if="isAuthenticated">
-            <!-- Home Link -->
             <router-link :to="getHomeRoute" class="nav-link" @click="closeMenu">
               Home
             </router-link>
 
-            <!-- Job Seeker-specific links -->
             <template v-if="isJobSeeker">
               <router-link to="/browse-jobs" class="nav-link" @click="closeMenu">
                 Browse Jobs
@@ -42,7 +38,6 @@
               </router-link>
             </template>
 
-            <!-- Employer-specific links -->
             <template v-if="isEmployer">
               <router-link to="/employer/post-job" class="nav-link" @click="closeMenu">
                 Post Job
@@ -53,7 +48,6 @@
             </template>
           </template>
 
-          <!-- Non-authenticated user navigation -->
           <template v-else>
             <router-link to="/" class="nav-link" @click="closeMenu">
               Home
@@ -64,13 +58,10 @@
           </template>
         </div>
 
-        <!-- Spacer to push right items to the right -->
         <div class="nav-spacer"></div>
 
-        <!-- Right Side Controls -->
         <div class="nav-controls-section">
           <template v-if="isAuthenticated">
-            <!-- Messages Icon -->
             <router-link to="/chat" class="nav-link chat-icon mobile-control-item" @click="closeMenu">
               <div class="chat-icon-wrapper">
                 <img v-if="isDarkMode" src="../assets/darkModeMessages.png" alt="Messages" class="envelope-icon" />
@@ -80,7 +71,6 @@
               <span class="control-label">Messages</span>
             </router-link>
 
-            <!-- User Profile Section (Mobile) -->
             <div class="mobile-user-section">
               <div class="mobile-user-header">
                 <div class="user-avatar-mobile">
@@ -130,7 +120,6 @@
               </div>
             </div>
 
-            <!-- User Menu (Desktop) -->
             <div class="user-menu">
               <button @click="toggleUserDropdown" class="user-avatar">
                 <img 
@@ -148,7 +137,7 @@
                 @mouseleave="startDropdownTimer"
                 @click="resetDropdownTimer"
               >
-                <!-- User Header in Dropdown -->
+
                 <div class="dropdown-user-header">
                   <div class="user-avatar-dropdown">
                     <img 
@@ -199,9 +188,7 @@
             </div>
           </template>
 
-          <!-- Guest Right Side Controls -->
           <template v-else>
-            <!-- Dark Mode Toggle for guests -->
             <button @click="toggleDarkMode" class="dark-mode-toggle mobile-control-item" title="Toggle Dark Mode">
               <img v-if="isDarkMode" src="../assets/sun-white.svg" alt="Light Mode" class="toggle-icon" />
               <img v-else src="../assets/moon-black.svg" alt="Dark Mode" class="toggle-icon" />
@@ -263,42 +250,29 @@ export default {
         .slice(0, 2)
     })
 
-    // Calculate total unread message count
-    // Access unreadCounts directly from state to ensure reactivity
     const totalUnreadCount = computed(() => {
       if (!isAuthenticated.value) return 0
       
-      // Get all chat rooms from store
       const chatRooms = store.getters['chatAbly/chatRooms'] || []
       
-      // Get unreadCounts Map from state (accessing the Map itself ensures reactivity)
       const unreadCounts = store.state.chatAbly.unreadCounts
       if (!unreadCounts || !(unreadCounts instanceof Map)) {
         return 0
       }
-      
-      // Sum up unread counts for all rooms
-      // Accessing Map.size and iterating ensures Vue tracks changes
+
       let total = 0
       for (const room of chatRooms) {
-        // Access the Map value - Vue will track this access
         const count = unreadCounts.get(room.id) || 0
         total += count
       }
-      
-      // Also check for temporary unread counts stored with roomName (for rooms being created)
-      // Iterate through all entries in the Map to ensure Vue tracks all changes
+
       for (const [key, value] of unreadCounts.entries()) {
-        // If key is a roomName (starts with 'chat_') and not already counted, add it
         if (typeof key === 'string' && key.startsWith('chat_') && !chatRooms.some(r => r.id === key || r.roomName === key)) {
           total += value || 0
         }
       }
-      
-      // Force Vue to track the Map by accessing its size property
-      // This ensures reactivity when Map is replaced with a new instance
+
       const mapSize = unreadCounts.size
-      
       return total
     })
 
@@ -336,7 +310,7 @@ export default {
         if (userDropdownOpen.value) {
           userDropdownOpen.value = false
         }
-      }, 5000) // 5 seconds
+      }, 5000)
     }
     
     const clearDropdownTimer = () => {
@@ -384,7 +358,6 @@ export default {
       }
     }
 
-    // Watch for dropdown state changes
     watch(userDropdownOpen, (isOpen) => {
       if (isOpen) {
         startDropdownTimer()
@@ -394,7 +367,6 @@ export default {
     })
     
     onMounted(() => {
-      // Check for saved dark mode preference
       const savedDarkMode = localStorage.getItem('darkMode')
       if (savedDarkMode === 'true') {
         isDarkMode.value = true
@@ -444,7 +416,6 @@ export default {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Dark mode - Modern glassmorphism */
 .dark-mode .navbar {
   background: rgba(10, 10, 15, 0.85);
   backdrop-filter: blur(20px) saturate(180%);
@@ -724,7 +695,6 @@ export default {
   object-fit: cover;
 }
 
-/* Only show border when no image */
 .user-avatar:not(:has(.avatar-image)) {
   background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
   color: white;
@@ -974,7 +944,6 @@ export default {
     z-index: 102;
   }
 
-  /* Hide hamburger when menu is open */
   .nav-toggle.active {
     opacity: 0;
     pointer-events: none;
@@ -1104,7 +1073,6 @@ export default {
     border-radius: 50%;
   }
 
-  /* Add text label next to avatar on mobile */
   .user-avatar::after {
     content: 'Account';
     font-size: 0.95rem;
@@ -1146,7 +1114,6 @@ export default {
     display: none;
   }
 
-  /* Backdrop overlay for mobile menu */
   .nav-menu::before {
     content: '';
     position: fixed;
@@ -1168,7 +1135,6 @@ export default {
   }
 }
 
-/* Tablet size adjustments */
 @media (max-width: 1024px) and (min-width: 769px) {
   .nav-menu {
     gap: 15px;
@@ -1253,7 +1219,6 @@ export default {
     align-items: center;
   }
 
-  /* Mobile User Section */
   .mobile-user-section {
     display: flex;
     flex-direction: column;
@@ -1340,18 +1305,15 @@ export default {
     background: rgba(255, 255, 255, 0.05);
   }
 
-  /* Hide desktop user menu on mobile */
   .user-menu {
     display: none;
   }
 
-  /* Remove old mobile avatar styles */
   .user-avatar::after {
     display: none;
   }
 }
 
-/* Desktop - hide mobile elements */
 @media (min-width: 769px) {
   .mobile-user-section {
     display: none !important;

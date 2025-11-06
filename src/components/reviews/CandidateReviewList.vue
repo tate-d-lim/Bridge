@@ -1,6 +1,5 @@
 <template>
   <div class="reviews-container">
-    <!-- Summary Card -->
     <div class="summary-card" v-if="loadedOnce">
       <div class="summary-content">
         <div class="rating-display">
@@ -25,13 +24,11 @@
       <p v-if="count === 0" class="no-reviews">No reviews yet. Be the first to review this candidate!</p>
     </div>
 
-    <!-- Loading State -->
     <div v-if="loading && !loadedOnce" class="loading-state">
       <div class="loading-spinner"></div>
       <p>Loading reviews...</p>
     </div>
 
-    <!-- Reviews List -->
     <div v-else-if="reviews.length > 0" class="reviews-list">
       <div 
         v-for="review in reviews" 
@@ -59,12 +56,10 @@
       </div>
     </div>
 
-    <!-- Empty State -->
     <div v-else-if="loadedOnce && reviews.length === 0" class="empty-state">
       <p>No reviews yet.</p>
     </div>
 
-    <!-- Load More Button -->
     <div v-if="cursor" class="load-more-container">
       <button 
         class="btn-load-more" 

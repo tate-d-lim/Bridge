@@ -51,15 +51,14 @@ export default {
     let currentInterval = null
 
     const animateCount = (targetValue, isInitial = false) => {
-      // Clear any existing interval
       if (currentInterval) {
         clearInterval(currentInterval)
       }
 
-      const duration = isInitial ? 2000 : 1000 // Shorter duration for updates
+      const duration = isInitial ? 2000 : 1000
       const steps = 60
       const increment = targetValue / steps
-      let current = count.value // Start from current value for updates
+      let current = count.value 
 
       const startAnimation = () => {
         currentInterval = setInterval(() => {
@@ -87,9 +86,8 @@ export default {
       }, props.delay)
     }
 
-    // Watch for changes in the value prop
     watch(() => props.value, (newValue) => {
-      if (opacity.value === 1) { // Only animate if component is already visible
+      if (opacity.value === 1) { 
         animateCount(newValue, false)
       }
     })

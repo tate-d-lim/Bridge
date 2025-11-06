@@ -94,7 +94,6 @@ export default {
           read: false
         })
         
-        // Update last message in chat
         await updateDoc(doc(db, 'chats', chatId), {
           lastMessage: text,
           lastMessageAt: serverTimestamp()

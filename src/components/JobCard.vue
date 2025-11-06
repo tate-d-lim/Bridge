@@ -89,7 +89,6 @@ export default {
       if (props.job.category) {
         tagsList.push(props.job.category)
       }
-      // Add any additional tags from the job object if they exist
       if (props.job.tags && Array.isArray(props.job.tags)) {
         tagsList.push(...props.job.tags)
       }
@@ -99,7 +98,6 @@ export default {
     const handleBookmark = (e) => {
       e.stopPropagation()
       isBookmarked.value = !isBookmarked.value
-      // TODO: Implement bookmark functionality
       console.log('Job bookmarked:', props.job.id)
     }
 
@@ -129,14 +127,12 @@ export default {
       const date = new Date(dateString)
       const now = new Date()
       
-      // Check if same calendar day
       const isSameDay = date.getFullYear() === now.getFullYear() &&
                        date.getMonth() === now.getMonth() &&
                        date.getDate() === now.getDate()
       
       if (isSameDay) return 'Today'
       
-      // Check if yesterday (previous calendar day)
       const yesterday = new Date(now)
       yesterday.setDate(yesterday.getDate() - 1)
       const isYesterday = date.getFullYear() === yesterday.getFullYear() &&
@@ -145,7 +141,6 @@ export default {
       
       if (isYesterday) return 'Yesterday'
       
-      // Calculate difference in days using floor instead of ceil
       const diffTime = Math.abs(now - date)
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
       
@@ -205,7 +200,6 @@ export default {
   border-color: rgba(0, 0, 0, 0.12);
 }
 
-/* Header */
 .job-card-header {
   display: flex;
   align-items: flex-start;
@@ -273,7 +267,6 @@ export default {
   height: 18px;
 }
 
-/* Job Details */
 .job-details {
   display: flex;
   flex-wrap: wrap;
@@ -294,7 +287,6 @@ export default {
   height: 14px;
 }
 
-/* Tags */
 .job-tags {
   display: flex;
   flex-wrap: wrap;
@@ -312,7 +304,6 @@ export default {
   text-transform: capitalize;
 }
 
-/* Description */
 .job-description {
   font-size: 0.875rem;
   color: var(--text-muted);
@@ -327,7 +318,6 @@ export default {
   text-overflow: ellipsis;
 }
 
-/* Footer */
 .job-footer {
   display: flex;
   justify-content: space-between;

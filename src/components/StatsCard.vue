@@ -3,13 +3,11 @@
     class="stat-card group"
     :style="cardStyle"
   >
-    <!-- Gradient background on hover -->
     <div 
       class="gradient-overlay"
       :class="gradientClass"
     />
-    
-    <!-- Icon container -->
+
     <div 
       class="icon-container"
       :class="gradientClass"
@@ -17,7 +15,6 @@
       <img :src="stat.icon" :alt="stat.label" class="icon" />
     </div>
 
-    <!-- Counter -->
     <div class="stat-content">
       <div class="stat-value">
         <span class="tabular-nums">{{ count.toLocaleString() }}</span>
@@ -26,7 +23,6 @@
       <p class="stat-label">{{ stat.label }}</p>
     </div>
 
-    <!-- Animated border -->
     <div 
       class="animated-border"
       :style="borderStyle"
@@ -160,7 +156,6 @@ export default {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Gradient background on hover */
 .gradient-overlay {
   position: absolute;
   inset: 0;
@@ -190,7 +185,6 @@ export default {
   background: linear-gradient(to bottom right, #22c55e, #16a34a);
 }
 
-/* Icon container */
 .icon-container {
   position: relative;
   width: 64px;
@@ -215,7 +209,6 @@ export default {
   filter: brightness(0) invert(1);
 }
 
-/* Stat content */
 .stat-content {
   position: relative;
   text-align: center;
@@ -240,7 +233,6 @@ export default {
   line-height: 1.5;
 }
 
-/* Animated border */
 .animated-border {
   position: absolute;
   inset: 0;
@@ -257,7 +249,6 @@ export default {
   opacity: 1;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .stat-card {
     padding: 24px;

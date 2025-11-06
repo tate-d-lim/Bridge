@@ -56,7 +56,6 @@ export default {
   gap: 12px;
 }
 
-/* Header Skeleton */
 .job-card-header-skeleton {
   display: flex;
   justify-content: space-between;
@@ -90,7 +89,6 @@ export default {
   flex-shrink: 0;
 }
 
-/* Details Skeleton */
 .job-details-skeleton {
   display: flex;
   flex-wrap: wrap;
@@ -103,7 +101,6 @@ export default {
   width: 80px;
 }
 
-/* Tags Skeleton */
 .job-tags-skeleton {
   display: flex;
   flex-wrap: wrap;
@@ -117,7 +114,6 @@ export default {
   border-radius: 12px;
 }
 
-/* Description Skeleton */
 .job-description-skeleton {
   display: flex;
   flex-direction: column;
@@ -135,7 +131,6 @@ export default {
   width: 83.33%;
 }
 
-/* Footer Skeleton */
 .job-footer-skeleton {
   display: flex;
   justify-content: space-between;
@@ -156,7 +151,6 @@ export default {
   border-radius: 8px;
 }
 
-/* Skeleton Animation */
 .skeleton {
   background: linear-gradient(
     90deg,

@@ -53,26 +53,16 @@ export default {
     const show = ref(false)
     const badges = ref([])
 
-    // Watch for newly earned badges
     watch(
       () => store.getters['badges/newlyEarnedBadges'],
       (newBadges) => {
         if (newBadges && newBadges.length > 0) {
           badges.value = [...newBadges]
           show.value = true
-          
-          // Play celebration sound (optional)
-          playSound()
         }
       },
       { deep: true }
     )
-
-    const playSound = () => {
-      // Optional: Add a celebration sound
-      // const audio = new Audio('/sounds/badge-earned.mp3')
-      // audio.play()
-    }
 
     const close = () => {
       show.value = false
@@ -126,7 +116,6 @@ export default {
   animation: scaleIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* Dark mode card background */
 .dark-mode .badge-notification-card {
   background: #1a1a1a;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -204,7 +193,6 @@ export default {
   font-size: 1.1rem;
 }
 
-/* Dark mode text */
 .dark-mode .badge-header h2 {
   color: #ffffff;
 }
@@ -232,7 +220,6 @@ export default {
   opacity: 0;
 }
 
-/* Dark mode badge item */
 .dark-mode .badge-item {
   background: #2a2a2a;
   border-color: #3a3a3a;
@@ -307,7 +294,6 @@ export default {
   font-size: 0.95rem;
 }
 
-/* Dark mode badge info */
 .dark-mode .badge-info h3 {
   color: #ffffff;
 }
@@ -364,7 +350,6 @@ export default {
   color: #000;
 }
 
-/* Dark mode buttons */
 .dark-mode .btn-secondary {
   background: #3a3a3a;
   color: #ffffff;
@@ -374,7 +359,6 @@ export default {
   background: #4a4a4a;
 }
 
-/* Transition */
 .badge-slide-enter-active {
   animation: fadeIn 0.3s;
 }
@@ -401,7 +385,6 @@ export default {
   }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .badge-notification-card {
     padding: 30px 20px;

@@ -16,13 +16,12 @@ export const useToast = () => {
     const toast = {
       id,
       message,
-      type, // 'success', 'error', 'warning', 'info'
+      type, 
       duration
     }
     
     toasts.value.push(toast)
     
-    // Auto remove after duration
     if (duration > 0) {
       setTimeout(() => {
         removeToast(id)

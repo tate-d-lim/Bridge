@@ -8,8 +8,6 @@
       animationDelay: `${index * 0.2}s`
     }"
   >
-    <!-- Particle effects removed -->
-
     <div
       :class="[
         'quiz-card-inner',
@@ -18,16 +16,12 @@
       ]"
     >
       <div class="quiz-card-content">
-        <!-- Animated background pattern -->
         <div class="card-pattern"></div>
-
-        <!-- Icon with glow effect -->
         <div :class="['quiz-icon-wrapper', `icon-${level}`, { 'icon-pulse': isHovered }]">
           <img :src="quiz.icon" :alt="quiz.name" class="quiz-icon-img" />
           <div v-if="isHovered" :class="['icon-glow', `glow-${level}`]"></div>
         </div>
 
-        <!-- Content -->
         <div class="card-body">
           <div class="card-header">
             <h3>{{ quiz.name }}</h3>
@@ -54,7 +48,6 @@
             </div>
           </div>
 
-          <!-- Start button -->
           <button :class="['start-button', `button-${level}`, { 'button-hover': isHovered }]">
             <span>Start Quiz</span>
             <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -63,7 +56,6 @@
           </button>
         </div>
 
-        <!-- Corner accent -->
         <div :class="['corner-accent', `accent-${level}`]"></div>
       </div>
     </div>

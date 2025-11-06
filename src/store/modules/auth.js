@@ -40,7 +40,6 @@ export default {
         const userCredential = await signInWithEmailAndPassword(auth, email, password)
         commit('SET_USER', userCredential.user)
         
-        // Fetch user profile
         const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid))
         if (userDoc.exists()) {
           commit('SET_USER_PROFILE', userDoc.data())
@@ -61,7 +60,6 @@ export default {
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password)
         
-        // Create user profile in Firestore
         await setDoc(doc(db, 'users', userCredential.user.uid), {
           ...userData,
           email,
@@ -114,7 +112,6 @@ export default {
           updatedAt: new Date().toISOString()
         })
         
-        // Update local state
         commit('SET_USER_PROFILE', {
           ...state.userProfile,
           ...updatedData
@@ -134,8 +131,7 @@ export default {
       commit('SET_ERROR', null)
       try {
         const userId = state.user.uid
-        
-        // Convert image to base64
+
         const base64Image = await new Promise((resolve, reject) => {
           const reader = new FileReader()
           reader.onload = () => resolve(reader.result)
@@ -143,13 +139,11 @@ export default {
           reader.readAsDataURL(file)
         })
         
-        // Store base64 image directly in Firestore user document
         await updateDoc(doc(db, 'users', userId), {
           photoURL: base64Image,
           updatedAt: new Date().toISOString()
         })
         
-        // Update local state
         commit('SET_USER_PROFILE', {
           ...state.userProfile,
           photoURL: base64Image
@@ -170,13 +164,11 @@ export default {
       try {
         const userId = state.user.uid
         
-        // Remove photo URL from Firestore
         await updateDoc(doc(db, 'users', userId), {
           photoURL: null,
           updatedAt: new Date().toISOString()
         })
         
-        // Update local state
         commit('SET_USER_PROFILE', {
           ...state.userProfile,
           photoURL: null
@@ -197,7 +189,6 @@ export default {
       try {
         const userId = state.user.uid
         
-        // Convert image to base64
         const base64Image = await new Promise((resolve, reject) => {
           const reader = new FileReader()
           reader.onload = () => resolve(reader.result)
@@ -205,13 +196,11 @@ export default {
           reader.readAsDataURL(file)
         })
         
-        // Store base64 image directly in Firestore user document
         await updateDoc(doc(db, 'users', userId), {
           companyLogo: base64Image,
           updatedAt: new Date().toISOString()
         })
         
-        // Update local state
         commit('SET_USER_PROFILE', {
           ...state.userProfile,
           companyLogo: base64Image
@@ -232,13 +221,11 @@ export default {
       try {
         const userId = state.user.uid
         
-        // Remove company logo from Firestore
         await updateDoc(doc(db, 'users', userId), {
           companyLogo: null,
           updatedAt: new Date().toISOString()
         })
         
-        // Update local state
         commit('SET_USER_PROFILE', {
           ...state.userProfile,
           companyLogo: null

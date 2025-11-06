@@ -115,7 +115,6 @@ export default {
   transition: color 0.3s ease, stroke 0.3s ease;
 }
 
-/* Blue Icons */
 .stat-icon.bg-blue-50 svg {
   color: #3b82f6;
   stroke: #3b82f6;
@@ -126,7 +125,6 @@ export default {
   stroke: #60a5fa;
 }
 
-/* Green Icons */
 .stat-icon.bg-green-50 svg {
   color: #10b981;
   stroke: #10b981;
@@ -137,7 +135,6 @@ export default {
   stroke: #34d399;
 }
 
-/* Purple Icons */
 .stat-icon.bg-purple-50 svg {
   color: #8b5cf6;
   stroke: #8b5cf6;
@@ -148,7 +145,6 @@ export default {
   stroke: #a78bfa;
 }
 
-/* Orange Icons */
 .stat-icon.bg-orange-50 svg {
   color: #f97316;
   stroke: #f97316;
@@ -159,7 +155,6 @@ export default {
   stroke: #fb923c;
 }
 
-/* Icon background colors */
 .bg-blue-50 {
   background: oklch(0.9 0.02 245);
 }

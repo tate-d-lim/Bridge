@@ -80,7 +80,6 @@ export default {
         }
       ]
       
-      // Add badges if provided
       if (this.badges !== null) {
         return [
           {

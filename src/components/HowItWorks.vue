@@ -9,7 +9,6 @@
       </div>
 
       <div class="steps-grid">
-        <!-- Connection line for desktop -->
         <div class="connection-line"></div>
 
         <div
@@ -19,7 +18,6 @@
           :style="{ animationDelay: `${index * 0.1}s` }"
         >
           <div class="step-content">
-            <!-- Icon -->
             <div class="step-icon-container">
               <div class="step-icon-wrapper" :class="step.colorClass">
                 <div class="step-icon-inner">
@@ -32,7 +30,6 @@
               </div>
             </div>
 
-            <!-- Content -->
             <h3 class="step-title">{{ step.title }}</h3>
             <p class="step-description">{{ step.description }}</p>
           </div>
@@ -46,7 +43,6 @@
 export default {
   name: "HowItWorks",
   setup() {
-    // Path to your icons folder in /public/icons
     const base = import.meta.env.BASE_URL
     const iconSrc = (file) => base + "icons/" + file
 
@@ -125,7 +121,6 @@ export default {
   position: relative;
 }
 
-/* Connection line for desktop */
 .connection-line {
   display: none;
   position: absolute;
@@ -207,7 +202,6 @@ export default {
   margin: 0 auto;
 }
 
-/* Gradient classes */
 .gradient-blue .step-icon-inner::before {
   background: linear-gradient(135deg, #3b82f6, #06b6d4);
 }
@@ -224,7 +218,6 @@ export default {
   background: linear-gradient(135deg, #10b981, #059669);
 }
 
-/* Animation */
 @keyframes slideInUp {
   from {
     opacity: 0;
@@ -236,7 +229,6 @@ export default {
   }
 }
 
-/* Responsive design */
 @media (min-width: 1024px) {  
   .steps-grid {
     grid-template-columns: repeat(4, 1fr);

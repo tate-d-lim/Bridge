@@ -22,17 +22,14 @@ import {
 } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 
-// Helper function to auto-subscribe to all rooms to receive messages
 const autoSubscribeToAllRooms = async ({ commit, state, dispatch }, userId) => {
   try {
     const { chatClient } = getAblyClients()
     const subscribedRooms = new Set()
-    
-    // Subscribe to message events for all rooms where user is participant
+
     for (const room of state.chatRooms) {
       const roomName = room.roomName || room.id
-      
-      // Skip if already subscribed
+
       if (state.rooms.has(roomName) || subscribedRooms.has(roomName)) {
         continue
       }
@@ -40,70 +37,48 @@ const autoSubscribeToAllRooms = async ({ commit, state, dispatch }, userId) => {
       try {
         const ablyRoom = await chatClient.rooms.get(roomName)
         
-        // Attach to room (this is required to receive messages)
         await ablyRoom.attach()
         
-        // Store in state
         state.rooms.set(roomName, ablyRoom)
         subscribedRooms.add(roomName)
         
-        // Subscribe to messages with auto-room creation
           ablyRoom.messages.subscribe((messageEvent) => {
             const msg = messageEvent.message
             
-            // CRITICAL: Ensure room exists BEFORE adding message
-            // This ensures the room is in chatRooms when ADD_MESSAGE tries to update unread counts
             dispatch('ensureRoomExistsFromMessage', { roomName, message: msg }).then(() => {
-              // Add message after room is ensured to exist
               commit('ADD_MESSAGE', {
                 roomName,
                 message: msg
               })
             }).catch(err => {
               console.error('Error ensuring room exists:', err)
-              // Still add message even if room creation fails
               commit('ADD_MESSAGE', {
                 roomName,
                 message: msg
               })
             })
           })
-        
-        // Check if this room is reactivated (was deleted but now has new message)
-        // CRITICAL: Only check reactivatedRooms Set - don't use heuristics on page load/refresh
-        // After page refresh, reactivatedRooms is empty, so we should load history for all rooms
         const isReactivated = state.reactivatedRooms && 
                              (state.reactivatedRooms.has(roomName) || state.reactivatedRooms.has(room.id))
         const wasDeleted = room.deletedFor && room.deletedFor.includes(userId)
-        
-        // IMPORTANT: Only skip history if explicitly marked as reactivated in this session
-        // After page refresh, reactivatedRooms is empty, so we should load history normally
-        // This ensures that on refresh, all rooms get their message history loaded
-        // Note: wasDeleted check is redundant since loadChatRooms already filters out deleted rooms
         const shouldSkipHistory = isReactivated || wasDeleted
         
         if (shouldSkipHistory) {
-          // Record reactivation time and clear only old messages
           const reactivationTime = new Date().getTime()
           if (!state.reactivatedAt) {
             state.reactivatedAt = new Map()
           }
-          // Only set if not already set (keep earliest reactivation time)
           if (!state.reactivatedAt.has(roomName)) {
             state.reactivatedAt.set(roomName, reactivationTime)
           }
           
-          // Use the stored reactivation time (or current if just set)
           const storedReactivationTime = state.reactivatedAt.get(roomName) || reactivationTime
-          // Use a 5-minute buffer - clear messages older than 5 minutes before reactivation
-          const cutoffTime = storedReactivationTime - 300000 // 5 minutes before reactivation
+          const cutoffTime = storedReactivationTime - 300000 
           
-          // Clear only old messages (before cutoff time), keep new ones
           if (state.messages.has(roomName)) {
             const messages = state.messages.get(roomName)
             const filteredMessages = messages.filter(msg => {
               const msgTime = msg.timestamp ? new Date(msg.timestamp).getTime() : 0
-              // Keep messages that arrived after cutoff time (likely new messages)
               return msgTime >= cutoffTime
             })
             
@@ -112,42 +87,30 @@ const autoSubscribeToAllRooms = async ({ commit, state, dispatch }, userId) => {
             }
           }
         } else {
-          // Load message history only for non-reactivated rooms
-          // IMPORTANT: If room was previously deleted, only load messages after deletion time
           try {
-            // Get deletion time for this user (if room was previously deleted)
-            // Handle Firestore Timestamp conversion
             const deletedAt = room.deletedAt?.[userId]
             let deletionTime = null
             if (deletedAt) {
               if (deletedAt.toDate && typeof deletedAt.toDate === 'function') {
-                // Firestore Timestamp object
                 deletionTime = deletedAt.toDate().getTime()
               } else if (deletedAt.seconds) {
-                // Firestore Timestamp in serialized format
                 deletionTime = deletedAt.seconds * 1000 + (deletedAt.nanoseconds || 0) / 1000000
               } else if (deletedAt instanceof Date) {
-                // Date object
                 deletionTime = deletedAt.getTime()
               } else {
-                // Try to parse as date string or timestamp
                 deletionTime = new Date(deletedAt).getTime()
                 if (isNaN(deletionTime)) {
                   deletionTime = null
                 }
               }
             }
-            
-            // Load all history first, then filter by deletion time
-            const history = await ablyRoom.messages.history({ limit: 100 }) // Load more to account for filtering
-            
+            const history = await ablyRoom.messages.history({ limit: 100 }) 
             if (history.items.length > 0) {
-              // Filter messages: only include messages after deletion time (if room was deleted)
               let filteredHistory = history.items
               if (deletionTime) {
                 filteredHistory = history.items.filter(msg => {
                   const msgTime = msg.timestamp ? new Date(msg.timestamp).getTime() : 0
-                  return msgTime > deletionTime // Only messages after deletion
+                  return msgTime > deletionTime 
                 })
               }
               
@@ -176,17 +139,11 @@ const autoSubscribeToAllRooms = async ({ commit, state, dispatch }, userId) => {
   }
 }
 
-// Helper function to auto-subscribe to a new room
 const subscribeToNewRoom = async ({ commit, state, dispatch }, { roomData, roomId, userId, skipHistory = false }) => {
   try {
     const { chatClient } = getAblyClients()
     const roomName = roomData.roomName || roomId
     
-    // Check if this is a reactivated room
-    // A room is reactivated if:
-    // 1. It was previously in reactivatedRooms Set (marked as reactivated earlier)
-    // 2. OR it's in deletedFor but we're explicitly told to skipHistory
-    // 3. OR skipHistory is explicitly true (indicates caller knows it's reactivated)
     const deletedFor = Array.isArray(roomData.deletedFor) ? roomData.deletedFor : []
     const wasInReactivatedRooms = state.reactivatedRooms && 
                                    (state.reactivatedRooms.has(roomName) || state.reactivatedRooms.has(roomId))
@@ -194,39 +151,28 @@ const subscribeToNewRoom = async ({ commit, state, dispatch }, { roomData, roomI
     
     const ablyRoom = await chatClient.rooms.get(roomName)
     
-    // Attach to room
     await ablyRoom.attach()
-    
-    // Store in state
+
     state.rooms.set(roomName, ablyRoom)
     
-    // CRITICAL: For reactivated rooms, clear old messages but keep new ones
-    // For reactivated rooms, we only want to receive new messages, not old history
     if (skipHistory || isReactivated) {
-      // Record reactivation time and clear old messages
-      // Use a reasonable buffer time (5 minutes ago) to clear old messages
-      // This should catch messages from before the room was deleted
+
       const reactivationTime = new Date().getTime()
       if (!state.reactivatedAt) {
         state.reactivatedAt = new Map()
       }
-      // Only set if not already set (keep earliest reactivation time)
+
       if (!state.reactivatedAt.has(roomName)) {
         state.reactivatedAt.set(roomName, reactivationTime)
       }
-      
-      // Use the stored reactivation time (or current if just set)
+
       const storedReactivationTime = state.reactivatedAt.get(roomName) || reactivationTime
-      // Use a 5-minute buffer - clear messages older than 5 minutes before reactivation
-      // This should be safe since users typically don't reactivate immediately after deleting
-      const cutoffTime = storedReactivationTime - 300000 // 5 minutes before reactivation
+      const cutoffTime = storedReactivationTime - 300000 
       
-      // Clear only old messages (before cutoff time), keep new ones
       if (state.messages.has(roomName)) {
         const messages = state.messages.get(roomName)
         const filteredMessages = messages.filter(msg => {
           const msgTime = msg.timestamp ? new Date(msg.timestamp).getTime() : 0
-          // Keep messages that arrived after cutoff time (likely new messages)
           return msgTime >= cutoffTime
         })
         
@@ -235,41 +181,31 @@ const subscribeToNewRoom = async ({ commit, state, dispatch }, { roomData, roomI
         }
       }
     } else {
-      // Only load history for new rooms (not reactivated)
-      // IMPORTANT: If room was previously deleted, only load messages after deletion time
       try {
-        // Get deletion time for this user (if room was previously deleted)
-        // Handle Firestore Timestamp conversion
         const deletedAt = roomData.deletedAt?.[userId]
         let deletionTime = null
         if (deletedAt) {
           if (deletedAt.toDate && typeof deletedAt.toDate === 'function') {
-            // Firestore Timestamp object
             deletionTime = deletedAt.toDate().getTime()
           } else if (deletedAt.seconds) {
-            // Firestore Timestamp in serialized format
             deletionTime = deletedAt.seconds * 1000 + (deletedAt.nanoseconds || 0) / 1000000
           } else if (deletedAt instanceof Date) {
-            // Date object
             deletionTime = deletedAt.getTime()
           } else {
-            // Try to parse as date string or timestamp
             deletionTime = new Date(deletedAt).getTime()
             if (isNaN(deletionTime)) {
               deletionTime = null
             }
           }
         }
-        
-        // Load all history first, then filter by deletion time
-        const history = await ablyRoom.messages.history({ limit: 100 }) // Load more to account for filtering
-        
-        // Filter messages: only include messages after deletion time (if room was deleted)
+
+        const history = await ablyRoom.messages.history({ limit: 100 }) 
+
         let filteredHistory = history.items
         if (deletionTime) {
           filteredHistory = history.items.filter(msg => {
             const msgTime = msg.timestamp ? new Date(msg.timestamp).getTime() : 0
-            return msgTime > deletionTime // Only messages after deletion
+            return msgTime > deletionTime 
           })
         }
         
@@ -288,15 +224,11 @@ const subscribeToNewRoom = async ({ commit, state, dispatch }, { roomData, roomI
         console.warn('⚠️ Error loading message history:', err)
       }
     }
-    
-    // Subscribe to messages with auto-room creation
+
     ablyRoom.messages.subscribe((messageEvent) => {
       const msg = messageEvent.message
       
-      // CRITICAL: Ensure room exists BEFORE adding message
-      // This ensures the room is in chatRooms when ADD_MESSAGE tries to update unread counts
       dispatch('ensureRoomExistsFromMessage', { roomName, message: msg }).then(() => {
-        // Add message after room is ensured to exist
         commit('ADD_MESSAGE', {
           roomName,
           message: msg
@@ -304,7 +236,6 @@ const subscribeToNewRoom = async ({ commit, state, dispatch }, { roomData, roomI
         console.log('[消息检查] 消息已添加:', roomName, msg.text?.substring(0, 30))
       }).catch(err => {
         console.error('[消息检查] 确保房间存在时出错:', err)
-        // Still add message even if room creation fails
         commit('ADD_MESSAGE', {
           roomName,
           message: msg
@@ -317,10 +248,7 @@ const subscribeToNewRoom = async ({ commit, state, dispatch }, { roomData, roomI
   }
 }
 
-// Helper function to auto-create rooms when receiving messages
 const startAutoCreateRoomsListener = ({ commit, state, dispatch }, userId) => {
-  // Query for any room where user is participant
-  // This includes deleted rooms so we can detect new messages
   const q = query(
     collection(db, 'chatRooms'),
     where('participants', 'array-contains', userId)
@@ -334,16 +262,15 @@ const startAutoCreateRoomsListener = ({ commit, state, dispatch }, userId) => {
       const roomName = roomData.roomName || roomId
       const isDeleted = deletedFor.includes(userId)
       
-      // Track previous state to detect reactivation
       const existingRoom = state.chatRooms.find(r => r.id === roomId)
       const wasDeleted = existingRoom?.deletedFor?.includes(userId)
       
       if (change.type === 'added') {
-        // New room created - only handle if not deleted
+
         if (!isDeleted) {
         const exists = state.chatRooms.find(r => r.id === roomId)
         if (!exists) {
-          // Create room object
+
           const newRoom = {
             id: roomId,
             ...roomData,
@@ -357,27 +284,24 @@ const startAutoCreateRoomsListener = ({ commit, state, dispatch }, userId) => {
             createdAt: roomData.createdAt?.toDate() || new Date()
           }
           
-          // Add to chat rooms
+
           commit('ADD_CHAT_ROOM', newRoom)
           
-            // Auto-subscribe to the new room to receive messages
+
             subscribeToNewRoom({ commit, state, dispatch }, { roomData, roomId, userId }).catch(err => {
             console.error('Error in background subscription:', err)
           })
           
-          // Unread count will be calculated automatically in ADD_MESSAGE mutation
           }
         }
       } else if (change.type === 'modified') {
-        // Room updated - check for new messages even if deleted
+
         const hasNewMessage = roomData.lastMessage && 
                               roomData.lastMessageSender !== userId &&
                               (!existingRoom || existingRoom.lastMessage !== roomData.lastMessage)
         
-        // If room was deleted but now has a new message, reactivate it
         if (wasDeleted && hasNewMessage && !isDeleted) {
           
-          // Reactivate the room
           const reactivatedRoom = {
             id: roomId,
             ...roomData,
@@ -391,7 +315,6 @@ const startAutoCreateRoomsListener = ({ commit, state, dispatch }, userId) => {
             createdAt: roomData.createdAt?.toDate() || new Date()
           }
           
-          // Add or update in chat rooms
           if (existingRoom) {
             const roomIndex = state.chatRooms.findIndex(r => r.id === roomId)
             if (roomIndex !== -1) {
@@ -400,20 +323,14 @@ const startAutoCreateRoomsListener = ({ commit, state, dispatch }, userId) => {
           } else {
             commit('ADD_CHAT_ROOM', reactivatedRoom)
           }
-          
-          // Subscribe to Ably if not already subscribed
-          // This is a reactivated room, so skip history
+
           if (!state.rooms.has(roomName)) {
             subscribeToNewRoom({ commit, state, dispatch }, { roomData, roomId, userId, skipHistory: true }).catch(err => {
               console.error('Error subscribing to reactivated room:', err)
             })
           }
           
-          // Unread count will be calculated automatically in ADD_MESSAGE mutation
         } else if (wasDeleted && hasNewMessage && isDeleted) {
-          // Room is still deleted but has new message - subscribe to receive it
-          // Subscribe to Ably to receive the message (room will be reactivated when message arrives)
-          // This is a deleted room with new message, so skip history
           if (!state.rooms.has(roomName)) {
             subscribeToNewRoom({ commit, state, dispatch }, { roomData, roomId, userId, skipHistory: true }).catch(err => {
               console.error('Error subscribing to deleted room with new message:', err)
@@ -431,38 +348,30 @@ export default {
   namespaced: true,
   
   state: {
-    // Connection state
     isConnected: false,
     connectionStatus: 'disconnected',
     clientId: null,
     
-    // Rooms and messages
-    rooms: new Map(), // roomName -> room instance
-    messages: new Map(), // roomName -> messages array
+    rooms: new Map(), 
+    messages: new Map(), 
     activeRoom: null,
-    
-    // Presence and typing
-    presence: new Map(), // roomName -> presence data
-    typing: new Map(), // roomName -> typing users
+
+    presence: new Map(),
+    typing: new Map(), 
     onlineUsers: new Set(),
     
-    // UI state
     loading: false,
     error: null,
+
+    chatRooms: [],
     
-    // Chat rooms list
-    chatRooms: [], // List of available chat rooms
-    
-    // Track reactivated rooms to skip loading history
-    reactivatedRooms: new Set(), // room IDs that were just reactivated
-    reactivatedAt: new Map(), // roomName -> timestamp when room was reactivated
-    
-    // Track unread messages per room
-    unreadCounts: new Map(), // roomId -> unreadCount
-    lastViewedAt: new Map(), // roomId -> timestamp when user last viewed the room
-    
-    // Track if listener is already set up
-    chatRoomListenerUnsubscribe: null, // Function to unsubscribe from chat room listener
+    reactivatedRooms: new Set(),
+    reactivatedAt: new Map(),
+
+    unreadCounts: new Map(), 
+    lastViewedAt: new Map(), 
+
+    chatRoomListenerUnsubscribe: null, 
   },
   
   mutations: {
@@ -494,8 +403,7 @@ export default {
       const messages = state.messages.get(roomName)
       const beforeCount = messages.length
       
-      // Check if message already exists (avoid duplicates)
-      // Use serial for duplicate detection (primary), or timestamp+text+clientId as fallback
+
       let exists = false
       
       if (message.serial) {

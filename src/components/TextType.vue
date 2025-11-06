@@ -42,7 +42,6 @@ export default {
       const currentText = props.text[currentTextIndex.value]
       
       if (isDeleting.value) {
-        // Deleting characters
         displayText.value = currentText.substring(0, currentCharIndex.value - 1)
         currentCharIndex.value--
         
@@ -53,7 +52,6 @@ export default {
           return
         }
       } else {
-        // Typing characters
         displayText.value = currentText.substring(0, currentCharIndex.value + 1)
         currentCharIndex.value++
         
