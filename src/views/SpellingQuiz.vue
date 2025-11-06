@@ -1,3 +1,5 @@
+ <!-- The follow code was taken and adapted from the following repository https://github.com/Snake0good/Drag-and-Drop-Spelling-Game -->
+
 <template>
   <div class="spelling-quiz-page">
     <div class="spelling-quiz-container">
