@@ -1238,7 +1238,7 @@ export default {
         // Create Ably room
         const { chatClient } = getAblyClients()
         const ablyRoomName = roomName || createRoomName(participants)
-        const room = chatClient.rooms.get(ablyRoomName)
+        const room = await chatClient.rooms.get(ablyRoomName)
         await room.attach()
         
         // Store room reference in state
