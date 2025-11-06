@@ -266,13 +266,17 @@ export default {
         total += count
       }
 
+      // Include temporary unread counts for rooms not yet in chatRooms
       for (const [key, value] of unreadCounts.entries()) {
         if (typeof key === 'string' && key.startsWith('chat_') && !chatRooms.some(r => r.id === key || r.roomName === key)) {
           total += value || 0
         }
       }
 
+      // Force reactivity by accessing the Map size
+      // This ensures Vue tracks changes when the Map reference changes
       const mapSize = unreadCounts.size
+      
       return total
     })
 
