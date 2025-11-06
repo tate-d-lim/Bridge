@@ -41,7 +41,7 @@
             <svg class="plus-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            <span>New Chat</span>
+            <span class="btn-text">New Chat</span>
           </button>
         </div>
         
@@ -1304,6 +1304,8 @@ export default {
   max-height: calc(100vh - 70px);
   background: var(--bg-dark);
   overflow: hidden;
+  width: 100%;
+  position: relative;
 }
 
 .chat-container {
@@ -1313,6 +1315,8 @@ export default {
   margin: 0 auto;
   box-shadow: var(--shadow-lg);
   border-radius: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 /* Sidebar */
@@ -1338,11 +1342,11 @@ export default {
 }
 
 .sidebar-header {
-  padding: 24px;
+  padding: 20px 24px;
   border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   background: var(--bg);
   position: relative;
   z-index: 1;
@@ -1356,14 +1360,16 @@ export default {
 .header-top {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
+  margin-bottom: 4px;
 }
 
 .messages-header-content {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1;
 }
 
 .messages-icon {
@@ -1388,15 +1394,16 @@ export default {
 .connection-badge {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
+  gap: 6px;
+  padding: 5px 12px;
   background: rgba(239, 68, 68, 0.1);
-  border-radius: 20px;
-  font-size: 0.8rem;
+  border-radius: 16px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #ef4444;
   transition: all 0.3s ease;
   border: 1px solid rgba(239, 68, 68, 0.2);
+  flex-shrink: 0;
 }
 
 .connection-badge.connected {
@@ -1416,11 +1423,12 @@ export default {
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #ef4444;
   animation: pulse-red 2s infinite;
+  flex-shrink: 0;
 }
 
 .connection-badge.connected .status-dot {
@@ -1430,7 +1438,7 @@ export default {
 
 .btn-new-chat {
   width: 100%;
-  padding: 12px 16px;
+  padding: 10px 16px;
   background: transparent;
   color: #6b7280;
   border: 1.5px solid #e5e7eb;
@@ -1440,8 +1448,8 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 0.95rem;
+  gap: 7px;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
@@ -1456,9 +1464,14 @@ export default {
 }
 
 .plus-icon {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
   stroke-width: 2.5;
+  flex-shrink: 0;
+}
+
+.btn-text {
+  white-space: nowrap;
 }
 
 .dark-mode .btn-new-chat {
@@ -3018,65 +3031,86 @@ export default {
   .chat-page {
     height: 100vh;
     max-height: 100vh;
+    overflow: hidden;
   }
   
   .chat-container {
-    flex-direction: row;
+    flex-direction: column;
     max-width: 100%;
+    overflow: hidden;
+    height: 100%;
   }
   
   .chat-sidebar {
     width: 100%;
     max-width: 100%;
+    min-height: 0;
+    flex: 0 0 auto;
     border-right: none;
-    border-bottom: 1px solid var(--border);
-    position: fixed;
-    top: 70px;
-    left: 0;
-    right: 0;
+    border-bottom: 2px solid var(--border);
+    position: relative;
     height: auto;
-    max-height: 50vh;
-    z-index: 10;
+    max-height: 35vh;
     overflow-y: auto;
+    z-index: 10;
   }
   
   .chat-window {
     width: 100%;
-    height: calc(100vh - 70px);
-    margin-top: 0;
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    overflow: hidden;
   }
   
   .sidebar-header {
-    padding: 16px 20px;
-    flex-direction: row;
-    gap: 12px;
+    padding: 14px 16px;
+    gap: 10px;
   }
   
   .header-top {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-bottom: 2px;
   }
   
   .sidebar-header h2 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+  }
+  
+  .messages-icon {
+    width: 24px;
+    height: 24px;
   }
   
   .connection-badge {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     padding: 4px 10px;
+    gap: 5px;
+    border-radius: 14px;
+  }
+  
+  .status-dot {
+    width: 6px;
+    height: 6px;
   }
   
   .btn-new-chat {
-    padding: 10px 14px;
-    font-size: 0.9rem;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    gap: 5px;
+    border-radius: 8px;
   }
   
   .plus-icon {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
   
   .chat-rooms-list {
-    max-height: calc(50vh - 120px);
+    max-height: calc(35vh - 100px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .chat-room-item {
@@ -3086,7 +3120,14 @@ export default {
   }
   
   .chat-room-item:hover {
-    transform: translateX(3px);
+    transform: none;
+  }
+  
+  .chat-content {
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
   }
   
   .room-avatar {
@@ -3114,26 +3155,43 @@ export default {
   }
   
   .chat-header {
-    padding: 16px 20px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
   
   .chat-avatar {
-    width: 48px;
-    height: 48px;
-    font-size: 1rem;
+    width: 44px;
+    height: 44px;
+    font-size: 0.95rem;
   }
   
   .chat-details h3 {
-    font-size: 1.05rem;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  
+  .no-room-selected {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .messages-container {
     padding: 16px;
-    max-height: calc(100vh - 280px);
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .messages-list {
+    gap: 12px;
   }
   
   .message-content {
-    max-width: 75%;
+    max-width: 80%;
   }
   
   .message-bubble {
@@ -3151,15 +3209,18 @@ export default {
   }
   
   .message-input-container {
-    padding: 14px 16px;
+    padding: 12px 16px;
+    flex-shrink: 0;
   }
   
   .input-wrapper {
     padding: 5px 8px 5px 16px;
+    border-radius: 20px;
   }
   
   .message-input {
-    font-size: 0.95rem;
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 8px 0;
   }
   
   .send-btn {
@@ -3182,11 +3243,16 @@ export default {
     width: 95%;
     max-width: 95%;
     margin: 10px;
-    max-height: 90vh;
+    max-height: 85vh;
+    border-radius: 20px;
+  }
+  
+  .modal-overlay {
+    padding: 10px;
   }
   
   .modal-header {
-    padding: 20px;
+    padding: 20px 16px;
   }
   
   .header-content h3 {
@@ -3204,13 +3270,16 @@ export default {
   }
   
   .modal-body {
-    padding: 20px;
-    max-height: calc(90vh - 150px);
+    padding: 16px;
+    max-height: calc(85vh - 140px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .search-input {
-    padding: 14px 20px;
-    font-size: 1rem;
+    padding: 12px 16px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    border-radius: 12px;
   }
   
   .user-result {
@@ -3261,16 +3330,58 @@ export default {
 }
 
 @media (max-width: 480px) {
-  .chat-sidebar {
-    height: 200px;
+  .chat-page {
+    height: 100vh;
+    max-height: 100vh;
   }
   
-  .chat-window {
-    height: calc(100vh - 270px);
+  .chat-sidebar {
+    max-height: 30vh;
+  }
+  
+  .chat-rooms-list {
+    max-height: calc(30vh - 90px);
+  }
+  
+  .sidebar-header {
+    padding: 12px 14px;
+    gap: 8px;
   }
   
   .sidebar-header h2 {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
+  }
+  
+  .messages-icon {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .connection-badge {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    gap: 4px;
+  }
+  
+  .status-dot {
+    width: 5px;
+    height: 5px;
+  }
+  
+  .btn-new-chat {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    gap: 4px;
+    border-radius: 8px;
+  }
+  
+  .plus-icon {
+    width: 13px;
+    height: 13px;
+  }
+  
+  .btn-text {
+    display: none;
   }
   
   .chat-room-item {
@@ -3299,15 +3410,24 @@ export default {
   }
   
   .messages-container {
-    padding: 15px;
+    padding: 12px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .message-content {
-    max-width: 75%;
+    max-width: 85%;
+  }
+  
+  .message-bubble {
+    padding: 10px 14px;
+    font-size: 0.95rem;
   }
   
   .message-input-container {
-    padding: 15px 20px;
+    padding: 12px 16px;
   }
   
   .input-wrapper {
@@ -3315,17 +3435,42 @@ export default {
   }
   
   .message-input {
-    font-size: 0.9rem;
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 6px 0;
   }
   
   .send-btn {
     width: 36px;
     height: 36px;
+    flex-shrink: 0;
   }
   
   .send-icon {
     width: 15px;
     height: 15px;
+  }
+  
+  .empty-state-container {
+    padding: 32px 20px;
+  }
+  
+  .icon-wrapper {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 24px;
+  }
+  
+  .chat-bubble-icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .empty-title {
+    font-size: 1.4rem;
+  }
+  
+  .empty-subtitle {
+    font-size: 0.9rem;
   }
   
   .modal-header {
@@ -3961,18 +4106,26 @@ export default {
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .modal-overlay-2 {
+    padding: 10px;
+  }
+  
   .modal-content-2 {
     width: 95%;
-    max-height: 90vh;
+    max-width: 95%;
+    max-height: 85vh;
+    border-radius: 20px;
   }
 
   .modal-header-2 {
-    padding: 24px;
+    padding: 20px;
+    gap: 12px;
   }
 
   .header-icon-wrapper {
     width: 48px;
     height: 48px;
+    border-radius: 12px;
   }
 
   .header-icon {
@@ -3981,24 +4134,41 @@ export default {
   }
 
   .header-text h3 {
-    font-size: 1.25rem;
+    font-size: 1.2rem;
   }
 
   .header-text p {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
+  }
+  
+  .btn-close-2 {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .btn-close-2 svg {
+    width: 18px;
+    height: 18px;
   }
 
   .search-section-2 {
-    padding: 20px;
+    padding: 16px 20px;
+  }
+  
+  .search-input-2 {
+    padding: 12px 44px 12px 48px;
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 
   .results-section-2 {
-    padding: 20px;
-    max-height: 45vh;
+    padding: 16px 20px 20px;
+    max-height: calc(85vh - 200px);
   }
 
   .user-card-2 {
-    padding: 14px 16px;
+    padding: 12px 14px;
+    gap: 12px;
+    border-radius: 14px;
   }
 
   .user-avatar-2 {
@@ -4007,38 +4177,62 @@ export default {
   }
 
   .avatar-initials {
-    font-size: 1.125rem;
+    font-size: 1.05rem;
+  }
+  
+  .avatar-status {
+    width: 10px;
+    height: 10px;
   }
 
   .user-name {
-    font-size: 1rem;
+    font-size: 0.95rem;
+  }
+  
+  .user-role-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+  }
+  
+  .user-email-text {
+    font-size: 0.8rem;
   }
 
   .chat-action {
-    min-width: 130px;
-    height: 38px;
-    padding: 8px 14px;
-    font-size: 0.8125rem;
+    min-width: 120px;
+    height: 36px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
     gap: 6px;
+    border-radius: 10px;
   }
 
   .chat-icon {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
   }
 
   .empty-state-2, .initial-state-2 {
-    padding: 40px 20px;
+    padding: 32px 20px;
   }
 
   .empty-icon-2, .initial-icon-2 {
-    width: 64px;
-    height: 64px;
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
   }
 
   .empty-icon-2 svg, .initial-icon-2 svg {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
+  }
+  
+  .empty-state-2 h4, .initial-state-2 h4 {
+    font-size: 1.1rem;
+  }
+  
+  .empty-state-2 p, .initial-state-2 p {
+    font-size: 0.875rem;
   }
 }
 </style>
