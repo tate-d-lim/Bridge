@@ -642,7 +642,7 @@ export default {
 
 .btn-primary.btn-hero {
   background: #fff;
-  color: var(--text);
+  color: black;
   border: 2px solid #fff;
 }
 
