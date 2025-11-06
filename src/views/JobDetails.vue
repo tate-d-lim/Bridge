@@ -273,7 +273,10 @@ export default {
 
     const jobTags = computed(() => {
       if (!job.value) return []
-      return [job.value.category, job.value.type].filter(Boolean)
+      return [
+        job.value.category ? capitalize(job.value.category) : null,
+        job.value.type ? capitalize(job.value.type) : null
+      ].filter(Boolean)
     })
 
     const getCompanyInitials = (name) => {
