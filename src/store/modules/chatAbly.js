@@ -641,7 +641,8 @@ export default {
     CLEAR_UNREAD(state, roomId) {
       state.unreadCounts.set(roomId, 0)
       // Update last viewed time when clearing unread
-      state.lastViewedAt.set(roomId, new Date().getTime())
+      const timestamp = new Date().getTime()
+      state.lastViewedAt.set(roomId, timestamp)
       // Force reactivity by creating new Map instances
       state.unreadCounts = new Map(state.unreadCounts)
       state.lastViewedAt = new Map(state.lastViewedAt)
@@ -822,6 +823,11 @@ export default {
             lastMessageAt: roomData.lastMessageAt?.toDate() || new Date(),
             createdAt: roomData.createdAt?.toDate() || new Date()
           })
+          
+          // Load lastViewedAt from Firebase for this room
+          if (roomData.lastViewedAt && roomData.lastViewedAt[userId]) {
+            state.lastViewedAt.set(roomId, roomData.lastViewedAt[userId])
+          }
         })
         
         commit('SET_CHAT_ROOMS', rooms)
@@ -829,6 +835,10 @@ export default {
         // Auto-subscribe to all rooms to receive messages even when not viewing them
         // Pass dispatch to enable auto-room creation
         await autoSubscribeToAllRooms({ commit, state, dispatch }, userId)
+        
+        // Recalculate unread counts after loading messages from history
+        // This ensures counts are based on lastViewedAt timestamps from Firebase
+        dispatch('recalculateUnreadCounts')
         
         // Note: Real-time updates for new rooms are handled by listenToChatRoomUpdates
         // (called from the Vue component). This avoids duplicate listeners.
@@ -989,6 +999,11 @@ export default {
               lastMessageAt: roomData.lastMessageAt?.toDate() || new Date(),
               createdAt: roomData.createdAt?.toDate() || new Date()
             })
+            
+            // Load lastViewedAt from Firebase for this room
+            if (roomData.lastViewedAt && roomData.lastViewedAt[userId]) {
+              state.lastViewedAt.set(roomId, roomData.lastViewedAt[userId])
+            }
           })
           
           commit('SET_CHAT_ROOMS', rooms)
@@ -1260,6 +1275,8 @@ export default {
         const roomId = state.chatRooms.find(r => r.roomName === roomName || r.id === roomName)?.id
         if (roomId) {
           commit('CLEAR_UNREAD', roomId)
+          // Persist lastViewedAt to Firebase
+          await dispatch('persistLastViewedAt', roomId)
         }
         
         // Check if already subscribed to this room
@@ -1825,8 +1842,25 @@ export default {
       }
     },
     
+    // Persist lastViewedAt to Firebase
+    async persistLastViewedAt({ state }, roomId) {
+      try {
+        if (!state.clientId) return
+        
+        const timestamp = state.lastViewedAt.get(roomId)
+        if (!timestamp) return
+        
+        const roomRef = doc(db, 'chatRooms', roomId)
+        await updateDoc(roomRef, {
+          [`lastViewedAt.${state.clientId}`]: timestamp
+        })
+      } catch (error) {
+        console.error('Error persisting lastViewedAt to Firebase:', error)
+      }
+    },
+    
     // Recalculate unread counts for all rooms based on actual message counts
-    recalculateUnreadCounts({ state, commit }) {
+    recalculateUnreadCounts({ state, commit, dispatch }) {
       const currentTime = new Date().getTime()
       
       for (const room of state.chatRooms) {
@@ -1838,6 +1872,8 @@ export default {
         if (roomId === activeRoomId) {
           // Active room has no unread messages
           commit('CLEAR_UNREAD', roomId)
+          // Persist to Firebase (don't await to avoid blocking)
+          dispatch('persistLastViewedAt', roomId)
           continue
         }
         

@@ -43,6 +43,9 @@ export default {
 .job-card-skeleton {
   display: flex;
   height: 100%;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .job-card-wrapper {
@@ -51,9 +54,11 @@ export default {
   border-radius: 8px;
   padding: 20px;
   width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-sizing: border-box;
 }
 
 .job-card-header-skeleton {

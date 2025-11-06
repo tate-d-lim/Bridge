@@ -1180,10 +1180,24 @@ export default {
     })
     
     // Watch for new messages to scroll to bottom
-    watch(() => store.getters['chatAbly/getMessages'](activeRoom.value), () => {
+    watch(() => store.getters['chatAbly/getMessages'](activeRoom.value), (newMessages, oldMessages) => {
       nextTick(() => {
         scrollToBottom()
       })
+      
+      // Persist lastViewedAt when messages arrive in active room
+      if (newMessages && newMessages.length > 0 && activeRoom.value) {
+        const currentRoom = getCurrentRoom()
+        if (currentRoom && currentRoom.id) {
+          // Debounce the persist call to avoid too many Firebase writes
+          if (window.persistLastViewedTimeout) {
+            clearTimeout(window.persistLastViewedTimeout)
+          }
+          window.persistLastViewedTimeout = setTimeout(() => {
+            store.dispatch('chatAbly/persistLastViewedAt', currentRoom.id)
+          }, 1000) // Wait 1 second after last message before persisting
+        }
+      }
     }, { deep: true }) // 深度监听消息数组变化
     
     // Watch connection status changes

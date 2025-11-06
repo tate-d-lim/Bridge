@@ -178,8 +178,11 @@ export default {
 .job-card {
   display: flex;
   height: 100%;
+  width: 100%;
+  max-width: 100%;
   cursor: pointer;
   transition: all 0.3s ease;
+  overflow: hidden;
 }
 
 
@@ -189,10 +192,12 @@ export default {
   border-radius: 8px;
   padding: 20px;
   width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .job-card:hover .job-card-wrapper {

@@ -268,6 +268,9 @@ export default {
 .browse-jobs-page {
   min-height: 100vh;
   background: var(--bg);
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 .filters-section {
@@ -336,6 +339,7 @@ export default {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 20px;
+  overflow-x: hidden;
 }
 
 /* Layout with Sidebar */
@@ -344,15 +348,19 @@ export default {
   grid-template-columns: 280px 1fr;
   gap: 32px;
   align-items: start;
+  max-width: 100%;
 }
 
 .filter-sidebar-wrapper {
   width: 100%;
+  max-width: 280px;
 }
 
 .jobs-main-content {
   width: 100%;
   min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Header Section */
@@ -423,8 +431,23 @@ export default {
 
 .jobs-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 24px;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Ensure consistent card widths at different breakpoints */
+@media (min-width: 1280px) {
+  .jobs-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .jobs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 1024px) {
@@ -435,15 +458,15 @@ export default {
   .filter-sidebar-wrapper {
     display: none;
   }
-}
-
-@media (min-width: 768px) {
-  /* Header already has flex-row styling */
-}
-
-@media (min-width: 1280px) {
+  
   .jobs-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .jobs-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
